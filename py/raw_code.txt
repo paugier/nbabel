@@ -1,0 +1,87 @@
+ 8 import sys
+ 9 import numpy
+10 from itertools import combinations
+11
+12 class Particle(object):
+13     """
+14     A Particle has mass, position, velocity and acceleration.
+15     """
+16     def __init__(self, mass, x, y, z, vx, vy, vz):
+17         self.mass = mass
+18         self.position = numpy.array([x, y, z])
+19         self.velocity = numpy.array([vx, vy, vz])
+20         self.acceleration = numpy.array([[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]])
+21
+22     @property
+23     def ke(self):
+24         return 0.5 * self.mass * numpy.sum(v**2 for v in self.velocity)
+25
+26 class Cluster(list):
+27     """
+28     A Cluster is just a list of particles with methods to accelerate and
+29     advance them.
+30     """
+31     @property
+32     def ke(self):
+33         return sum(particle.ke for particle in self)
+34
+35     @property
+36     def energy(self):
+37         return self.ke + self.pe
+38
+39     def step(self, dt):
+40         self.__accelerate()
+41         self.__advance_positions(dt)
+42         self.__accelerate()
+43         self.__advance_velocities(dt)
+44
+45     def __accelerate(self):
+46         for particle in self:
+47             particle.acceleration[1] = particle.acceleration[0]
+48             particle.acceleration[0] = 0.0
+49             self.pe = 0.0
+50
+51         for p1, p2 in combinations(self, 2):
+52             vector = numpy.subtract(p1.position, p2.position)
+53             distance = numpy.sqrt(numpy.sum(vector**2))
+54             p1.acceleration[0] = p1.acceleration[0] - (p2.mass/distance**3) *
+55                                  vector
+56             p2.acceleration[0] = p2.acceleration[0] + (p1.mass/distance**3) *
+57                                  vector
+58             self.pe -= (p1.mass * p2.mass)/distance
+59
+60     def __advance_positions(self, dt):
+61         for p in self:
+62             p.position = p.position + p.velocity * dt + 0.5 * dt**2 * p.
+63                          acceleration[0]
+64
+65     def __advance_velocities(self, dt):
+66         for p in self:
+67             p.velocity = p.velocity + 0.5 * (p.acceleration[0] + p.acceleration[
+68                          1]) * dt
+69
+70
+71 if __name__ == "__main__":
+72     tend, dt = 10.0, 0.001 # end time, timestep
+73
+74     cluster = Cluster()
+75     with open(sys.argv[1]) as input_file:
+76         for line in input_file:
+77             # try/except is a blunt instrument to clean up input
+78             try:
+79                 cluster.append(
+80                     Particle(*[float(x) for x in line.split()[1:]])
+81                 )
+82             except:
+83                 pass
+84
+85     old_energy = -0.25
+86     for step in xrange(1, int(tend/dt+1)):
+87         cluster.step(dt)
+88         if not step % 10:
+89             print "t = %.2f, E = % .10f, dE/E = % .10f" % (
+90                 dt * step, cluster.energy, (cluster.energy-old_energy)
+91                                             /old_energy
+92             )
+93             old_energy = cluster.energy
+94     print "Final dE/E = %.6e" % ((cluster.energy+0.25)/-0.25)
