@@ -39,12 +39,11 @@ class Cluster(list):
         return self.ke + self.pe
 
     def step(self, dt):
-        self.__accelerate()
         self.__advance_positions(dt)
-        self.__accelerate()
+        self.accelerate()
         self.__advance_velocities(dt)
 
-    def __accelerate(self):
+    def accelerate(self):
         for particle in self:
             particle.acceleration1 = particle.acceleration
             particle.acceleration = np.array([0.0, 0.0, 0.0])
@@ -52,7 +51,6 @@ class Cluster(list):
         for p1, p2 in combinations(self, 2):
             vector = p1.position - p2.position
             distance = sqrt(sum(vector ** 2))
-
             p1.acceleration -= (p2.mass / distance ** 3) * vector
             p2.acceleration += (p1.mass / distance ** 3) * vector
             self.pe -= (p1.mass * p2.mass) / distance
@@ -80,6 +78,7 @@ if __name__ == "__main__":
                 pass
 
     old_energy = energy0 = -0.25
+    cluster.accelerate()
     for step in range(1, int(tend / dt + 1)):
         cluster.step(dt)
         if not step % 100:
