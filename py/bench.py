@@ -37,21 +37,28 @@ def compute_accelerations(accelerations, masses, positions):
             mass1 = masses[index_p1]
             vector = positions[index_p0] - positions[index_p1]
             distance = sqrt(sum(vector ** 2))
-            coef = 1. / distance**3
+            coef = 1.0 / distance ** 3
             accelerations[index_p0] -= coef * mass1 * vector
             accelerations[index_p1] += coef * mass0 * vector
 
 
 def compute_accelerations_alternative(accelerations, masses, positions):
+    """
+    Alternative implementation (more computation but better for OMP)
+
+    It seems that the C++ implementation uses this method.
+    """
     nb_particules = masses.size
     for index_p0 in range(nb_particules):
-        acceleration = accelerations[index_p0]
+        position0 = positions[index_p0]
+        acceleration = np.zeros_like(position0)
         for index_p1 in range(nb_particules):
-            if index_p0 == index_p1:
+            if index_p1 == index_p0:
                 continue
-            vector = positions[index_p0] - positions[index_p1]
+            vector = position0 - positions[index_p1]
             distance = sqrt(sum(vector ** 2))
             acceleration -= (masses[index_p1] / distance ** 3) * vector
+        accelerations[index_p0] = acceleration
 
 
 @boost

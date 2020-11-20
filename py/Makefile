@@ -17,6 +17,9 @@ bench1k_pythran: __pythran__/bench.py
 bench256_pythran: __pythran__/bench.py
 	python bench.py ../data/input256
 
+bench64_pythran: __pythran__/bench.py
+	python bench.py ../data/input64
+
 __pythran__/bench.py: bench.py
 	transonic bench.py -af "-march=native -Ofast"
 
