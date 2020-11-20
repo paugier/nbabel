@@ -1,94 +1,131 @@
-import sys
-import numpy as np
-from itertools import combinations
+from math import sqrt
 from time import perf_counter
 from datetime import timedelta
 
+import numpy as np
+import pandas as pd
 
-class Particle:
-    """
-    A Particle has mass, position, velocity and acceleration.
-    """
-
-    def __init__(self, mass, x, y, z, vx, vy, vz):
-        self.mass = mass
-        self.position = np.array([x, y, z])
-        self.velocity = np.array([vx, vy, vz])
-        self.acceleration = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]])
-
-    @property
-    def ke(self):
-        return 0.5 * self.mass * sum(v ** 2 for v in self.velocity)
+from transonic import boost
 
 
-class Cluster(list):
-    """
-    A Cluster is just a list of particles with methods to accelerate and
-    advance them.
-    """
+def load_input_data(path):
+    df = pd.read_csv(
+        path, names=["mass", "x", "y", "z", "vx", "vy", "vz"], delimiter=r"\s+"
+    )
 
-    @property
-    def ke(self):
-        return sum(particle.ke for particle in self)
+    masses = df["mass"].values
+    positions = df.loc[:, ["x", "y", "z"]].values
+    velocities = df.loc[:, ["vx", "vy", "vz"]].values
 
-    @property
-    def energy(self):
-        return self.ke + self.pe
+    return masses, positions, velocities
 
-    def step(self, dt):
-        self.__accelerate()
-        self.__advance_positions(dt)
-        self.__accelerate()
-        self.__advance_velocities(dt)
 
-    def __accelerate(self):
-        for particle in self:
-            particle.acceleration[1] = particle.acceleration[0]
-            particle.acceleration[0] = 0.0
-            self.pe = 0.0
-        for p1, p2 in combinations(self, 2):
-            vector = np.subtract(p1.position, p2.position)
-            distance = np.sqrt(np.sum(vector ** 2))
-            p1.acceleration[0] = (
-                p1.acceleration[0] - (p2.mass / distance ** 3) * vector
+def advance_positions(positions, velocities, accelerations, time_step):
+    positions += time_step * velocities + 0.5 * time_step ** 2 * accelerations
+
+
+def advance_velocities(velocities, accelerations, accelerations1, time_step):
+    velocities += 0.5 * time_step * (accelerations + accelerations1)
+
+
+def compute_accelerations(accelerations, masses, positions):
+    nb_particules = masses.size
+    for index_p0 in range(nb_particules - 1):
+        for index_p1 in range(index_p0 + 1, nb_particules):
+            mass0 = masses[index_p0]
+            mass1 = masses[index_p1]
+            vector = positions[index_p0] - positions[index_p1]
+            distance3 = sqrt(sum(vector ** 2)) ** 3
+            accelerations[index_p0] -= (mass1 / distance3) * vector
+            accelerations[index_p1] += (mass0 / distance3) * vector
+
+
+def compute_accelerations_alternative(accelerations, masses, positions):
+    nb_particules = masses.size
+    for index_p0 in range(nb_particules):
+        acceleration = accelerations[index_p0]
+        for index_p1 in range(nb_particules):
+            if index_p0 == index_p1:
+                continue
+            vector = positions[index_p0] - positions[index_p1]
+            distance3 = sqrt(sum(vector ** 2)) ** 3
+            acceleration -= (masses[index_p1] / distance3) * vector
+
+
+# @boost
+def loop(
+    time_step: float,
+    nb_steps: int,
+    masses: "float[]",
+    positions: "float[:,:]",
+    velocities: "float[:,:]",
+):
+
+    accelerations = np.zeros_like(positions)
+    accelerations1 = np.zeros_like(positions)
+
+    compute_accelerations(accelerations, masses, positions)
+
+    time = 0.0
+    energy0, _, _ = compute_energies(masses, positions, velocities)
+    energy_previous = energy0
+
+    for step in range(nb_steps):
+        advance_positions(positions, velocities, accelerations, time_step)
+        # swap acceleration arrays
+        accelerations, accelerations1 = accelerations1, accelerations
+        # accelerations.fill(0)
+        accelerations[...] = 0.
+        compute_accelerations(accelerations, masses, positions)
+        # compute_accelerations_alternative(accelerations, masses, positions)
+        advance_velocities(velocities, accelerations, accelerations1, time_step)
+        time += time_step
+
+        if not step % 100:
+            energy, energy_kin, energy_pot = compute_energies(
+                masses, positions, velocities
             )
-            p2.acceleration[0] = (
-                p2.acceleration[0] + (p1.mass / distance ** 3) * vector
+            print(
+                "t = %.2f, E = %.10f, " % (time_step * step, energy)
+                + "dE/E = %.10f" % ((energy - energy_previous) / energy_previous)
             )
-            self.pe -= (p1.mass * p2.mass) / distance
+            energy_previous = energy
 
-    def __advance_positions(self, dt):
-        for p in self:
-            p.position = (
-                p.position + p.velocity * dt + 0.5 * dt ** 2 * p.acceleration[0]
-            )
+    return energy, energy0
 
-    def __advance_velocities(self, dt):
-        for p in self:
-            p.velocity = (
-                p.velocity + 0.5 * (p.acceleration[0] + p.acceleration[1]) * dt
-            )
+
+def compute_kinetic_energy(masses, velocities):
+    return 0.5 * np.sum(masses * np.sum(velocities ** 2, 1))
+
+
+def compute_potential_energy(masses, positions):
+    nb_particules = masses.size
+    pe = 0.0
+    for index_p0 in range(nb_particules - 1):
+        for index_p1 in range(index_p0 + 1, nb_particules):
+            mass0 = masses[index_p0]
+            mass1 = masses[index_p1]
+            vector = positions[index_p0] - positions[index_p1]
+            distance = sqrt(sum(vector ** 2))
+            pe -= (mass0 * mass1) / distance
+    return pe
+
+
+def compute_energies(masses, positions, velocities):
+    energy_kin = compute_kinetic_energy(masses, velocities)
+    energy_pot = compute_potential_energy(masses, positions)
+    return energy_kin + energy_pot, energy_kin, energy_pot
 
 
 if __name__ == "__main__":
+
     t_start = perf_counter()
-    tend, dt = 10.0, 0.001  # end time, timestep
-    cluster = Cluster()
-    with open(sys.argv[1]) as input_file:
-        for line in input_file:
-            # try/except is a blunt instrument to clean up input
-            try:
-                cluster.append(Particle(*[float(x) for x in line.split()[1:]]))
-            except:
-                pass
-    old_energy = -0.25
-    for step in range(1, int(tend / dt + 1)):
-        cluster.step(dt)
-        if not step % 100:
-            print(
-                f"t = {dt * step:.2f}, E = {cluster.energy:.10f}, "
-                f"dE/E = {(cluster.energy - old_energy) / old_energy:.10f}"
-            )
-            old_energy = cluster.energy
-    print(f"Final dE/E = {(cluster.energy + 0.25) / -0.25:.6e}")
+    time_end, time_step = 10.0, 0.001
+    nb_steps = int(time_end / time_step)
+
+    path_input = "../data/input16"
+    masses, positions, velocities = load_input_data(path_input)
+
+    energy, energy0 = loop(time_step, nb_steps, masses, positions, velocities)
+    print(f"Final dE/E = {(energy - energy0) / energy0:.6e}")
     print(f"run in {timedelta(seconds=perf_counter()-t_start)}")
