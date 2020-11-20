@@ -3,3 +3,7 @@ syntax: glob
 **/__pycache__
 **/__pythran__/
 cpp/main
+fortran/nbabel
+fortran/output*
+
+*.mod
