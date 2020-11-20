@@ -183,10 +183,12 @@ int main() {
     k += 1;
     if (k % 100 == 0) {
       E = cl.energies();
-      cerr << "t= " << t << " E= " << E[0] << " " << E[1] << " " << E[2]
-           << " dE = " << (E[0] - E0[0]) / E0[0] << endl;
+      cout << "t= " << t << " E= " << E[0] << " " << E[1] << " " << E[2]
+           << " dE/E = " << (E[0] - E0[0]) / E0[0] << endl;
     }
   } // end while
+
+  cout << "number time steps: " << k << endl;
 
   return 0;
 } // end program

@@ -13,9 +13,10 @@ def load_input_data(path):
         path, names=["mass", "x", "y", "z", "vx", "vy", "vz"], delimiter=r"\s+"
     )
 
-    masses = df["mass"].values
-    positions = df.loc[:, ["x", "y", "z"]].values
-    velocities = df.loc[:, ["vx", "vy", "vz"]].values
+    # warning: copy() is for Pythran...
+    masses = df["mass"].values.copy()
+    positions = df.loc[:, ["x", "y", "z"]].values.copy()
+    velocities = df.loc[:, ["vx", "vy", "vz"]].values.copy()
 
     return masses, positions, velocities
 
@@ -52,7 +53,7 @@ def compute_accelerations_alternative(accelerations, masses, positions):
             acceleration -= (masses[index_p1] / distance3) * vector
 
 
-# @boost
+@boost
 def loop(
     time_step: float,
     nb_steps: int,
@@ -74,8 +75,8 @@ def loop(
         advance_positions(positions, velocities, accelerations, time_step)
         # swap acceleration arrays
         accelerations, accelerations1 = accelerations1, accelerations
-        # accelerations.fill(0)
-        accelerations[...] = 0.
+        accelerations.fill(0)
+
         compute_accelerations(accelerations, masses, positions)
         # compute_accelerations_alternative(accelerations, masses, positions)
         advance_velocities(velocities, accelerations, accelerations1, time_step)
@@ -86,8 +87,8 @@ def loop(
                 masses, positions, velocities
             )
             print(
-                "t = %.2f, E = %.10f, " % (time_step * step, energy)
-                + "dE/E = %.10f" % ((energy - energy_previous) / energy_previous)
+                "t = %4.2f, E = %.6f, " % (time_step * step, energy)
+                + "dE/E = %+.6e" % ((energy - energy_previous) / energy_previous)
             )
             energy_previous = energy
 
@@ -119,13 +120,17 @@ def compute_energies(masses, positions, velocities):
 
 if __name__ == "__main__":
 
+    import sys
+
     t_start = perf_counter()
     time_end, time_step = 10.0, 0.001
-    nb_steps = int(time_end / time_step)
+    nb_steps = int(time_end / time_step) + 1
 
-    path_input = "../data/input16"
+    path_input = sys.argv[1]
     masses, positions, velocities = load_input_data(path_input)
 
     energy, energy0 = loop(time_step, nb_steps, masses, positions, velocities)
     print(f"Final dE/E = {(energy - energy0) / energy0:.6e}")
-    print(f"run in {timedelta(seconds=perf_counter()-t_start)}")
+    print(
+        f"{nb_steps} time steps run in {timedelta(seconds=perf_counter()-t_start)}"
+    )
