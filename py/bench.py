@@ -36,9 +36,10 @@ def compute_accelerations(accelerations, masses, positions):
             mass0 = masses[index_p0]
             mass1 = masses[index_p1]
             vector = positions[index_p0] - positions[index_p1]
-            distance3 = sqrt(sum(vector ** 2)) ** 3
-            accelerations[index_p0] -= (mass1 / distance3) * vector
-            accelerations[index_p1] += (mass0 / distance3) * vector
+            distance = sqrt(sum(vector ** 2))
+            coef = 1. / distance**3
+            accelerations[index_p0] -= coef * mass1 * vector
+            accelerations[index_p1] += coef * mass0 * vector
 
 
 def compute_accelerations_alternative(accelerations, masses, positions):
@@ -49,8 +50,8 @@ def compute_accelerations_alternative(accelerations, masses, positions):
             if index_p0 == index_p1:
                 continue
             vector = positions[index_p0] - positions[index_p1]
-            distance3 = sqrt(sum(vector ** 2)) ** 3
-            acceleration -= (masses[index_p1] / distance3) * vector
+            distance = sqrt(sum(vector ** 2))
+            acceleration -= (masses[index_p1] / distance ** 3) * vector
 
 
 @boost
