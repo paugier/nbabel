@@ -91,8 +91,8 @@ def loop(
     time_step: float,
     nb_steps: int,
     masses: "float[]",
-    positions: "float[:,3]",
-    velocities: "float[:,3]",
+    positions: "float[:,:]",
+    velocities: "float[:,:]",
 ):
 
     accelerations = np.zeros_like(positions)
