@@ -29,13 +29,38 @@ def advance_velocities(velocities, accelerations, accelerations1, time_step):
     velocities += 0.5 * time_step * (accelerations + accelerations1)
 
 
+def compute_distance(vec):
+    tmp = 0.0
+    for i in range(3):
+        tmp += vec[i] ** 2
+    return sqrt(tmp)
+
+
+def compute_accelerations_lowlevel(accelerations, masses, positions):
+    nb_particules = masses.size
+    vector = np.empty(3)
+    for index_p0 in range(nb_particules - 1):
+        position0 = positions[index_p0]
+        mass0 = masses[index_p0]
+        for index_p1 in range(index_p0 + 1, nb_particules):
+            mass1 = masses[index_p1]
+            for i in range(3):
+                vector[i] = position0[i] - positions[index_p1, i]
+            distance = compute_distance(vector)
+            coef = 1.0 / distance ** 3
+            for i in range(3):
+                accelerations[index_p0, i] -= coef * mass1 * vector[i]
+                accelerations[index_p1, i] += coef * mass0 * vector[i]
+
+
 def compute_accelerations(accelerations, masses, positions):
     nb_particules = masses.size
     for index_p0 in range(nb_particules - 1):
+        position0 = positions[index_p0]
+        mass0 = masses[index_p0]
         for index_p1 in range(index_p0 + 1, nb_particules):
-            mass0 = masses[index_p0]
             mass1 = masses[index_p1]
-            vector = positions[index_p0] - positions[index_p1]
+            vector = position0 - positions[index_p1]
             distance = sqrt(sum(vector ** 2))
             coef = 1.0 / distance ** 3
             accelerations[index_p0] -= coef * mass1 * vector
@@ -85,7 +110,8 @@ def loop(
         accelerations, accelerations1 = accelerations1, accelerations
         accelerations.fill(0)
 
-        compute_accelerations(accelerations, masses, positions)
+        compute_accelerations_lowlevel(accelerations, masses, positions)
+        # compute_accelerations(accelerations, masses, positions)
         # compute_accelerations_alternative(accelerations, masses, positions)
         advance_velocities(velocities, accelerations, accelerations1, time_step)
         time += time_step
