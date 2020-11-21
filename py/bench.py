@@ -121,7 +121,12 @@ def loop(
     accelerations = np.zeros_like(positions)
     accelerations1 = np.zeros_like(positions)
 
-    compute_accelerations(accelerations, masses, positions)
+    compute_acc = compute_accelerations_lowlevel
+    # compute_acc = compute_accelerations_alt_lowlevel
+    # compute_acc = compute_accelerations
+    # compute_acc = compute_accelerations_alt
+
+    compute_acc(accelerations, masses, positions)
 
     time = 0.0
     energy0, _, _ = compute_energies(masses, positions, velocities)
@@ -132,12 +137,7 @@ def loop(
         # swap acceleration arrays
         accelerations, accelerations1 = accelerations1, accelerations
         accelerations.fill(0)
-
-        compute_accelerations_lowlevel(accelerations, masses, positions)
-        # compute_accelerations_alt_lowlevel(accelerations, masses, positions)
-        # compute_accelerations(accelerations, masses, positions)
-        # compute_accelerations_alt(accelerations, masses, positions)
-
+        compute_acc(accelerations, masses, positions)
         advance_velocities(velocities, accelerations, accelerations1, time_step)
         time += time_step
 
