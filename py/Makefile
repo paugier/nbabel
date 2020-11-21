@@ -17,6 +17,9 @@ bench1k_pythran: __pythran__/bench.py
 bench256_pythran: __pythran__/bench.py
 	python bench.py ../data/input256
 
+bench128_pythran: __pythran__/bench.py
+	python bench.py ../data/input128
+
 bench64_pythran: __pythran__/bench.py
 	python bench.py ../data/input64
 

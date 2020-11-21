@@ -1,6 +1,9 @@
 bench256: main
 	cat ../data/input256 | time ./main
 
+bench128: main
+	cat ../data/input128 | time ./main
+
 bench1k: main
 	cat ../data/input1k | time ./main
 
