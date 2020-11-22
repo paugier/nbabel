@@ -4,5 +4,11 @@ bench256: nbabel
 bench1k: nbabel
 	time ./nbabel ../data/input1k 1024
 
+bench2k: nbabel
+	time ./nbabel ../data/input2k 2048
+
 nbabel: nbabel.f03
-	gfortran -O3 nbabel.f03 -o nbabel
+	gfortran -march=native -O3 nbabel.f03 -o nbabel
+
+clean:
+	rm -f nbabel *.mod
