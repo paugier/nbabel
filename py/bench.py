@@ -145,10 +145,13 @@ def loop(
             energy, energy_kin, energy_pot = compute_energies(
                 masses, positions, velocities
             )
+            # no f-strings and format because not supported by Pythran
             print(
                 "t = %4.2f, E = %.6f, " % (time_step * step, energy)
                 + "dE/E = %+.6e" % ((energy - energy_previous) / energy_previous)
             )
+            # alternative for Numba (doesn't support string formatting!)
+            # print(time_step * step, energy, (energy - energy_previous) / energy_previous)
             energy_previous = energy
 
     return energy, energy0
@@ -166,7 +169,7 @@ def compute_potential_energy(masses, positions):
             mass0 = masses[index_p0]
             mass1 = masses[index_p1]
             vector = positions[index_p0] - positions[index_p1]
-            distance = sqrt(sum(vector ** 2))
+            distance = compute_distance(vector)
             pe -= (mass0 * mass1) / distance
     return pe
 
