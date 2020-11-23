@@ -29,6 +29,13 @@ def advance_velocities(velocities, accelerations, accelerations1, time_step):
     velocities += 0.5 * time_step * (accelerations + accelerations1)
 
 
+def compute_distance_cube(vec):
+    tmp = 0.0
+    for i in range(3):
+        tmp += vec[i] ** 2
+    return sqrt(tmp) * tmp
+
+
 def compute_distance(vec):
     tmp = 0.0
     for i in range(3):
@@ -46,11 +53,12 @@ def compute_accelerations_lowlevel(accelerations, masses, positions):
             mass1 = masses[index_p1]
             for i in range(3):
                 vector[i] = position0[i] - positions[index_p1, i]
-            distance = compute_distance(vector)
-            coef = 1.0 / distance ** 3
+            distance_cube = compute_distance_cube(vector)
+            coef_mass0 = mass0 / distance_cube
+            coef_mass1 = mass1 / distance_cube
             for i in range(3):
-                accelerations[index_p0, i] -= coef * mass1 * vector[i]
-                accelerations[index_p1, i] += coef * mass0 * vector[i]
+                accelerations[index_p0, i] -= coef_mass1 * vector[i]
+                accelerations[index_p1, i] += coef_mass0 * vector[i]
 
 
 def compute_accelerations(accelerations, masses, positions):
