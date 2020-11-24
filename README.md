@@ -1,15 +1,15 @@
 # Benchmark N-Body system
 
-Here are some elapsed times (in s) for 3 implementations.
+Here are some elapsed times (in s) for 4 implementations.
 
-| # particles |  Py | C++ | Fortran |
-|-------------|-----|-----|---------|
-|     1024    |  29 |  58 |   43    |
-|     2048    | 123 | 239 |  174    |
+| # particles |  Py | C++ | Fortran | Julia |
+|-------------|-----|-----|---------|-------|
+|     1024    |  29 |  55 |   41    |   45  |
+|     2048    | 123 | 231 |  166    |  173  |
 
-The implementations in C++ and Fortran come from https://www.nbabel.org/ and
-have recently been used in an article published in Nature Astronomy ([Zwart,
-2020](https://arxiv.org/pdf/2009.11295.pdf)). The implementation in
+The implementations in C++, Fortran and Julia come from https://www.nbabel.org/
+and have recently been used in an article published in Nature Astronomy
+([Zwart, 2020](https://arxiv.org/pdf/2009.11295.pdf)). The implementation in
 Python-Numpy is very simple, but uses
 [Transonic](https://transonic.readthedocs.io) and
 [Pythran](https://pythran.readthedocs.io).

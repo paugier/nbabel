@@ -2,14 +2,14 @@
 CC=gcc
 CXX=g++
 
-bench_pypy:
-	pypy bench_purepy.py ../data/input16
-
-bench64_pypy:
-	pypy bench_purepy.py ../data/input64
-
 bench0:
 	python bench0.py ../data/input16
+
+bench_pypy_purepy:
+	pypy bench_purepy.py ../data/input16
+
+bench_pypy:
+	pypy bench_pypy.py ../data/input16
 
 bench1k: __pythran__/bench.py
 	python bench.py ../data/input1k

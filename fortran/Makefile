@@ -8,7 +8,7 @@ bench2k: nbabel
 	time ./nbabel ../data/input2k 2048
 
 nbabel: nbabel.f03
-	gfortran -march=native -O3 nbabel.f03 -o nbabel
+	gfortran -march=native -Ofast nbabel.f03 -o nbabel
 
 clean:
 	rm -f nbabel *.mod

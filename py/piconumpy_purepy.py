@@ -55,3 +55,20 @@ def empty(size):
 
 def zeros(size):
     return array([0] * size)
+
+
+class Vectors(array):
+    def get_vector(self, index_part):
+        start = 3 * index_part
+        return self.data[start : start + 3]
+
+    def fill(self, value):
+        for i in range(self.size):
+            self.data[i] = value
+
+    def compute_squares(self):
+        result = []
+        for index_part in range(self.size // 3):
+            vector = self.get_vector(index_part)
+            result.append(vector[0] ** 2 + vector[1] ** 2 + vector[2] ** 2)
+        return result
