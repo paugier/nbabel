@@ -41,5 +41,5 @@ For comparison, we have for this case `{"c++": 0.85, "Fortran": 0.62, "Julia":
 2.57}`.
 
 Note that just adding `from transonic import jit` and then decorating the
-fonction `compute_accelerations` with `@jit`, the elapsed time decreases to 9 s
-(x75 speedup).
+fonction `compute_accelerations` with `@jit`, the elapsed time decreases to 8 s
+(x85 speedup, with Pythran 0.9.8).
