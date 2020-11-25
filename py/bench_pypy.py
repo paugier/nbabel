@@ -143,6 +143,7 @@ if __name__ == "__main__":
     path_input = sys.argv[1]
     masses, positions, velocities = load_input_data(path_input)
 
+    masses = array(masses)
     positions = Vectors(positions.flatten())
     velocities = Vectors(velocities.flatten())
 
