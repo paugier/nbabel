@@ -67,7 +67,7 @@ class Cluster(list):
 if __name__ == "__main__":
 
     t_start = perf_counter()
-    tend, dt = 1.0, 0.001  # end time, timestep
+    tend, dt = 10.0, 0.001  # end time, timestep
     cluster = Cluster()
     with open(sys.argv[1]) as input_file:
         for line in input_file:

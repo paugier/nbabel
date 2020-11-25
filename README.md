@@ -20,3 +20,25 @@ bench1k` or `make bench2k`.
 To give an idea of what it gives compared to the figure published in Nature Astronomy:
 
 ![image](https://raw.githubusercontent.com/paugier/nbabel/master/py/fig/fig_ecolo_impact_transonic.png)
+
+**Note:** these benchmarks are run sequentially with a Intel(R) Core(TM)
+i5-8400 CPU @ 2.80GHz.
+
+**Note 2:** With Numba (environment variable `TRANSONIC_BACKEND="numba"`), the
+elapsed times are 55 s and 206 s, respectively.
+
+## Smaller benchmarks between different Python solutions
+
+We can also compare different solutions in Python. Since some solutions are
+very slow, we need to compare on a much smaller problem (only 128 particles).
+Here are the elapsed times (in s):
+
+| Transonic-Pythran | Transonic-Numba | High-level Numpy | PyPy OOP | PyPy lists |
+|-------------------|-----------------|------------------|----------|------------|
+| 0.48              | 3.91            | 686              | 87       | 15         |
+
+For comparison, we have `{"c++": 0.85, "Fortran": 0.62, "Julia": 2.57}`.
+
+Note that just adding `from transonic import jit` and then decorating the
+fonction `compute_accelerations` with `@jit`, the elapsed time decreases to 9 s
+(x75 speedup).
