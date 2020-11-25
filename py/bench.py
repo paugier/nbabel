@@ -34,6 +34,8 @@ def compute_distance(vec):
     for i in range(3):
         tmp += vec[i] ** 2
     return sqrt(tmp)
+    # with pythran>=9.8, same perf with
+    # return sqrt(sum(vec ** 2))
 
 
 def compute_accelerations_lowlevel(accelerations, masses, positions):

@@ -37,7 +37,8 @@ Here are the elapsed times (in s):
 |-------------------|-----------------|------------------|----------|------------|
 | 0.48              | 3.91            | 686              | 87       | 15         |
 
-For comparison, we have `{"c++": 0.85, "Fortran": 0.62, "Julia": 2.57}`.
+For comparison, we have for this case `{"c++": 0.85, "Fortran": 0.62, "Julia":
+2.57}`.
 
 Note that just adding `from transonic import jit` and then decorating the
 fonction `compute_accelerations` with `@jit`, the elapsed time decreases to 9 s
