@@ -40,6 +40,6 @@ Here are the elapsed times (in s):
 For comparison, we have for this case `{"c++": 0.85, "Fortran": 0.62, "Julia":
 2.57}`.
 
-Note that just adding `from transonic import jit` and then decorating the
-fonction `compute_accelerations` with `@jit`, the elapsed time decreases to 8 s
-(x85 speedup, with Pythran 0.9.8).
+Note that just adding `from transonic import jit` to the simple high-level
+Numpy code and then decorating the function `compute_accelerations` with
+`@jit`, the elapsed time decreases to 8 s (a x85 speedup!, with Pythran 0.9.8).

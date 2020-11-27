@@ -6,6 +6,8 @@ import numpy as np
 import pandas as pd
 
 from transonic import jit
+# code not compatible with numba
+# from numba import jit
 
 
 def load_input_data(path):
@@ -26,7 +28,7 @@ def advance_velocities(velocities, accelerations, accelerations1, time_step):
     velocities += 0.5 * time_step * (accelerations + accelerations1)
 
 
-@jit
+# @jit
 def compute_accelerations(accelerations, masses, positions):
     nb_particules = masses.size
     for index_p0 in range(nb_particules - 1):
