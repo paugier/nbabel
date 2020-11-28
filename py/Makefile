@@ -28,7 +28,6 @@ bench64: __pythran__/bench.py
 
 __pythran__/bench.py: bench.py
 	transonic bench.py -af "-march=native -Ofast"
-
 	# transonic bench.py -af "-march=native -DUSE_XSIMD -Ofast"
 
 clean:
