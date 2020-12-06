@@ -21,7 +21,7 @@ class Particle:
 
     @property
     def ke(self):
-        return 0.5 * self.mass * sum(self.velocity ** 2)
+        return 0.5 * self.mass * (self.velocity ** 2).sum()
 
 
 class Cluster(list):
@@ -47,13 +47,14 @@ class Cluster(list):
         for particle in self:
             particle.acceleration1 = particle.acceleration
             particle.acceleration = np.array([0.0, 0.0, 0.0])
-            self.pe = 0.0
+        pe = 0.0
         for p1, p2 in combinations(self, 2):
             vector = p1.position - p2.position
-            distance = sqrt(sum(vector ** 2))
+            distance = sqrt((vector ** 2).sum())
             p1.acceleration -= (p2.mass / distance ** 3) * vector
             p2.acceleration += (p1.mass / distance ** 3) * vector
-            self.pe -= (p1.mass * p2.mass) / distance
+            pe -= (p1.mass * p2.mass) / distance
+        self.pe = pe
 
     def __advance_positions(self, dt):
         for p in self:
