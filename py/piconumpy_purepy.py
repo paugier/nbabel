@@ -1,55 +1,73 @@
 class array:
-
     def __init__(self, data):
         if isinstance(data, list):
             self.data = data
             return
         self.data = list(float(number) for number in data)
 
+    @property
+    def size(self):
+        return len(self.data)
+
     def __add__(self, other):
         if len(self.data) == 3 and len(other.data) == 3:
-            return array([self.data[0] + other.data[0],
-                          self.data[1] + other.data[1],
-                          self.data[2] + other.data[2],
-                        ])
+            return array(
+                [
+                    self.data[0] + other.data[0],
+                    self.data[1] + other.data[1],
+                    self.data[2] + other.data[2],
+                ]
+            )
         return array(
             number + other.data[index] for index, number in enumerate(self.data)
         )
 
     def __sub__(self, other):
         if len(self.data) == 3 and len(other.data) == 3:
-            return array([self.data[0] - other.data[0],
-                          self.data[1] - other.data[1],
-                          self.data[2] - other.data[2],
-                        ])
+            return array(
+                [
+                    self.data[0] - other.data[0],
+                    self.data[1] - other.data[1],
+                    self.data[2] - other.data[2],
+                ]
+            )
         return array(
             number - other.data[index] for index, number in enumerate(self.data)
         )
 
     def __pow__(self, exponent):
         if len(self.data) == 3:
-            return array([self.data[0] ** exponent,
-                          self.data[1] ** exponent,
-                          self.data[2] ** exponent,
-                        ])
+            return array(
+                [
+                    self.data[0] ** exponent,
+                    self.data[1] ** exponent,
+                    self.data[2] ** exponent,
+                ]
+            )
         return array(number ** exponent for number in self.data)
 
     def __mul__(self, other):
         if len(self.data) == 3:
-            return array([self.data[0] * other,
-                          self.data[1] * other,
-                          self.data[2] * other,
-                        ])
+            return array(
+                [
+                    self.data[0] * other,
+                    self.data[1] * other,
+                    self.data[2] * other,
+                ]
+            )
         return array(other * number for number in self.data)
 
     __rmul__ = __mul__
 
     def __truediv__(self, other):
         if len(self.data) == 3:
-            return array([self.data[0] / other,
-                          self.data[1] / other,
-                          self.data[2] / other,
-                        ])
+            return array(
+                [
+                    self.data[0] / other,
+                    self.data[1] / other,
+                    self.data[2] / other,
+                ]
+            )
         return array(number / other for number in self.data)
 
     def tolist(self):
@@ -101,7 +119,7 @@ def zeros(size):
 class Vectors(array):
     def get_vector(self, index_part):
         start = 3 * index_part
-        return self.data[start : start + 3]
+        return array(self.data[start : start + 3])
 
     def fill(self, value):
         for i in range(self.size):

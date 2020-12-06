@@ -34,28 +34,29 @@ def advance_velocities(velocities, accelerations, accelerations1, time_step):
 
 
 def compute_distance(vec):
-    tmp = 0.0
-    for i in range(3):
-        tmp += vec[i] ** 2
-    return sqrt(tmp)
+    return sqrt(vec[0] ** 2 + vec[1] ** 2 + vec[2] ** 2)
 
 
 def compute_accelerations_lowlevel(accelerations, masses, positions):
     nb_particules = masses.size
-    vector = [0.0, 0.0, 0.0]
     for index_p0 in range(nb_particules - 1):
         position0 = positions.get_vector(index_p0)
         mass0 = masses[index_p0]
         for index_p1 in range(index_p0 + 1, nb_particules):
             mass1 = masses[index_p1]
             position1 = positions.get_vector(index_p1)
-            for i in range(3):
-                vector[i] = position0[i] - position1[i]
+            vector = position0 - position1
             distance = compute_distance(vector)
-            coef = 1.0 / distance ** 3
-            for i in range(3):
-                accelerations[3 * index_p0 + i] -= coef * mass1 * vector[i]
-                accelerations[3 * index_p1 + i] += coef * mass0 * vector[i]
+            coef_m1 = mass1 / distance ** 3
+            coef_m0 = mass0 / distance ** 3
+
+            accelerations[3 * index_p0] -= coef_m1 * vector[0]
+            accelerations[3 * index_p0 + 1] -= coef_m1 * vector[1]
+            accelerations[3 * index_p0 + 2] -= coef_m1 * vector[2]
+
+            accelerations[3 * index_p1] += coef_m0 * vector[0]
+            accelerations[3 * index_p1 + 1] += coef_m0 * vector[1]
+            accelerations[3 * index_p1 + 2] += coef_m0 * vector[2]
 
 
 def loop(

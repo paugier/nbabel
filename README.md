@@ -35,7 +35,7 @@ Here are the elapsed times (in s):
 
 | Transonic-Pythran | Transonic-Numba | High-level Numpy | PyPy OOP | PyPy lists |
 |-------------------|-----------------|------------------|----------|------------|
-| 0.48              | 3.91            | 686              | 87       | 15         |
+| 0.48              | 3.91            | 686              |  7.6     | 10.3       |
 
 For comparison, we have for this case `{"c++": 0.85, "Fortran": 0.62, "Julia":
 2.57}`.
