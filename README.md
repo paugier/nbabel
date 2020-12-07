@@ -26,15 +26,19 @@ i5-8400 CPU @ 2.80GHz.
 
 **Note 2:** With Numba, the elapsed times are 46 s and 181 s, respectively.
 
+**Note 3:** With PyPy, a pure Python implementation (bench_purepy.py) runs for
+1024 particles in 225 s, i.e. only 4.1 times slower than the C++ implementation
+(compared to ~50 times slower as shown in the figure taken from Zwart, 2020).
+
 ## Smaller benchmarks between different Python solutions
 
 We can also compare different solutions in Python. Since some solutions are
 very slow, we need to compare on a much smaller problem (only 128 particles).
 Here are the elapsed times (in s):
 
-| Transonic-Pythran | Transonic-Numba | High-level Numpy | PyPy OOP | PyPy lists |
-|-------------------|-----------------|------------------|----------|------------|
-| 0.48              |  0.87           | 686              |  3.4     |  4.3       |
+| Transonic-Pythran | Numba | High-level Numpy | PyPy OOP | PyPy lists |
+|-------------------|-------|------------------|----------|------------|
+| 0.48              | 0.87  | 686              |  3.4     |  4.3       |
 
 For comparison, we have for this case `{"c++": 0.85, "Fortran": 0.62, "Julia":
 2.57}`.
