@@ -5,44 +5,79 @@ from datetime import timedelta
 import numpy as np
 import pandas as pd
 
-from transonic import jit
+from numba import njit
 
 
 def load_input_data(path):
     df = pd.read_csv(
         path, names=["mass", "x", "y", "z", "vx", "vy", "vz"], delimiter=r"\s+"
     )
+
     # warning: copy() is for Pythran...
     masses = df["mass"].values.copy()
     positions = df.loc[:, ["x", "y", "z"]].values.copy()
     velocities = df.loc[:, ["vx", "vy", "vz"]].values.copy()
+
     return masses, positions, velocities
 
 
+@njit(cache=True)
 def advance_positions(positions, velocities, accelerations, time_step):
     positions += time_step * velocities + 0.5 * time_step ** 2 * accelerations
 
 
+@njit(cache=True)
 def advance_velocities(velocities, accelerations, accelerations1, time_step):
     velocities += 0.5 * time_step * (accelerations + accelerations1)
 
 
+@njit(cache=True)
+def compute_distance(vec):
+    d2 = vec[0] ** 2 + vec[1] ** 2 + vec[2] ** 2
+    return sqrt(d2)
+
+
+@njit(cache=True)
+def compute_distance_cube(vec):
+    d2 = vec[0] ** 2 + vec[1] ** 2 + vec[2] ** 2
+    return d2 * sqrt(d2)
+
+
+@njit(cache=True)
 def compute_accelerations(accelerations, masses, positions):
     nb_particules = masses.size
+    vector = np.empty(3)
     for index_p0 in range(nb_particules - 1):
         position0 = positions[index_p0]
         mass0 = masses[index_p0]
         for index_p1 in range(index_p0 + 1, nb_particules):
             mass1 = masses[index_p1]
-            vector = position0 - positions[index_p1]
-            distance = sqrt(sum(vector ** 2))
-            coef = 1.0 / distance ** 3
-            accelerations[index_p0] -= coef * mass1 * vector
-            accelerations[index_p1] += coef * mass0 * vector
+            position1 = positions[index_p1]
 
-# @jit
-def loop(time_step, nb_steps, masses, positions, velocities):
+            for i in range(3):
+                vector[i] = position0[i] - position1[i]
 
+            distance_cube = compute_distance_cube(vector)
+            coef_m1 = mass1 / distance_cube
+            coef_m0 = mass0 / distance_cube
+
+            acceleration0 = accelerations[index_p0]
+            for i in range(3):
+                acceleration0[i] -= coef_m1 * vector[i]
+
+            acceleration1 = accelerations[index_p1]
+            for i in range(3):
+                acceleration1[i] += coef_m0 * vector[i]
+
+
+@njit(cache=True)
+def loop(
+    time_step: float,
+    nb_steps: int,
+    masses: "float[]",
+    positions: "float[:,:]",
+    velocities: "float[:,:]",
+):
     accelerations = np.zeros_like(positions)
     accelerations1 = np.zeros_like(positions)
 
@@ -62,22 +97,27 @@ def loop(time_step, nb_steps, masses, positions, velocities):
         time += time_step
 
         if not step % 100:
-            energy, energy_kin, energy_pot = compute_energies(
-                masses, positions, velocities
-            )
+            energy, _, _ = compute_energies(masses, positions, velocities)
+            # Numba doesn't support string formatting!
             print(
-                f"t = {time_step * step:4.2f}, E = {energy:.6f}, "
-                f"dE/E = {(energy - energy_previous) / energy_previous:+.6e}"
+                "t =",
+                time_step * step,
+                "E =",
+                energy,
+                "dE/E =",
+                (energy - energy_previous) / energy_previous,
             )
             energy_previous = energy
 
     return energy, energy0
 
 
+@njit(cache=True)
 def compute_kinetic_energy(masses, velocities):
     return 0.5 * np.sum(masses * np.sum(velocities ** 2, 1))
 
 
+@njit(cache=True)
 def compute_potential_energy(masses, positions):
     nb_particules = masses.size
     pe = 0.0
@@ -86,11 +126,12 @@ def compute_potential_energy(masses, positions):
             mass0 = masses[index_p0]
             mass1 = masses[index_p1]
             vector = positions[index_p0] - positions[index_p1]
-            distance = sqrt(sum(vector ** 2))
+            distance = compute_distance(vector)
             pe -= (mass0 * mass1) / distance
     return pe
 
 
+@njit(cache=True)
 def compute_energies(masses, positions, velocities):
     energy_kin = compute_kinetic_energy(masses, velocities)
     energy_pot = compute_potential_energy(masses, positions)

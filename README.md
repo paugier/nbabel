@@ -24,8 +24,7 @@ To give an idea of what it gives compared to the figure published in Nature Astr
 **Note:** these benchmarks are run sequentially with a Intel(R) Core(TM)
 i5-8400 CPU @ 2.80GHz.
 
-**Note 2:** With Numba (environment variable `TRANSONIC_BACKEND="numba"`), the
-elapsed times are 55 s and 206 s, respectively.
+**Note 2:** With Numba, the elapsed times are 46 s and 181 s, respectively.
 
 ## Smaller benchmarks between different Python solutions
 
@@ -35,11 +34,11 @@ Here are the elapsed times (in s):
 
 | Transonic-Pythran | Transonic-Numba | High-level Numpy | PyPy OOP | PyPy lists |
 |-------------------|-----------------|------------------|----------|------------|
-| 0.48              | 3.91            | 686              |  3.4     |  4.3       |
+| 0.48              |  0.87           | 686              |  3.4     |  4.3       |
 
 For comparison, we have for this case `{"c++": 0.85, "Fortran": 0.62, "Julia":
 2.57}`.
 
 Note that just adding `from transonic import jit` to the simple high-level
-Numpy code and then decorating the function `compute_accelerations` with
-`@jit`, the elapsed time decreases to 8 s (a x85 speedup!, with Pythran 0.9.8).
+Numpy code and then decorating the function `loop` with `@jit`, the elapsed
+time decreases to 2.4 s (a x280 speedup!, with Pythran 0.9.8).
