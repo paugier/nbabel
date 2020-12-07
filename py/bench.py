@@ -30,15 +30,11 @@ def advance_velocities(velocities, accelerations, accelerations1, time_step):
 
 
 def compute_distance(vec):
-    tmp = 0.0
-    for i in range(3):
-        tmp += vec[i] ** 2
-    return sqrt(tmp)
-    # with pythran>=9.8, same perf with
-    # return sqrt(sum(vec ** 2))
+    # with pythran>=0.9.8, good perf with
+    return sqrt(sum(vec ** 2))
 
 
-def compute_accelerations_lowlevel(accelerations, masses, positions):
+def compute_accelerations(accelerations, masses, positions):
     nb_particules = masses.size
     vector = np.empty(3)
     for index_p0 in range(nb_particules - 1):
@@ -55,62 +51,6 @@ def compute_accelerations_lowlevel(accelerations, masses, positions):
                 accelerations[index_p1, i] += coef * mass0 * vector[i]
 
 
-def compute_accelerations(accelerations, masses, positions):
-    nb_particules = masses.size
-    for index_p0 in range(nb_particules - 1):
-        position0 = positions[index_p0]
-        mass0 = masses[index_p0]
-        for index_p1 in range(index_p0 + 1, nb_particules):
-            mass1 = masses[index_p1]
-            vector = position0 - positions[index_p1]
-            distance = sqrt(sum(vector ** 2))
-            coef = 1.0 / distance ** 3
-            accelerations[index_p0] -= coef * mass1 * vector
-            accelerations[index_p1] += coef * mass0 * vector
-
-
-def compute_accelerations_alt(accelerations, masses, positions):
-    """
-    Alternative implementation (more computation but better for OMP)
-
-    It seems that the C++ implementation uses this method.
-    """
-    nb_particules = masses.size
-    for index_p0 in range(nb_particules):
-        position0 = positions[index_p0]
-        acceleration = np.zeros_like(position0)
-        for index_p1 in range(nb_particules):
-            if index_p1 == index_p0:
-                continue
-            vector = position0 - positions[index_p1]
-            distance = sqrt(sum(vector ** 2))
-            acceleration -= (masses[index_p1] / distance ** 3) * vector
-        accelerations[index_p0] = acceleration
-
-
-def compute_accelerations_alt_lowlevel(accelerations, masses, positions):
-    """
-    Alternative implementation (more computation but better for OMP)
-
-    It seems that the C++ implementation uses this method.
-    """
-    nb_particules = masses.size
-    vector = np.empty(3)
-    for index_p0 in range(nb_particules):
-        position0 = positions[index_p0]
-        acceleration = np.zeros_like(position0)
-        for index_p1 in range(nb_particules):
-            if index_p1 == index_p0:
-                continue
-            for i in range(3):
-                vector[i] = position0[i] - positions[index_p1, i]
-            distance = compute_distance(vector)
-            for i in range(3):
-                acceleration[i] -= (masses[index_p1] / distance ** 3) * vector[i]
-        for i in range(3):
-            accelerations[index_p0, i] = acceleration[i]
-
-
 @boost
 def loop(
     time_step: float,
@@ -123,12 +63,7 @@ def loop(
     accelerations = np.zeros_like(positions)
     accelerations1 = np.zeros_like(positions)
 
-    compute_acc = compute_accelerations_lowlevel
-    # compute_acc = compute_accelerations_alt_lowlevel
-    # compute_acc = compute_accelerations
-    # compute_acc = compute_accelerations_alt
-
-    compute_acc(accelerations, masses, positions)
+    compute_accelerations(accelerations, masses, positions)
 
     time = 0.0
     energy0, _, _ = compute_energies(masses, positions, velocities)
@@ -139,7 +74,7 @@ def loop(
         # swap acceleration arrays
         accelerations, accelerations1 = accelerations1, accelerations
         accelerations.fill(0)
-        compute_acc(accelerations, masses, positions)
+        compute_accelerations(accelerations, masses, positions)
         advance_velocities(velocities, accelerations, accelerations1, time_step)
         time += time_step
 
@@ -147,13 +82,11 @@ def loop(
             energy, energy_kin, energy_pot = compute_energies(
                 masses, positions, velocities
             )
-            # no f-strings and format because not supported by Pythran
+            # f-strings supported by Pythran>=0.9.8
             print(
-                "t = %4.2f, E = %.6f, " % (time_step * step, energy)
-                + "dE/E = %+.6e" % ((energy - energy_previous) / energy_previous)
+                f"t = {time_step * step:.2f}, E = {energy:.10f}, "
+                f"dE/E = {(energy - energy_previous) / energy_previous:.10f}"
             )
-            # alternative for Numba (doesn't support string formatting!)
-            # print(time_step * step, energy, (energy - energy_previous) / energy_previous)
             energy_previous = energy
 
     return energy, energy0

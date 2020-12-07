@@ -12,7 +12,7 @@ and have recently been used in an article published in Nature Astronomy
 ([Zwart, 2020](https://arxiv.org/pdf/2009.11295.pdf)). The implementation in
 Python-Numpy is very simple, but uses
 [Transonic](https://transonic.readthedocs.io) and
-[Pythran](https://pythran.readthedocs.io).
+[Pythran](https://pythran.readthedocs.io) (>=0.9.8).
 
 To run these benchmarks, go into the different directories and run `make
 bench1k` or `make bench2k`.
