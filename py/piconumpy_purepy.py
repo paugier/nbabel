@@ -2,6 +2,11 @@ class array:
     __slots__ = ["data", "size"]
 
     def __init__(self, data):
+        if isinstance(data, list):
+            self.data = data
+            self.size = len(data)
+            return
+
         self.data = list(float(number) for number in data)
         self.size = len(self.data)
 
@@ -50,11 +55,11 @@ class array:
 
 
 def empty(size):
-    return array([0] * size)
+    return array([0.0] * size)
 
 
 def zeros(size):
-    return array([0] * size)
+    return array([0.0] * size)
 
 
 class Vectors(array):
