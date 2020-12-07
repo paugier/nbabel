@@ -35,6 +35,15 @@ class Cluster(list):
         return sum(particle.ke for particle in self)
 
     @property
+    def pe(self):
+        pe = 0.0
+        for p1, p2 in combinations(self, 2):
+            vector = p1.position - p2.position
+            distance = sqrt((vector ** 2).sum())
+            pe -= (p1.mass * p2.mass) / distance
+        return pe
+
+    @property
     def energy(self):
         return self.ke + self.pe
 
@@ -47,16 +56,12 @@ class Cluster(list):
         for particle in self:
             particle.acceleration1 = particle.acceleration
             particle.acceleration = np.array([0.0, 0.0, 0.0])
-        pe = 0.0
         for p1, p2 in combinations(self, 2):
             vector = p1.position - p2.position
             distance_square = (vector ** 2).sum()
-            distance = sqrt(distance_square)
-            distance_cube = distance_square * distance
+            distance_cube = distance_square * sqrt(distance_square)
             p1.acceleration -= (p2.mass / distance_cube) * vector
             p2.acceleration += (p1.mass / distance_cube) * vector
-            pe -= (p1.mass * p2.mass) / distance
-        self.pe = pe
 
     def __advance_positions(self, dt):
         for p in self:
@@ -85,11 +90,12 @@ if __name__ == "__main__":
     for step in range(1, int(tend / dt + 1)):
         cluster.step(dt)
         if not step % 100:
+            energy = cluster.energy
             print(
-                f"t = {dt * step:.2f}, E = {cluster.energy:.10f}, "
-                f"dE/E = {(cluster.energy - old_energy) / old_energy:.10f}"
+                f"t = {dt * step:.2f}, E = {energy:.10f}, "
+                f"dE/E = {(energy - old_energy) / old_energy:.10f}"
             )
-            old_energy = cluster.energy
-    print(f"Final dE/E = {(cluster.energy - energy0) / energy0:.6e}")
+            old_energy = energy
+    print(f"Final dE/E = {(energy - energy0) / energy0:.6e}")
 
     print(f"run in {timedelta(seconds=perf_counter()-t_start)}")
