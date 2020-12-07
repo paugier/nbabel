@@ -50,9 +50,11 @@ class Cluster(list):
         pe = 0.0
         for p1, p2 in combinations(self, 2):
             vector = p1.position - p2.position
-            distance = sqrt((vector ** 2).sum())
-            p1.acceleration -= (p2.mass / distance ** 3) * vector
-            p2.acceleration += (p1.mass / distance ** 3) * vector
+            distance_square = (vector ** 2).sum()
+            distance = sqrt(distance_square)
+            distance_cube = distance_square * distance
+            p1.acceleration -= (p2.mass / distance_cube) * vector
+            p2.acceleration += (p1.mass / distance_cube) * vector
             pe -= (p1.mass * p2.mass) / distance
         self.pe = pe
 

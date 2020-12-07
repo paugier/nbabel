@@ -37,6 +37,11 @@ def compute_distance(vec):
     return sqrt(vec[0] ** 2 + vec[1] ** 2 + vec[2] ** 2)
 
 
+def compute_distance_cube(vec):
+    d2 = vec[0] ** 2 + vec[1] ** 2 + vec[2] ** 2
+    return d2 * sqrt(d2)
+
+
 def compute_accelerations_lowlevel(accelerations, masses, positions):
     nb_particules = masses.size
     for index_p0 in range(nb_particules - 1):
@@ -46,9 +51,9 @@ def compute_accelerations_lowlevel(accelerations, masses, positions):
             mass1 = masses[index_p1]
             position1 = positions.get_vector(index_p1)
             vector = position0 - position1
-            distance = compute_distance(vector)
-            coef_m1 = mass1 / distance ** 3
-            coef_m0 = mass0 / distance ** 3
+            distance_cube = compute_distance_cube(vector)
+            coef_m1 = mass1 / distance_cube
+            coef_m0 = mass0 / distance_cube
 
             accelerations[3 * index_p0] -= coef_m1 * vector[0]
             accelerations[3 * index_p0 + 1] -= coef_m1 * vector[1]
@@ -86,16 +91,11 @@ def loop(
         time += time_step
 
         if not step % 100:
-            energy, energy_kin, energy_pot = compute_energies(
-                masses, positions, velocities
-            )
-            # no f-strings and format because not supported by Pythran
+            energy, _, _ = compute_energies(masses, positions, velocities)
             print(
-                "t = %4.2f, E = %.6f, " % (time_step * step, energy)
-                + "dE/E = %+.6e" % ((energy - energy_previous) / energy_previous)
+                f"t = {time_step * step:4.2f}, E = {energy:.6f}, "
+                f"dE/E = {(energy - energy_previous) / energy_previous:+.6e}"
             )
-            # alternative for Numba (doesn't support string formatting!)
-            # print(time_step * step, energy, (energy - energy_previous) / energy_previous)
             energy_previous = energy
 
     return energy, energy0
@@ -111,12 +111,12 @@ def compute_potential_energy(masses, positions):
     nb_particules = masses.size
     pe = 0.0
     for index_p0 in range(nb_particules - 1):
+        mass0 = masses[index_p0]
+        position0 = positions.get_vector(index_p0)
         for index_p1 in range(index_p0 + 1, nb_particules):
-            mass0 = masses[index_p0]
             mass1 = masses[index_p1]
-            position0 = positions.get_vector(index_p0)
             position1 = positions.get_vector(index_p1)
-            vector = [p0 - p1 for p0, p1 in zip(position0, position1)]
+            vector = position0 - position1
             distance = compute_distance(vector)
             pe -= (mass0 * mass1) / distance
     return pe
