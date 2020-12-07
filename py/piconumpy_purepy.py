@@ -86,7 +86,7 @@ class array:
         if len(self.data) == 3 and len(other) == 3:
             self.data[0] += other[0]
             self.data[1] += other[1]
-            self.data[2] += other[1]
+            self.data[2] += other[2]
             return self
         for index, value in enumerate(other):
             self.data[index] += value
@@ -96,7 +96,7 @@ class array:
         if len(self.data) == 3 and len(other) == 3:
             self.data[0] -= other[0]
             self.data[1] -= other[1]
-            self.data[2] -= other[1]
+            self.data[2] -= other[2]
             return self
         for index, value in enumerate(other):
             self.data[index] -= value
