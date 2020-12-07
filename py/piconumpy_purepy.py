@@ -119,7 +119,7 @@ def zeros(size):
 class Vectors(array):
     def get_vector(self, index_part):
         start = 3 * index_part
-        return array([self.data[start], self.data[start + 1], self.data[start + 2]])
+        return array(self.data[start : start + 3])
 
     def fill(self, value):
         for i in range(self.size):
