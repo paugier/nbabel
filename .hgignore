@@ -8,3 +8,4 @@ fortran/nbabel
 fortran/output*
 
 *.mod
+rust/nbabel

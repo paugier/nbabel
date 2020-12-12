@@ -40,9 +40,9 @@ def compute_accelerations(accelerations, masses, positions):
             accelerations[index_p0] -= coef * mass1 * vector
             accelerations[index_p1] += coef * mass0 * vector
 
+
 # @jit
 def loop(time_step, nb_steps, masses, positions, velocities):
-
     accelerations = np.zeros_like(positions)
     accelerations1 = np.zeros_like(positions)
 

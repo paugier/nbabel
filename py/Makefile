@@ -12,10 +12,10 @@ bench_pypy:
 	pypy bench_pypy.py ../data/input16
 
 bench1k: __pythran__/bench.py
-	python bench.py ../data/input1k
+	time python bench.py ../data/input1k
 
 bench2k: __pythran__/bench.py
-	python bench.py ../data/input2k
+	time python bench.py ../data/input2k
 
 bench256: __pythran__/bench.py
 	python bench.py ../data/input256

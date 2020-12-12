@@ -173,7 +173,7 @@ fn main() {
         if step % 100 == 0 {
             energy = bodies.compute_energy(pe);
             println!(
-                "t = {}, E = {},  dE/E = {}",
+                "t = {:5.2}, E = {:.10},  dE/E = {:+.10}",
                 dt * step as f64,
                 energy,
                 (energy - old_energy) / old_energy

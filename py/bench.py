@@ -79,13 +79,11 @@ def loop(
         time += time_step
 
         if not step % 100:
-            energy, energy_kin, energy_pot = compute_energies(
-                masses, positions, velocities
-            )
+            energy, _, _ = compute_energies(masses, positions, velocities)
             # f-strings supported by Pythran>=0.9.8
             print(
-                f"t = {time_step * step:.2f}, E = {energy:.10f}, "
-                f"dE/E = {(energy - energy_previous) / energy_previous:.10f}"
+                f"t = {time_step * step:5.2f}, E = {energy:.10f}, "
+                f"dE/E = {(energy - energy_previous) / energy_previous:+.10f}"
             )
             energy_previous = energy
 

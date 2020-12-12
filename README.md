@@ -1,11 +1,13 @@
 # Benchmark N-Body system
 
-Here are some elapsed times (in s) for 4 implementations.
+Here are some elapsed times (in s) for 5 **implementations** (of course, these
+numbers do not characterized the languages but only particular implementations
+in some languages).
 
-| # particles |  Py | C++ | Fortran | Julia |
-|-------------|-----|-----|---------|-------|
-|     1024    |  29 |  55 |   41    |   45  |
-|     2048    | 123 | 231 |  166    |  173  |
+| # particles |  Py | C++ | Fortran | Julia | Rust |
+|-------------|-----|-----|---------|-------|------|
+|     1024    |  30 |  55 |   41    |   45  |   34 |
+|     2048    | 124 | 231 |  166    |  173  |  137 |
 
 The implementations in C++, Fortran and Julia come from https://www.nbabel.org/
 and have recently been used in an article published in Nature Astronomy
@@ -45,4 +47,5 @@ For comparison, we have for this case `{"c++": 0.85, "Fortran": 0.62, "Julia":
 
 Note that just adding `from transonic import jit` to the simple high-level
 Numpy code and then decorating the function `loop` with `@jit`, the elapsed
-time decreases to 2.4 s (a x280 speedup!, with Pythran 0.9.8).
+time decreases to 2.1 s (a ~ x300 speedup!, with Pythran 0.9.8).
+

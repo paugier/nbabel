@@ -12,7 +12,7 @@ bench1k: nbabel
 bench2k: nbabel
 		time ./nbabel ../data/input2k
 
-nbabel: 
+nbabel: nbabel.rs
 	rustc -C opt-level=3 nbabel.rs
 
 clean:
