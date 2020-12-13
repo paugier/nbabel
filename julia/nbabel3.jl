@@ -171,6 +171,6 @@ export NBabel
 
 end
 
-using .NB
-NBabel(ARGS[1],show=parse(Bool,ARGS[2]))
+#using .NB
+#NBabel(ARGS[1],show=parse(Bool,ARGS[2]))
 
