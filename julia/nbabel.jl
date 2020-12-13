@@ -1,3 +1,5 @@
+module NB
+
 """
 This is an implementation of the NBabel N-body problem.
 See nbabel.org for more information.
@@ -186,8 +188,10 @@ function read_ICs(fname::String)
     return id, mass, pos, vel
 end
 
+export NBabel
 
-function main(args)
-    NBabel(args[1], show=true)
 end
-main(ARGS)
+
+using .NB
+NBabel(ARGS[1],show=parse(Bool,ARGS[2]))
+
