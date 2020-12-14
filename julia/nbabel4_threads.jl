@@ -1,24 +1,8 @@
 
 module NB
 
-"""
-This is an implementation of the NBabel N-body problem.
-See nbabel.org for more information.
-This is 'naive & native' Julia with type and loop annotations for
-fastmath and vectorization, because this is really is no effort.
-Without annotations the code will be as slow as naive Python/IDL.
-    include("nbabel.jl")
-    NBabel("IC/input128", show=true)
-Julius Donnert INAF-IRA 2017
-"""
-
 using Printf
 using DelimitedFiles
-using StaticArrays
-
-tbeg = 0.0
-tend = 10.0
-dt = 0.001
 
 struct Particle
   x :: Float64
@@ -33,10 +17,10 @@ import Base.+, Base.-, Base.*, Base.zero
 -(p1::Particle,p2::Particle) = Particle(p1.x-p2.x,p1.y-p2.y,p1.z-p2.z,p1.w-p2.w)
 +(p1::Particle,p2::Particle) = Particle(p1.x+p2.x,p1.y+p2.y,p1.z+p2.z,p1.w+p2.w)
 *(c,p1::Particle) = Particle(c*p1.x,c*p1.y,c*p1.z,c*p1.w)
-*(p1::Particle,c) = Particle(c*p1.x,c*p1.y,c*p1.z,c*p1.w)
+*(p1::Particle,c) = c*p1
 zero(T::Type{Particle}) = Particle(0,0,0,0)
 
-function NBabel(fname::String; tend = tend, dt = dt, show=false)
+function NBabel(fname::String; tend = 10., dt = 0.001, show=false)
 
     if show
 	    println("Reading file : $fname")
@@ -47,10 +31,10 @@ function NBabel(fname::String; tend = tend, dt = dt, show=false)
     return NBabelCalcs(ID, mass, pos, vel, tend, dt, show)
 end
 
-function NBabelCalcs(ID, mass, pos, vel, tend = tend, dt = dt, show=false)
+function NBabelCalcs(ID, mass, pos, vel, tend = 10., dt = 0.001, show=false)
     nthreads = Threads.nthreads()
     acc_parallel = Array{eltype(vel)}(undef,length(vel),nthreads)
-    acc = compute_acceleration(pos, mass, acc_parallel)
+    acc = compute_acceleration!(pos, mass, acc_parallel)
     last_acc = copy(acc)
 
     Ekin, Epot = compute_energy(pos, vel, mass)
@@ -61,13 +45,13 @@ function NBabelCalcs(ID, mass, pos, vel, tend = tend, dt = dt, show=false)
 
     while t < tend
 
-        pos = update_positions(pos, vel, acc, dt)
+        update_positions!(pos, vel, acc, dt)
 
         last_acc .= acc
 
-        acc = compute_acceleration(pos, mass, acc_parallel)
+        acc = compute_acceleration!(pos, mass, acc_parallel)
 
-        vel = update_velocities(vel, acc, last_acc, dt)
+        update_velocities!(vel, acc, last_acc, dt)
         
         t += dt
         nstep += 1
@@ -84,33 +68,30 @@ function NBabelCalcs(ID, mass, pos, vel, tend = tend, dt = dt, show=false)
 
     Ekin, Epot = compute_energy(pos, vel, mass)
     Etot = Ekin + Epot
-    return (; Ekin, Epot, Etot)
-    # return size(pos,1)
+    return Ekin, Epot, Etot
 end
 
-function update_positions(pos, vel, acc, dt)
-    N = length(pos)
-    for i in 1:N
+function update_positions!(pos, vel, acc, dt)
+    for i in eachindex(pos)
         pos[i] = (0.5 * acc[i] * dt + vel[i])*dt + pos[i]
     end
-    return pos
+    nothing
 end
 
-function update_velocities(vel, acc, last_acc, dt)
-    N = length(vel)
-    for i in 1:N
+function update_velocities!(vel, acc, last_acc, dt)
+    for i in eachindex(vel)
         vel[i] = vel[i] + 0.5 * dt * (acc[i] + last_acc[i])
     end
-    return vel
+    nothing
 end
 
-"""
-Force calculation.
-"""
-function compute_acceleration(pos, mass, acc)
+#
+#Force calculation.
+#
+function compute_acceleration!(pos, mass, acc)
     nthreads = Threads.nthreads()
     N = length(pos)
-    for i in 1:N
+    @inbounds for i in 1:N
       for j in 1:nthreads
         acc[i,j] = zero(eltype(acc))
       end
@@ -124,7 +105,7 @@ function compute_acceleration(pos, mass, acc)
             acc[j,id] = acc[j,id] + mass[j] * rinv3 * dr
         end
     end
-    for i in 1:N
+    @inbounds for i in 1:N
       for j in 2:nthreads
         acc[i,1] += acc[i,j]
       end
@@ -133,10 +114,8 @@ function compute_acceleration(pos, mass, acc)
 end
 
 
-"""
-Kinetic and potential energy.
-"""
-function compute_energy(pos, vel, mass)
+# Kinetic and potential energy.
+@inbounds function compute_energy(pos, vel, mass)
     N = length(vel)
 
     Ekin = 0.0
