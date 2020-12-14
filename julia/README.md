@@ -1,5 +1,4 @@
-
-## Alternative implementations of the Julia version:
+## Alternative implementations of the Julia version
 
 `nbabel.jl` is the implementation mentioned in the main README.
 
@@ -10,14 +9,14 @@ Float64 fields to maximize the performance of SIMD operations.
 
 `nbabel4_threads.jl`: runs with one or multiple processors. (use the `-tN` flag)
 
-Benchmarks measure the time reported by sytem time, as output by the `Makefile` commands.
+Benchmarks measure the time reported by system time, as output by the `Makefile` commands.
 
 `@inbounds` flags are added to O(N^2) loops, but the benchmark appears to be somewhat
 dependent on bounds checking anyway, particularly for the parallel version, which
 allocates larger arrays for non-concurrent sums. Thus, two benchmarks were performed, with and
 without a global flag to avoid bounds checking:
 
-### Single-threaded in a Intel(R) Core(TM) i7-8550U CPU @ 1.80GHz:
+### Single-threaded in a Intel(R) Core(TM) i7-8550U CPU @ 1.80GHz
 
 With julia flags `-O3 --check-bounds=no`:
 
@@ -50,7 +49,7 @@ With julia flags `-O3` only:
 |     1024    |   24.9             |
 |     2048    |   91.7             |
 
-- Differences smaller than about 10% are not probably not significant.
+- Differences smaller than about 10% are probably not significant.
 
 ## Requirements
 
@@ -62,7 +61,3 @@ julia> ] add DelimitedFiles
 ```
 
 (Julia version 1.5 or greater is recommended)
-
-
-
-

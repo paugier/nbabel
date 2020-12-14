@@ -8,17 +8,15 @@ struct Particle
   x :: Float64
   y :: Float64
   z :: Float64
-  w :: Float64
 end
-Particle(x,y,z) = Particle(x,y,z,0)
-norm2(p :: Particle) = p.x^2 + p.y^2 + p.z^2 + p.w^2
+norm2(p :: Particle) = p.x^2 + p.y^2 + p.z^2
 norm(p :: Particle) = sqrt(norm2(p))
-import Base: +, -, *, zero
--(p1::Particle,p2::Particle) = Particle(p1.x-p2.x,p1.y-p2.y,p1.z-p2.z,p1.w-p2.w)
-+(p1::Particle,p2::Particle) = Particle(p1.x+p2.x,p1.y+p2.y,p1.z+p2.z,p1.w+p2.w)
-*(c::Real, p1::Particle) = Particle(c*p1.x,c*p1.y,c*p1.z,c*p1.w)
-*(p1::Particle, c::Real) = c*p1
-zero(T::Type{Particle}) = Particle(0,0,0,0)
+import Base.+, Base.-, Base.*, Base.zero
+-(p1::Particle,p2::Particle) = Particle(p1.x-p2.x,p1.y-p2.y,p1.z-p2.z)
++(p1::Particle,p2::Particle) = Particle(p1.x+p2.x,p1.y+p2.y,p1.z+p2.z)
+*(c,p1::Particle) = Particle(c*p1.x,c*p1.y,c*p1.z)
+*(p1::Particle,c) = c*p1
+zero(T::Type{Particle}) = Particle(0,0,0)
 
 function NBabel(fname::String; tend = 10., dt = 0.001, show=false)
 
@@ -26,13 +24,13 @@ function NBabel(fname::String; tend = 10., dt = 0.001, show=false)
 	    println("Reading file : $fname")
     end
 
-    mass, pos, vel = read_ICs(fname)
+    ID, mass, pos, vel = read_ICs(fname)
 
-    return NBabelCalcs(mass, pos, vel, tend = tend, dt = dt, show = show)
+    return NBabelCalcs(ID, mass, pos, vel, tend, dt, show)
 end
 
-function NBabelCalcs(mass, pos, vel; tend = 10., dt = 0.001, show=false)
-    acc = Vector{eltype(vel)}(undef,length(vel))
+function NBabelCalcs(ID, mass, pos, vel, tend = 10., dt = 0.001, show=false)
+    acc = Array{eltype(vel)}(undef,length(vel))
     compute_acceleration!(pos, mass, acc)
     last_acc = copy(acc)
 
@@ -136,11 +134,11 @@ function read_ICs(fname::String)
 
     N = size(ICs,1)
 
-    pos = Vector{Particle}(undef, N)
-    vel = Vector{Particle}(undef, N)
+    pos = Array{Particle}(undef, N)
+    vel = Array{Particle}(undef, N)
 
-    mass = Vector{Float64}(undef,N)
-    mass .= ICs[:,2]
+    id = @view ICs[:, 1]
+    mass = @view ICs[:, 2]
 
     for i in axes(ICs, 1)
         pos[i] = Particle(ICs[i, 3], ICs[i, 4], ICs[i, 5])
@@ -150,10 +148,9 @@ function read_ICs(fname::String)
         vel[i] = Particle(ICs[i, 6], ICs[i, 7], ICs[i, 8])
     end
 
-    return mass, pos, vel
+    return id, mass, pos, vel
 end
 
 export NBabel
 
 end
-
