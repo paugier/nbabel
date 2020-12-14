@@ -1,4 +1,12 @@
 
+bench_table:
+	time julia -O3 -- run.jl nbabel4_serial.jl ../data/input1k true
+	time julia -O3 -- run.jl nbabel4_serial.jl ../data/input2k true
+
+bench_part4:
+	time julia -O3 -- run.jl nbabel4_serial.jl ../data/input1k false
+	time julia -O3 -- run.jl nbabel_oop_serial.jl ../data/input1k false
+
 bench1k:
 	time julia -O3 -- run.jl nbabel.jl ../data/input1k true
 	time julia -O3 -- run.jl nbabel4_serial.jl ../data/input1k true

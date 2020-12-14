@@ -8,17 +8,15 @@ struct Particle
   x :: Float64
   y :: Float64
   z :: Float64
-  w :: Float64
 end
-Particle(x,y,z) = Particle(x,y,z,0)
-norm2(p :: Particle) = p.x^2 + p.y^2 + p.z^2 + p.w^2
+norm2(p :: Particle) = p.x^2 + p.y^2 + p.z^2
 norm(p :: Particle) = sqrt(norm2(p))
 import Base.+, Base.-, Base.*, Base.zero
--(p1::Particle,p2::Particle) = Particle(p1.x-p2.x,p1.y-p2.y,p1.z-p2.z,p1.w-p2.w)
-+(p1::Particle,p2::Particle) = Particle(p1.x+p2.x,p1.y+p2.y,p1.z+p2.z,p1.w+p2.w)
-*(c,p1::Particle) = Particle(c*p1.x,c*p1.y,c*p1.z,c*p1.w)
+-(p1::Particle,p2::Particle) = Particle(p1.x-p2.x,p1.y-p2.y,p1.z-p2.z)
++(p1::Particle,p2::Particle) = Particle(p1.x+p2.x,p1.y+p2.y,p1.z+p2.z)
+*(c,p1::Particle) = Particle(c*p1.x,c*p1.y,c*p1.z)
 *(p1::Particle,c) = c*p1
-zero(T::Type{Particle}) = Particle(0,0,0,0)
+zero(T::Type{Particle}) = Particle(0,0,0)
 
 function NBabel(fname::String; tend = 10., dt = 0.001, show=false)
 
@@ -156,4 +154,3 @@ end
 export NBabel
 
 end
-

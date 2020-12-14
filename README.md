@@ -32,6 +32,11 @@ i5-8400 CPU @ 2.80GHz.
 1024 particles in 225 s, i.e. only 4.1 times slower than the C++ implementation
 (compared to ~50 times slower as shown in the figure taken from Zwart, 2020).
 
+**Note 4:** The directory "julia" contains some more advanced and faster
+implementations. The sequential optimized Julia implementation runs on my PC in
+27.2 s and 104.4 s, respectively (i.e. 1.1-1.2 times faster than our fast and
+simple Python implementation).
+
 ## Smaller benchmarks between different Python solutions
 
 We can also compare different solutions in Python. Since some solutions are
@@ -48,4 +53,3 @@ For comparison, we have for this case `{"c++": 0.85, "Fortran": 0.62, "Julia":
 Note that just adding `from transonic import jit` to the simple high-level
 Numpy code and then decorating the function `loop` with `@jit`, the elapsed
 time decreases to 2.1 s (a ~ x300 speedup!, with Pythran 0.9.8).
-
