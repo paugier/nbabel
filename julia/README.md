@@ -35,7 +35,7 @@ With julia flag `-O3` only:
 
 ### With 4 processors (the laptop has 4):
 
-With julia flags `-O3 --check-bounds=no -t3`:
+With julia flags `-O3 --check-bounds=no -t4`:
 
 | # particles | nbabel4_threads.jl |
 |-------------|--------------------|
