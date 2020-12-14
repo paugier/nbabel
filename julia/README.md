@@ -23,25 +23,32 @@ With julia flags `-O3 --check-bounds=no`:
 
 | # particles |  nbabel.jl | nbabel_serial.jl | nbabel4_threads.jl |
 |-------------|------------|------------------|--------------------|
-|     1024    |    50.7    |    29.1          |      30.0          |
-|     2048    |   180.5    |   109.1          |     110.8          |
+|     1024    |    50.2    |    31.1          |      34.4          |
+|     2048    |   201.5    |   120.1          |     109.3          |
 
 With julia flag `-O3` only:
 
 | # particles |  nbabel.jl | nbabel_serial.jl | nbabel4_threads.jl |
 |-------------|------------|------------------|--------------------|
-|     1024    |    46.7    |    29.8          |    47.1            |
-|     2048    |   205.7    |   131.9          |   173.8            |
+|     1024    |    48.1    |    28.0          |    36.6            |
+|     2048    |   188.5    |   111.8          |   147.7            |
 
 
-### With 3 processors (the laptop has 4):
+### With 4 processors (the laptop has 4):
 
 With julia flags `-O3 --check-bounds=no -t3`:
 
 | # particles | nbabel4_threads.jl |
 |-------------|--------------------|
-|     1024    |   20.6             |
-|     2048    |   80.2             |
+|     1024    |   19.9             |
+|     2048    |   82.1             |
+
+With julia flags `-O3` only:
+
+| # particles | nbabel4_threads.jl |
+|-------------|--------------------|
+|     1024    |   24.9             |
+|     2048    |   91.7             |
 
 - Differences smaller than about 10% are not probably not significant.
 
