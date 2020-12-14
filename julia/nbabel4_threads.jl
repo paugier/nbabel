@@ -88,22 +88,6 @@ end
 #
 #Force calculation.
 #
-
-function ij_pair(k)
-  j = Int(floor(-0.5+0.5*sqrt(1+8*(k-1)))+2)
-  i = Int(j*(3-j)/2+k-1)
-  return i,j
-end
-
-function add_acc!(ipair,it,pos,mass,acc)
-  i, j = ij_pair(ipair)
-  dr = pos[i] - pos[j]
-  rinv3 = 1/norm(dr)^3
-  acc[i,it] = acc[i,it] - mass[i] * rinv3 * dr
-  acc[j,it] = acc[j,it] + mass[j] * rinv3 * dr
-  nothing
-end
-
 function compute_acceleration!(pos, mass, acc)
     nthreads = Threads.nthreads()
     N = length(pos)
@@ -112,17 +96,14 @@ function compute_acceleration!(pos, mass, acc)
         acc[i,j] = zero(eltype(acc))
       end
     end
-    npairs = N*(N-1)/2
-    nthreads = Threads.nthreads()
-    n_per_thread = npairs÷nthreads 
-    @inbounds Threads.@threads for it in 1:nthreads 
-      @simd for ipair in 1:n_per_thread
-        ipair_thread = (it-1)*n_per_thread + ipair
-        add_acc!(ipair_thread,it,pos,mass,acc)
-      end
-    end
-    @inbounds @simd for ipair in nthreads*n_per_thread+1:npairs
-       add_acc!(ipair,1,pos,mass,acc)
+    @inbounds Threads.@threads for i = 1:N-1
+        id = Threads.threadid()
+        @simd for j = i+1:N
+            dr = pos[i] - pos[j]
+            rinv3 = 1/norm(dr)^3
+            acc[i,id] = acc[i,id] - mass[i] * rinv3 * dr
+            acc[j,id] = acc[j,id] + mass[j] * rinv3 * dr
+        end
     end
     @inbounds for i in 1:N
       for j in 2:nthreads
