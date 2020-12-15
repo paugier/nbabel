@@ -4,39 +4,39 @@ module NB
 using Printf
 using DelimitedFiles
 
-struct Particle
-  x :: Float64
-  y :: Float64
-  z :: Float64
-  w :: Float64
+struct Point4D
+    x::Float64
+    y::Float64
+    z::Float64
+    w::Float64
 end
-Particle(x,y,z) = Particle(x,y,z,0)
-norm2(p :: Particle) = p.x^2 + p.y^2 + p.z^2 + p.w^2
-norm(p :: Particle) = sqrt(norm2(p))
+Point4D(x,y,z) = Point4D(x, y, z, 0)
+norm2(vec::Point4D) = vec.x^2 + vec.y^2 + vec.z^2 + vec.w^2
+norm(vec::Point4D) = sqrt(norm2(vec))
 import Base: +, -, *, zero
--(p1::Particle,p2::Particle) = Particle(p1.x-p2.x,p1.y-p2.y,p1.z-p2.z,p1.w-p2.w)
-+(p1::Particle,p2::Particle) = Particle(p1.x+p2.x,p1.y+p2.y,p1.z+p2.z,p1.w+p2.w)
-*(c::Real, p1::Particle) = Particle(c*p1.x,c*p1.y,c*p1.z,c*p1.w)
-*(p1::Particle, c::Real) = c*p1
-zero(T::Type{Particle}) = Particle(0,0,0,0)
+-(vec1::Point4D,vec2::Point4D) = Point4D(vec1.x - vec2.x, vec1.y - vec2.y, vec1.z - vec2.z, vec1.w - vec2.w)
++(vec1::Point4D,vec2::Point4D) = Point4D(vec1.x + vec2.x, vec1.y + vec2.y, vec1.z + vec2.z, vec1.w + vec2.w)
+*(c::Real, vec1::Point4D) = Point4D(c * vec1.x, c * vec1.y, c * vec1.z, c * vec1.w)
+*(vec1::Point4D, c::Real) = c * vec1
+zero(T::Type{Point4D}) = Point4D(0, 0, 0, 0)
 
-function NBabel(fname::String; tend = 10., dt = 0.001, show=false)
+function NBabel(fname::String; tend=10., dt=0.001, show=false)
 
     if show
 	    println("Reading file : $fname")
     end
 
-    mass, pos, vel = read_ICs(fname)
+    masses, positions, velocities = read_ICs(fname)
 
-    return NBabelCalcs(mass, pos, vel, tend = tend, dt = dt, show = show)
+    return NBabelCalcs(masses, positions, velocities, tend=tend, dt=dt, show=show)
 end
 
-function NBabelCalcs(mass, pos, vel; tend = 10., dt = 0.001, show=false)
-    acc = Vector{eltype(vel)}(undef,length(vel))
-    compute_acceleration!(pos, mass, acc)
-    last_acc = copy(acc)
+function NBabelCalcs(masses, positions, velocities; tend=10., dt=0.001, show=false)
+    accelerations = Vector{eltype(velocities)}(undef, length(velocities))
+    compute_acceleration!(positions, masses, accelerations)
+    last_acc = copy(accelerations)
 
-    Ekin, Epot = compute_energy(pos, vel, mass)
+    Ekin, Epot = compute_energy(positions, velocities, masses)
     Etot_ICs = Ekin + Epot
     Etot_previous = Etot_ICs
 
@@ -45,43 +45,43 @@ function NBabelCalcs(mass, pos, vel; tend = 10., dt = 0.001, show=false)
 
     while t < tend
 
-        update_positions!(pos, vel, acc, dt)
+        update_positions!(positions, velocities, accelerations, dt)
 
-        last_acc .= acc
+        last_acc .= accelerations
 
-        compute_acceleration!(pos, mass, acc)
+        compute_acceleration!(positions, masses, accelerations)
 
-        update_velocities!(vel, acc, last_acc, dt)
+        update_velocities!(velocities, accelerations, last_acc, dt)
 
         t += dt
         nstep += 1
 
-        if show && nstep%100 == 1
+        if show && nstep % 100 == 1
 
-            Ekin, Epot = compute_energy(pos, vel, mass)
+            Ekin, Epot = compute_energy(positions, velocities, masses)
             Etot = Ekin + Epot
-            dE = (Etot - Etot_previous)/Etot_previous
+            dE = (Etot - Etot_previous) / Etot_previous
             Etot_previous = Etot
 
             @printf "t = %5.2f, Etot = %.10f, dE = %+.10f \n" t Etot dE
         end
     end
 
-    Ekin, Epot = compute_energy(pos, vel, mass)
+    Ekin, Epot = compute_energy(positions, velocities, masses)
     Etot = Ekin + Epot
     return Ekin, Epot, Etot
 end
 
-function update_positions!(pos, vel, acc, dt)
-    for i in eachindex(pos)
-        pos[i] = pos[i] + (0.5 * acc[i] * dt + vel[i])*dt
+function update_positions!(positions, velocities, accelerations, dt)
+    for i in eachindex(positions)
+        positions[i] = positions[i] + (0.5 * accelerations[i] * dt + velocities[i]) * dt
     end
     nothing
 end
 
-function update_velocities!(vel, acc, last_acc, dt)
-    for i in eachindex(vel)
-        vel[i] = vel[i] + 0.5 * dt * (acc[i] + last_acc[i])
+function update_velocities!(velocities, accelerations, last_acc, dt)
+    for i in eachindex(velocities)
+        velocities[i] = velocities[i] + 0.5 * dt * (accelerations[i] + last_acc[i])
     end
     nothing
 end
@@ -89,19 +89,19 @@ end
 #
 # Force calculation.
 #
-function compute_acceleration!(pos, mass, acc)
-    N = length(pos)
+function compute_acceleration!(positions, masses, accelerations)
+    N = length(positions)
 
-    @inbounds for i in eachindex(acc)
-      acc[i] = zero(eltype(acc))
+    @inbounds for i in eachindex(accelerations)
+        accelerations[i] = zero(eltype(accelerations))
     end
 
-    @inbounds for i = 1:N-1
-        @simd for j = i+1:N
-            dr = pos[i] - pos[j]
-            rinv3 = 1/norm(dr)^3
-            acc[i] = acc[i] - mass[i] * rinv3 * dr
-            acc[j] = acc[j] + mass[j] * rinv3 * dr
+    @inbounds for i = 1:N - 1
+        @simd for j = i + 1:N
+            dr = positions[i] - positions[j]
+            rinv3 = 1 / norm(dr)^3
+            accelerations[i] = accelerations[i] - masses[i] * rinv3 * dr
+            accelerations[j] = accelerations[j] + masses[j] * rinv3 * dr
         end
     end
     nothing
@@ -111,20 +111,20 @@ end
 #
 # Kinetic and potential energy.
 #
-function compute_energy(pos, vel, mass)
-    N = length(vel)
+function compute_energy(positions, velocities, masses)
+    N = length(velocities)
 
     Ekin = 0.0
     for i = 1:N
-        Ekin += 0.5 * mass[i] * norm2(vel[i])
+        Ekin += 0.5 * masses[i] * norm2(velocities[i])
     end
 
     Epot = 0.
-    @inbounds for i = 1:N-1
-        @simd for j = i+1:N
-            dr = pos[i] - pos[j]
-            rinv = 1/norm(dr)
-            Epot -= mass[i] * mass[j] * rinv
+    @inbounds for i = 1:N - 1
+        @simd for j = i + 1:N
+            dr = positions[i] - positions[j]
+            rinv = 1 / norm(dr)
+            Epot -= masses[i] * masses[j] * rinv
         end
     end
     return Ekin, Epot
@@ -134,26 +134,25 @@ function read_ICs(fname::String)
 
     ICs = readdlm(fname)
 
-    N = size(ICs,1)
+    N = size(ICs, 1)
 
-    pos = Vector{Particle}(undef, N)
-    vel = Vector{Particle}(undef, N)
+    positions = Vector{Point4D}(undef, N)
+    velocities = Vector{Point4D}(undef, N)
 
-    mass = Vector{Float64}(undef,N)
-    mass .= ICs[:,2]
+    masses = Vector{Float64}(undef, N)
+    masses .= ICs[:,2]
 
     for i in axes(ICs, 1)
-        pos[i] = Particle(ICs[i, 3], ICs[i, 4], ICs[i, 5])
+        positions[i] = Point4D(ICs[i, 3], ICs[i, 4], ICs[i, 5])
     end
 
     for i in axes(ICs, 1)
-        vel[i] = Particle(ICs[i, 6], ICs[i, 7], ICs[i, 8])
+        velocities[i] = Point4D(ICs[i, 6], ICs[i, 7], ICs[i, 8])
     end
 
-    return mass, pos, vel
+    return masses, positions, velocities
 end
 
 export NBabel
 
 end
-
