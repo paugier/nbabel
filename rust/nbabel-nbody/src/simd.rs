@@ -1,72 +1,14 @@
-/*
-The Computer Language Benchmarks Game
-https://salsa.debian.org/benchmarksgame-team/benchmarksgame/
-
-Contributed by Ilia Schelokov, modified by Darley Barreto with help of Rust discourse
-*/
-use std::default::Default;
-use std::ops::{Add, AddAssign, Mul, Sub, SubAssign};
+//! Based on https://github.com/rust-lang/packed_simd/blob/master/examples/nbody/src/simd.rs
 use std::path::Path;
-use std::{fs, mem, env};
+use std::{fs, mem};
 
-#[derive(Clone, Copy, Default)]
-struct Vec3D(f64, f64, f64);
-
-impl Vec3D {
-    fn sum_squares(&self) -> f64 {
-        self.0 * self.0 + self.1 * self.1 + self.2 * self.2
-    }
-}
-
-impl Add for Vec3D {
-    type Output = Vec3D;
-    fn add(self, rhs: Self) -> Self::Output {
-        Vec3D(self.0 + rhs.0, self.1 + rhs.1, self.2 + rhs.2)
-    }
-}
-
-impl Sub for &Vec3D {
-    type Output = Vec3D;
-    fn sub(self, rhs: Self) -> Self::Output {
-        Vec3D(self.0 - rhs.0, self.1 - rhs.1, self.2 - rhs.2)
-    }
-}
-
-impl Mul<&Vec3D> for f64 {
-    type Output = Vec3D;
-    fn mul(self, rhs: &Vec3D) -> Self::Output {
-        Vec3D(self * rhs.0, self * rhs.1, self * rhs.2)
-    }
-}
-
-impl Mul<Vec3D> for f64 {
-    type Output = Vec3D;
-    fn mul(self, rhs: Vec3D) -> Self::Output {
-        Vec3D(self * rhs.0, self * rhs.1, self * rhs.2)
-    }
-}
-
-impl AddAssign for Vec3D {
-    fn add_assign(&mut self, rhs: Self) {
-        self.0 += rhs.0;
-        self.1 += rhs.1;
-        self.2 += rhs.2;
-    }
-}
-
-impl SubAssign for Vec3D {
-    fn sub_assign(&mut self, rhs: Self) {
-        self.0 -= rhs.0;
-        self.1 -= rhs.1;
-        self.2 -= rhs.2;
-    }
-}
+use packed_simd::*;
 
 #[derive(Clone)]
 pub struct Particle {
-    position: Vec3D,
-    velocity: Vec3D,
-    acceleration: [Vec3D; 2],
+    position: f64x4,
+    velocity: f64x4,
+    acceleration: [f64x4; 2],
     mass: f64,
 }
 
@@ -88,11 +30,12 @@ impl Bodies {
     }
 
     pub fn compute_energy(&self, pe: f64) -> f64 {
-        pe + &self
+        let res: f64 = self
             .particles
             .iter()
-            .map(|p| 0.5 * p.mass * p.velocity.sum_squares())
-            .sum()
+            .map(|p| 0.5 * p.mass * (p.velocity*p.velocity).sum())
+            .sum();
+        pe + res
     }
 
     pub fn advance_velocities(&mut self, dt: f64) {
@@ -120,9 +63,10 @@ impl Bodies {
             particles = rest;
 
             for p2 in particles.iter_mut() {
-                let vector = &p1.position - &p2.position;
-                let distance = vector.sum_squares().sqrt();
-                let distance_cube = distance.powi(3);
+                let vector = p1.position - p2.position;
+                let norm2 = (vector*vector).sum();
+                let distance = norm2.sqrt();
+                let distance_cube = norm2 * distance;
 
                 p1.acceleration[0] -= (p2.mass / distance_cube) * vector;
                 p2.acceleration[0] += (p1.mass / distance_cube) * vector;
@@ -143,25 +87,23 @@ pub fn parse_row(line: &str) -> Particle {
         .collect();
 
     Particle {
-        position: Vec3D(row_vec[1], row_vec[2], row_vec[3]),
-        velocity: Vec3D(row_vec[4], row_vec[5], row_vec[6]),
-        acceleration: Default::default(),
+        position: f64x4::new(row_vec[1], row_vec[2], row_vec[3],0.),
+        velocity: f64x4::new(row_vec[4], row_vec[5], row_vec[6],0.),
+        acceleration: [f64x4::new(0.,0.,0.,0.), f64x4::new(0.,0.,0.,0.)],
         mass: row_vec[0],
     }
 }
 
-fn main() {
-    let path = env::args_os()
-        .nth(1)
-        .and_then(|s| s.into_string().ok())
-        .unwrap_or("../data/input128".to_string());
-
-    let mut bodies = Bodies::new(&path);
+pub fn run(path: &str) {
 
     let mut pe;
     let mut energy = 0.;
     let (tend, dt) = (10.0, 0.001); // end time, timestep
     let (mut old_energy, energy0) = (-0.25, -0.25);
+    
+    println!("Running SIMD version");
+
+    let mut bodies = Bodies::new(path);
 
     bodies.accelerate();
 
