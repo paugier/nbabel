@@ -15,5 +15,11 @@ fn main() {
         1 // SIMD algorithm
     };
 
-    nbabel_lib::run(&path, alg);
+    let n_threads: usize = if let Some(v) = std::env::args().nth(3) {
+        v.parse().expect("third argument must be a usize")
+    } else {
+        4
+    };
+
+    nbabel_lib::run(&path, alg, n_threads);
 }

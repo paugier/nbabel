@@ -6,14 +6,15 @@ use packed_simd::*;
 
 #[derive(Clone)]
 pub struct Particle {
-    position: f64x4,
-    velocity: f64x4,
-    acceleration: [f64x4; 2],
-    mass: f64,
+    pub position: f64x4,
+    pub velocity: f64x4,
+    pub acceleration: [f64x4; 2],
+    pub mass: f64,
 }
 
+
 pub struct Bodies {
-    particles: Vec<Particle>,
+    pub particles: Vec<Particle>,
 }
 
 impl Bodies {
@@ -89,7 +90,7 @@ pub fn parse_row(line: &str) -> Particle {
     Particle {
         position: f64x4::new(row_vec[1], row_vec[2], row_vec[3],0.),
         velocity: f64x4::new(row_vec[4], row_vec[5], row_vec[6],0.),
-        acceleration: [f64x4::new(0.,0.,0.,0.), f64x4::new(0.,0.,0.,0.)],
+        acceleration: [f64x4::splat(0.0);2],
         mass: row_vec[0],
     }
 }
@@ -112,17 +113,17 @@ pub fn run(path: &str) {
         pe = bodies.accelerate();
         bodies.advance_velocities(dt);
 
-        if step % 100 == 0 {
-            energy = bodies.compute_energy(pe);
-            println!(
-                "t = {:5.2}, E = {:.10},  dE/E = {:+.10}",
-                dt * step as f64,
-                energy,
-                (energy - old_energy) / old_energy
-            );
-            old_energy = energy;
-        }
+        // if step % 100 == 0 {
+        //     energy = bodies.compute_energy(pe);
+        //     println!(
+        //         "t = {:5.2}, E = {:.10},  dE/E = {:+.10}",
+        //         dt * step as f64,
+        //         energy,
+        //         (energy - old_energy) / old_energy
+        //     );
+        //     old_energy = energy;
+        // }
     }
 
-    println!("Final dE/E = {}", (energy - energy0) / energy0);
+    // println!("Final dE/E = {}", (energy - energy0) / energy0);
 }

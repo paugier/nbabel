@@ -5,6 +5,7 @@ edition = "2018"
 
 [dependencies]
 packed_simd = { version = "0.3.4", package = "packed_simd_2" }
+rayon = "1.5"
 
 [[bin]]
 name = "nbabel"

@@ -162,17 +162,17 @@ pub fn run(path: &str) {
         pe = bodies.accelerate();
         bodies.advance_velocities(dt);
 
-        if step % 100 == 0 {
-            energy = bodies.compute_energy(pe);
-            println!(
-                "t = {:5.2}, E = {:.10},  dE/E = {:+.10}",
-                dt * step as f64,
-                energy,
-                (energy - old_energy) / old_energy
-            );
-            old_energy = energy;
-        }
+        // if step % 100 == 0 {
+        //     energy = bodies.compute_energy(pe);
+        //     println!(
+        //         "t = {:5.2}, E = {:.10},  dE/E = {:+.10}",
+        //         dt * step as f64,
+        //         energy,
+        //         (energy - old_energy) / old_energy
+        //     );
+        //     old_energy = energy;
+        // }
     }
 
-    println!("Final dE/E = {}", (energy - energy0) / energy0);
+    // println!("Final dE/E = {}", (energy - energy0) / energy0);
 }
