@@ -1,2 +1,18 @@
 # vim temporary files
 *.swp
+
+**/__pycache__
+**/__pythran__/
+**/__numba__
+cpp/main
+fortran/nbabel
+fortran/output*
+
+*.mod
+rust/nbabel
+
+.vscode
+
+profile.png
+profile.pstats
+output.log

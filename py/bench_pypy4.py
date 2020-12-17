@@ -6,6 +6,15 @@ import pandas as pd
 
 
 class Point4D:
+    # not needed for PyPy
+    __slots__ = list("xyzw")
+
+    # not needed for PyPy but can be written
+    x: float
+    y: float
+    z: float
+    w: float
+
     def __init__(self, x, y, z, w=0.0):
         self.x = x
         self.y = y
@@ -49,7 +58,45 @@ class Point4D:
         self.w = 0.0
 
 
-class Points(list):
+class Points:
+    """
+    We would need a fixed size homogeneous mutable container.
+
+    In Julia, you can do::
+
+      positions = Vector{Point4D}(undef, N)
+
+    In Python, it would be nice to be able to do::
+
+      positions = Vector[Point4D].empty(N)
+
+    """
+
+    @classmethod
+    def from_list(cls, data):
+        return cls(len(data), type(data[0]), data=data)
+
+    @classmethod
+    def empty(cls, size, type_elem):
+        return cls(size, type_elem)
+
+    def __init__(self, size, type_elem, data=None):
+        if data is None:
+            self._data = [None] * size
+        else:
+            self._data = list(data).copy()
+
+        self.__iter__ = self._data.__iter__
+
+    def __getitem__(self, index):
+        return self._data[index]
+
+    def __setitem__(self, index, value):
+        self._data[index] = value
+
+    def __len__(self):
+        return len(self._data)
+
     def reset_to_0(self):
         for point in self:
             point.reset_to_0()
@@ -62,11 +109,11 @@ class Points(list):
 
 
 def zeros(size):
-    points = Points()
+    points = Points.empty(size, Point4D)
     i = 0
     while i < size:
+        points[i] = Point4D(0.0, 0.0, 0.0)
         i += 1
-        points.append(Point4D(0.0, 0.0, 0.0))
     return points
 
 
@@ -80,15 +127,15 @@ def load_input_data(path):
     velocities_np = df.loc[:, ["vx", "vy", "vz"]].values
 
     masses = []
-    positions = Points()
-    velocities = Points()
+    positions = []
+    velocities = []
 
     for index, mass in enumerate(masses_np):
         masses.append(float(mass))
         positions.append(Point4D(*[float(n) for n in positions_np[index]]))
         velocities.append(Point4D(*[float(n) for n in velocities_np[index]]))
 
-    return masses, positions, velocities
+    return masses, Points.from_list(positions), Points.from_list(velocities)
 
 
 def advance_positions(positions, velocities, accelerations, time_step):
@@ -104,6 +151,18 @@ def advance_velocities(velocities, accelerations, accelerations1, time_step):
 
 
 def compute_accelerations(accelerations, masses, positions):
+    """
+    This needs to be very efficient!!
+
+    In Julia, the loops are written::
+
+      @inbounds for i = 1:N - 1
+      @simd for j = i + 1:N
+
+    However, `@inbounds` and `@simd` do not seem to be very important for
+    performance in this case.
+
+    """
     nb_particules = len(masses)
     for i0 in range(nb_particules - 1):
         mass0 = masses[i0]
@@ -117,13 +176,7 @@ def compute_accelerations(accelerations, masses, positions):
             accelerations[i1] += mass0 / distance_cube * delta
 
 
-def loop(
-    time_step: float,
-    nb_steps: int,
-    masses,
-    positions,
-    velocities,
-):
+def loop(time_step: float, nb_steps: int, masses, positions, velocities):
 
     accelerations = zeros(len(positions))
     accelerations1 = zeros(len(positions))
