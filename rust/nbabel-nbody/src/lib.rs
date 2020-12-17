@@ -9,13 +9,11 @@
 
 pub mod scalar;
 pub mod simd;
-pub mod parallel_simd;
 
-pub fn run(path: &str, alg: usize, n_threads:usize) {
+pub fn run(path: &str, alg: usize) {
     match alg {
         0 => scalar::run(path),
         1 => simd::run(path),
-        2 => parallel_simd::run(path,n_threads),
         v => panic!("unknown algorithm value: {}", v),
     };
 }

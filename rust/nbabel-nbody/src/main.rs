@@ -1,7 +1,7 @@
 //! Based on https://github.com/rust-lang/packed_simd/blob/master/examples/nbody/src/main.rs
 #![deny(warnings, rust_2018_idioms)]
 
-use std::{env};
+use std::env;
 
 fn main() {
     let path = env::args_os()
@@ -15,11 +15,5 @@ fn main() {
         1 // SIMD algorithm
     };
 
-    let n_threads: usize = if let Some(v) = std::env::args().nth(3) {
-        v.parse().expect("third argument must be a usize")
-    } else {
-        4
-    };
-
-    nbabel_lib::run(&path, alg, n_threads);
+    nbabel_lib::run(&path, alg);
 }

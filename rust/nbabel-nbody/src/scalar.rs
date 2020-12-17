@@ -145,7 +145,6 @@ pub fn parse_row(line: &str) -> Particle {
 }
 
 pub fn run(path: &str) {
-
     let mut pe;
     let mut energy = 0.;
     let (tend, dt) = (10.0, 0.001); // end time, timestep

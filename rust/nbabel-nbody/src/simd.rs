@@ -12,7 +12,6 @@ pub struct Particle {
     mass: f64,
 }
 
-
 pub struct Bodies {
     particles: Vec<Particle>,
 }
@@ -34,7 +33,7 @@ impl Bodies {
         let res: f64 = self
             .particles
             .iter()
-            .map(|p| 0.5 * p.mass * (p.velocity*p.velocity).sum())
+            .map(|p| 0.5 * p.mass * (p.velocity * p.velocity).sum())
             .sum();
         pe + res
     }
@@ -65,7 +64,7 @@ impl Bodies {
 
             for p2 in particles.iter_mut() {
                 let vector = p1.position - p2.position;
-                let norm2 = (vector*vector).sum();
+                let norm2 = (vector * vector).sum();
                 let distance = norm2.sqrt();
                 let distance_cube = norm2 * distance;
 
@@ -80,7 +79,7 @@ impl Bodies {
     }
 }
 
-pub fn parse_row(line: &str) -> Particle {
+fn parse_row(line: &str) -> Particle {
     let row_vec: Vec<f64> = line
         .split(' ')
         .filter(|s| s.len() > 2)
@@ -88,20 +87,19 @@ pub fn parse_row(line: &str) -> Particle {
         .collect();
 
     Particle {
-        position: f64x4::new(row_vec[1], row_vec[2], row_vec[3],0.),
-        velocity: f64x4::new(row_vec[4], row_vec[5], row_vec[6],0.),
-        acceleration: [f64x4::splat(0.0);2],
+        position: f64x4::new(row_vec[1], row_vec[2], row_vec[3], 0.),
+        velocity: f64x4::new(row_vec[4], row_vec[5], row_vec[6], 0.),
+        acceleration: [f64x4::splat(0.0); 2],
         mass: row_vec[0],
     }
 }
 
 pub fn run(path: &str) {
-
     let mut pe;
     let mut energy = 0.;
     let (tend, dt) = (10.0, 0.001); // end time, timestep
     let (mut old_energy, energy0) = (-0.25, -0.25);
-    
+
     println!("Running SIMD version");
 
     let mut bodies = Bodies::new(path);
