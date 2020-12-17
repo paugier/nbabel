@@ -18,6 +18,22 @@ import Base: +, -, *, zero
 *(vec1::Point3D, c::Real) = c * vec1
 zero(T::Type{Point3D}) = Point3D(0, 0, 0)
 
+struct Point4D
+    x::Float64
+    y::Float64
+    z::Float64
+    w::Float64
+end
+Point4D(x,y,z) = Point4D(x, y, z, 0)
+norm2(vec::Point4D) = vec.x^2 + vec.y^2 + vec.z^2 + vec.w^2
+norm(vec::Point4D) = sqrt(norm2(vec))
+import Base: +, -, *, zero
+-(vec1::Point4D,vec2::Point4D) = Point4D(vec1.x - vec2.x, vec1.y - vec2.y, vec1.z - vec2.z, vec1.w - vec2.w)
++(vec1::Point4D,vec2::Point4D) = Point4D(vec1.x + vec2.x, vec1.y + vec2.y, vec1.z + vec2.z, vec1.w + vec2.w)
+*(c::Real, vec1::Point4D) = Point4D(c * vec1.x, c * vec1.y, c * vec1.z, c * vec1.w)
+*(vec1::Point4D, c::Real) = c * vec1
+zero(T::Type{Point4D}) = Point4D(0, 0, 0, 0)
+
 function NBabel(fname::String; tend=10., dt=0.001, show=false)
 
     if show
@@ -72,18 +88,21 @@ end
 
 function update_positions!(positions, velocities, accelerations, dt)
     for i in eachindex(positions)
-        positions[i] += (0.5 * accelerations[i] * dt + velocities[i]) * dt
+        positions[i] = positions[i] + (0.5 * accelerations[i] * dt + velocities[i]) * dt
     end
     nothing
 end
 
 function update_velocities!(velocities, accelerations, last_acc, dt)
     for i in eachindex(velocities)
-        velocities[i] += 0.5 * dt * (accelerations[i] + last_acc[i])
+        velocities[i] = velocities[i] + 0.5 * dt * (accelerations[i] + last_acc[i])
     end
     nothing
 end
 
+#
+# Force calculation.
+#
 function compute_acceleration!(positions, masses, accelerations)
     N = length(positions)
 
@@ -95,12 +114,14 @@ function compute_acceleration!(positions, masses, accelerations)
         for j = i + 1:N
             dr = positions[i] - positions[j]
             rinv3 = 1 / norm(dr)^3
-            accelerations[i] -= masses[i] * rinv3 * dr
-            accelerations[j] += masses[j] * rinv3 * dr
+            accelerations[i] = accelerations[i] - masses[i] * rinv3 * dr
+            accelerations[j] = accelerations[j] + masses[j] * rinv3 * dr
         end
     end
     nothing
 end
+
+
 
 #
 # Kinetic and potential energy.
@@ -130,7 +151,7 @@ function read_ICs(fname::String)
 
     N = size(ICs, 1)
 
-    Point = Point3D
+    Point = Point4D
 
     positions = Vector{Point}(undef, N)
     velocities = Vector{Point}(undef, N)

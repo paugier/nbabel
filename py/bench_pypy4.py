@@ -104,19 +104,7 @@ class Point3D(PointND):
         self.z = 0.0
 
 
-class Points(Vector[Point3D]):
-    """
-    We would need a fixed size homogeneous mutable container.
-
-    In Julia, you can do::
-
-      positions = Vector{Point4D}(undef, N)
-
-    In Python, it would be nice to be able to do::
-
-      positions = Vector[Point4D].empty(N)
-
-    """
+class Points(Vector):
 
     def reset_to_0(self):
         for point in self:
@@ -144,10 +132,11 @@ def load_input_data(path):
     positions = []
     velocities = []
 
-    Point = Points.dtype
+    Point = Point3D
+    Points_ = Points[Point]
 
-    positions = Points.empty(number_particles)
-    velocities = Points.empty(number_particles)
+    positions = Points_.empty(number_particles)
+    velocities = Points_.empty(number_particles)
 
     for index, mass in enumerate(masses_np):
         masses.append(float(mass))
@@ -171,7 +160,7 @@ def advance_velocities(velocities, accelerations, accelerations1, time_step):
 
 def compute_accelerations(accelerations, masses, positions):
     """
-    This needs to be very efficient!!
+    This needs to be very efficient!! >90% of the time spent here.
 
     In Julia, the loops are written::
 

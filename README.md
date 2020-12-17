@@ -28,8 +28,8 @@ i5-8400 CPU @ 2.80GHz.
 
 **Note 2:** With Numba, the elapsed times are 46 s and 181 s, respectively.
 
-**Note 3:** With PyPy, a pure Python implementation (bench_purepy.py) runs for
-1024 particles in 225 s, i.e. only 4.1 times slower than the C++ implementation
+**Note 3:** With PyPy, a pure Python implementation (bench_pypy4.py) runs for
+1024 particles in 151 s, i.e. only 3 times slower than the C++ implementation
 (compared to ~50 times slower as shown in the figure taken from Zwart, 2020).
 
 **Note 4:** The directory "julia" contains some more advanced and faster

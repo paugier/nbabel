@@ -1,8 +1,22 @@
+"""
+We would need a fixed size homogeneous mutable container.
+
+In Julia, you can do::
+
+    positions = Vector{Point4D}(undef, N)
+
+In Python, it would be nice to be able to do::
+
+    positions = Vector[Point4D].empty(N)
+
+"""
+
+
 class MetaVector(type):
-    def __getitem__(self, dtype):
+    def __getitem__(cls, dtype):
         return type(
             f"Vector{dtype.__name__.capitalize()}",
-            (Vector,),
+            (cls,),
             {"dtype": dtype},
         )
 
@@ -39,7 +53,7 @@ class Vector(metaclass=MetaVector):
         self._data[index] = value
 
     def __len__(self):
-        return len(self._data)
+        return self._data.__len__()
 
     def __repr__(self):
         return self._data.__repr__()
@@ -48,10 +62,9 @@ class Vector(metaclass=MetaVector):
 if __name__ == "__main__":
 
     class Point2d:
-
         @classmethod
         def _zero(cls):
-            return cls(0., 0.)
+            return cls(0.0, 0.0)
 
         def __init__(self, x, y):
             self.x = x
@@ -59,7 +72,6 @@ if __name__ == "__main__":
 
         def __repr__(self):
             return f"[{self.x}, {self.y}]"
-
 
     VectorP = Vector[Point2d]
 
