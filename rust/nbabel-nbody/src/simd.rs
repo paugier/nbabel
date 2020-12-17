@@ -6,15 +6,15 @@ use packed_simd::*;
 
 #[derive(Clone)]
 pub struct Particle {
-    pub position: f64x4,
-    pub velocity: f64x4,
-    pub acceleration: [f64x4; 2],
-    pub mass: f64,
+    position: f64x4,
+    velocity: f64x4,
+    acceleration: [f64x4; 2],
+    mass: f64,
 }
 
 
 pub struct Bodies {
-    pub particles: Vec<Particle>,
+    particles: Vec<Particle>,
 }
 
 impl Bodies {

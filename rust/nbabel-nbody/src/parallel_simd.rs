@@ -1,22 +1,39 @@
-use std::{mem};
+use std::path::Path;
+use std::{fs, mem};
 
-use crate::simd;
+use packed_simd::*;
 use rayon::prelude::*;
-use rayon::ThreadPoolBuilder;
+use rayon::{ThreadPoolBuilder, current_thread_index};
 
-struct ParallelBodies {
-    bodies: simd::Bodies,
+struct Particle {
+    position: f64x4,
+    velocity: f64x4,
+    mass: f64,
+}
+
+pub struct Bodies {
+    particles: Vec<Particle>,
+    acc_paralell: Vec<Vec<f64x4>>,
     n_threads: usize
 }
 
-impl ParallelBodies {
-    pub fn new(path_name: &str, n_threads: usize) -> ParallelBodies {
-        ParallelBodies { bodies: simd::Bodies::new(path_name) , n_threads}
+impl Bodies {
+    pub fn new(path_name: &str, n_threads: usize) -> Bodies {
+        let file_path = Path::new(path_name);
+        let particles: Vec<Particle> = fs::read_to_string(file_path)
+            .expect("File not found!")
+            .lines()
+            .filter(|x| !x.is_empty())
+            .map(|x| parse_row(x))
+            .collect();
+
+        let len = particles.len();
+
+        Bodies { particles, n_threads, acc_paralell: vec![vec![f64x4::splat(0.0); n_threads]; len] }
     }
 
     pub fn compute_energy(&self, pe: f64) -> f64{
         let res: f64 = self
-            .bodies
             .particles
             .par_iter()
             .map(|p| 0.5 * p.mass * (p.velocity*p.velocity).sum())
@@ -25,55 +42,69 @@ impl ParallelBodies {
     }
 
     pub fn advance_velocities(&mut self, dt: f64) {
-        self.bodies
-            .particles
+        self.particles
             .par_iter_mut()
-            .for_each(|p| {
-                p.velocity += 0.5 * dt * (p.acceleration[0] + p.acceleration[1]);
+            .enumerate()
+            .for_each(|(i,p)| {
+                p.velocity += 0.5 * dt * (self.acc_paralell[i][0] + self.acc_paralell[i][1]);
             });
     }
 
     pub fn advance_positions(&mut self, dt: f64) {
-        self.bodies
-            .particles
+        self.particles
             .par_iter_mut()
-            .for_each(|p| {
-                p.position += dt * p.velocity + 0.5 * dt.powi(2) * p.acceleration[0];
+            .enumerate()
+            .for_each(|(i,p)| {
+                p.position += dt * p.velocity + 0.5 * dt.powi(2) * self.acc_paralell[i][0];
             });
     }
 
     pub fn accelerate(&mut self) -> f64 {
-        self.bodies
-            .particles
+        self.acc_paralell
             .par_iter_mut()
             .for_each(|p| {
-                p.acceleration[1] = mem::take(&mut p.acceleration[0]);
+                p[1] = mem::take(&mut p[0]);
             });
 
-        self.bodies
-            .particles
-            .par_chunks_mut(self.n_threads)
-            .map(|mut particles| {
+        (0..self.acc_paralell.len())
+            .into_par_iter()
+            .map(| i | {
                 let mut pe = 0.0;
+                let idx = current_thread_index().unwrap_or(0);
 
-                while let Some((p1, rest)) = particles.split_first_mut(){
-                    particles = rest;
+                let p1 = &self.particles[i];
 
-                    for p2 in particles.iter_mut() {
-                        let vector = p1.position - p2.position;
-                        let norm2 = (vector*vector).sum();
-                        let distance = norm2.sqrt();
-                        let distance_cube = norm2 * distance;
-        
-                        p1.acceleration[0] -= (p2.mass / distance_cube) * vector;
-                        p2.acceleration[0] += (p1.mass / distance_cube) * vector;
-        
-                        pe -= (p1.mass * p2.mass) / distance;
-                    }
+                for j in i+1 .. self.acc_paralell.len()+1 {
+                    let p2 = &self.particles[j];
+                    
+                    let vector = p1.position - p2.position;
+                    let norm2 = (vector*vector).sum();
+                    let distance = norm2.sqrt();
+                    let distance_cube = norm2 * distance;
+
+                    self.acc_paralell[i][idx] -= (p2.mass / distance_cube) * vector;
+                    self.acc_paralell[j][idx] += (p1.mass / distance_cube) * vector;
+
+                    pe -= (p1.mass * p2.mass) / distance;
+
                 }
                 -pe
             })
             .sum::<f64>()
+    }
+}
+
+pub fn parse_row(line: &str) -> Particle {
+    let row_vec: Vec<f64> = line
+        .split(' ')
+        .filter(|s| s.len() > 2)
+        .map(|s| s.parse().unwrap())
+        .collect();
+
+    Particle {
+        position: f64x4::new(row_vec[1], row_vec[2], row_vec[3],0.),
+        velocity: f64x4::new(row_vec[4], row_vec[5], row_vec[6],0.),
+        mass: row_vec[0],
     }
 }
 
@@ -86,7 +117,7 @@ pub fn run(path: &str, n_threads:usize) {
     println!("Running Parallel SIMD version");
 
     ThreadPoolBuilder::new().num_threads(n_threads).build_global().unwrap();
-    let mut bodies = ParallelBodies::new(path, n_threads);
+    let mut bodies = Bodies::new(path, n_threads.max(2));
 
     bodies.accelerate();
 
