@@ -8,17 +8,15 @@ struct Point4D
     x::Float64
     y::Float64
     z::Float64
-    w::Float64
 end
-Point4D(x,y,z) = Point4D(x, y, z, 0)
-norm2(vec::Point4D) = vec.x^2 + vec.y^2 + vec.z^2 + vec.w^2
+norm2(vec::Point4D) = vec.x^2 + vec.y^2 + vec.z^2
 norm(vec::Point4D) = sqrt(norm2(vec))
 import Base: +, -, *, zero
--(vec1::Point4D,vec2::Point4D) = Point4D(vec1.x - vec2.x, vec1.y - vec2.y, vec1.z - vec2.z, vec1.w - vec2.w)
-+(vec1::Point4D,vec2::Point4D) = Point4D(vec1.x + vec2.x, vec1.y + vec2.y, vec1.z + vec2.z, vec1.w + vec2.w)
-*(c::Real, vec1::Point4D) = Point4D(c * vec1.x, c * vec1.y, c * vec1.z, c * vec1.w)
+-(vec1::Point4D,vec2::Point4D) = Point4D(vec1.x - vec2.x, vec1.y - vec2.y, vec1.z - vec2.z)
++(vec1::Point4D,vec2::Point4D) = Point4D(vec1.x + vec2.x, vec1.y + vec2.y, vec1.z + vec2.z)
+*(c::Real, vec1::Point4D) = Point4D(c * vec1.x, c * vec1.y, c * vec1.z)
 *(vec1::Point4D, c::Real) = c * vec1
-zero(T::Type{Point4D}) = Point4D(0, 0, 0, 0)
+zero(T::Type{Point4D}) = Point4D(0, 0, 0)
 
 function NBabel(fname::String; tend=10., dt=0.001, show=false)
 
@@ -92,15 +90,12 @@ end
 function compute_acceleration!(positions, masses, accelerations)
     N = length(positions)
 
-    #@inbounds
-    for i in eachindex(accelerations)
+    @inbounds for i in eachindex(accelerations)
         accelerations[i] = zero(eltype(accelerations))
     end
 
-    #@inbounds
-    for i = 1:N - 1
-        #@simd
-        for j = i + 1:N
+    @inbounds for i = 1:N - 1
+        @simd for j = i + 1:N
             dr = positions[i] - positions[j]
             rinv3 = 1 / norm(dr)^3
             accelerations[i] = accelerations[i] - masses[i] * rinv3 * dr

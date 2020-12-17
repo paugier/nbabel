@@ -4,6 +4,8 @@ from datetime import timedelta
 
 import pandas as pd
 
+from vector import Vector
+
 
 class Point4D:
     # not needed for PyPy
@@ -14,6 +16,10 @@ class Point4D:
     y: float
     z: float
     w: float
+
+    @classmethod
+    def __zero(cls):
+        return cls(0.0, 0.0, 0.0)
 
     def __init__(self, x, y, z, w=0.0):
         self.x = x
@@ -58,7 +64,51 @@ class Point4D:
         self.w = 0.0
 
 
-class Points:
+class Point3D:
+    # not needed for PyPy
+    __slots__ = list("xyz")
+
+    # not needed for PyPy but can be written
+    x: float
+    y: float
+    z: float
+
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+
+    def norm2(self):
+        return self.x ** 2 + self.y ** 2 + self.z ** 2
+
+    def norm(self):
+        return sqrt(self.norm2())
+
+    def norm_cube(self):
+        norm2 = self.norm2()
+        return norm2 * sqrt(norm2)
+
+    def __add__(self, other):
+        return Point3D(self.x + other.x, self.y + other.y, self.z + other.z)
+
+    def __sub__(self, other):
+        return Point3D(self.x - other.x, self.y - other.y, self.z - other.z)
+
+    def __mul__(self, other):
+        return Point3D(other * self.x, other * self.y, other * self.z)
+
+    __rmul__ = __mul__
+
+    def __repr__(self):
+        return f"[{self.x:.10f}, {self.y:.10f}, {self.z:.10f}]"
+
+    def reset_to_0(self):
+        self.x = 0.0
+        self.y = 0.0
+        self.z = 0.0
+
+
+class Points(Vector):
     """
     We would need a fixed size homogeneous mutable container.
 
@@ -72,30 +122,30 @@ class Points:
 
     """
 
-    @classmethod
-    def from_list(cls, data):
-        return cls(len(data), type(data[0]), data=data)
+    # @classmethod
+    # def from_list(cls, data):
+    #     return cls(len(data), type(data[0]), data=data)
 
-    @classmethod
-    def empty(cls, size, type_elem):
-        return cls(size, type_elem)
+    # @classmethod
+    # def empty(cls, size, dtype):
+    #     return cls(size, dtype)
 
-    def __init__(self, size, type_elem, data=None):
-        if data is None:
-            self._data = [None] * size
-        else:
-            self._data = list(data).copy()
+    # def __init__(self, size, dtype, data=None):
+    #     if data is None:
+    #         self._data = [None] * size
+    #     else:
+    #         self._data = list(data).copy()
 
-        self.__iter__ = self._data.__iter__
+    #     self.__iter__ = self._data.__iter__
 
-    def __getitem__(self, index):
-        return self._data[index]
+    # def __getitem__(self, index):
+    #     return self._data[index]
 
-    def __setitem__(self, index, value):
-        self._data[index] = value
+    # def __setitem__(self, index, value):
+    #     self._data[index] = value
 
-    def __len__(self):
-        return len(self._data)
+    # def __len__(self):
+    #     return len(self._data)
 
     def reset_to_0(self):
         for point in self:
@@ -108,14 +158,6 @@ class Points:
         return result
 
 
-def zeros(size):
-    points = Points.empty(size, Point4D)
-    i = 0
-    while i < size:
-        points[i] = Point4D(0.0, 0.0, 0.0)
-        i += 1
-    return points
-
 
 def load_input_data(path):
     df = pd.read_csv(
@@ -126,16 +168,24 @@ def load_input_data(path):
     positions_np = df.loc[:, ["x", "y", "z"]].values
     velocities_np = df.loc[:, ["vx", "vy", "vz"]].values
 
+    number_particles = len(masses_np)
+
     masses = []
     positions = []
     velocities = []
 
+    Point = Point3D
+    cls = Points[Point]
+
+    positions = cls.empty(number_particles)
+    velocities = cls.empty(number_particles)
+
     for index, mass in enumerate(masses_np):
         masses.append(float(mass))
-        positions.append(Point4D(*[float(n) for n in positions_np[index]]))
-        velocities.append(Point4D(*[float(n) for n in velocities_np[index]]))
+        positions[index] = Point(*[float(n) for n in positions_np[index]])
+        velocities[index] = Point(*[float(n) for n in velocities_np[index]])
 
-    return masses, Points.from_list(positions), Points.from_list(velocities)
+    return masses, positions, velocities
 
 
 def advance_positions(positions, velocities, accelerations, time_step):
@@ -178,8 +228,8 @@ def compute_accelerations(accelerations, masses, positions):
 
 def loop(time_step: float, nb_steps: int, masses, positions, velocities):
 
-    accelerations = zeros(len(positions))
-    accelerations1 = zeros(len(positions))
+    accelerations = positions.zeros_like()
+    accelerations1 = positions.zeros_like()
 
     compute_accelerations(accelerations, masses, positions)
 
