@@ -20,7 +20,7 @@ class Vector(metaclass=MetaVector):
         points = self.empty(len(self))
         i = 0
         while i < len(self):
-            points[i] = self.dtype.zero()
+            points[i] = self.dtype._zero()
             i += 1
         return points
 
@@ -41,6 +41,8 @@ class Vector(metaclass=MetaVector):
     def __len__(self):
         return len(self._data)
 
+    def __repr__(self):
+        return self._data.__repr__()
 
 
 if __name__ == "__main__":
@@ -48,12 +50,18 @@ if __name__ == "__main__":
     class Point2d:
 
         @classmethod
-        def zero(cls):
+        def _zero(cls):
             return cls(0., 0.)
 
         def __init__(self, x, y):
             self.x = x
             self.y = y
 
+        def __repr__(self):
+            return f"[{self.x}, {self.y}]"
 
-    a = Vector[Point2d].empty(4)
+
+    VectorP = Vector[Point2d]
+
+    a = VectorP.empty(4)
+    b = a.zeros_like()

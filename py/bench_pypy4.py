@@ -7,7 +7,24 @@ import pandas as pd
 from vector import Vector
 
 
-class Point4D:
+class PointND:
+
+    @classmethod
+    def _zero(cls):
+        return cls(0.0, 0.0, 0.0)
+
+    def norm(self):
+        return sqrt(self.norm2())
+
+    def norm_cube(self):
+        norm2 = self.norm2()
+        return norm2 * sqrt(norm2)
+
+    def __repr__(self):
+        return f"[{self.x:.10f}, {self.y:.10f}, {self.z:.10f}]"
+
+
+class Point4D(PointND):
     # not needed for PyPy
     __slots__ = list("xyzw")
 
@@ -17,10 +34,6 @@ class Point4D:
     z: float
     w: float
 
-    @classmethod
-    def __zero(cls):
-        return cls(0.0, 0.0, 0.0)
-
     def __init__(self, x, y, z, w=0.0):
         self.x = x
         self.y = y
@@ -29,13 +42,6 @@ class Point4D:
 
     def norm2(self):
         return self.x ** 2 + self.y ** 2 + self.z ** 2 + self.w ** 2
-
-    def norm(self):
-        return sqrt(self.norm2())
-
-    def norm_cube(self):
-        norm2 = self.norm2()
-        return norm2 * sqrt(norm2)
 
     def __add__(self, other):
         return Point4D(
@@ -64,7 +70,7 @@ class Point4D:
         self.w = 0.0
 
 
-class Point3D:
+class Point3D(PointND):
     # not needed for PyPy
     __slots__ = list("xyz")
 
@@ -81,13 +87,6 @@ class Point3D:
     def norm2(self):
         return self.x ** 2 + self.y ** 2 + self.z ** 2
 
-    def norm(self):
-        return sqrt(self.norm2())
-
-    def norm_cube(self):
-        norm2 = self.norm2()
-        return norm2 * sqrt(norm2)
-
     def __add__(self, other):
         return Point3D(self.x + other.x, self.y + other.y, self.z + other.z)
 
@@ -99,16 +98,13 @@ class Point3D:
 
     __rmul__ = __mul__
 
-    def __repr__(self):
-        return f"[{self.x:.10f}, {self.y:.10f}, {self.z:.10f}]"
-
     def reset_to_0(self):
         self.x = 0.0
         self.y = 0.0
         self.z = 0.0
 
 
-class Points(Vector):
+class Points(Vector[Point3D]):
     """
     We would need a fixed size homogeneous mutable container.
 
@@ -122,31 +118,6 @@ class Points(Vector):
 
     """
 
-    # @classmethod
-    # def from_list(cls, data):
-    #     return cls(len(data), type(data[0]), data=data)
-
-    # @classmethod
-    # def empty(cls, size, dtype):
-    #     return cls(size, dtype)
-
-    # def __init__(self, size, dtype, data=None):
-    #     if data is None:
-    #         self._data = [None] * size
-    #     else:
-    #         self._data = list(data).copy()
-
-    #     self.__iter__ = self._data.__iter__
-
-    # def __getitem__(self, index):
-    #     return self._data[index]
-
-    # def __setitem__(self, index, value):
-    #     self._data[index] = value
-
-    # def __len__(self):
-    #     return len(self._data)
-
     def reset_to_0(self):
         for point in self:
             point.reset_to_0()
@@ -156,7 +127,6 @@ class Points(Vector):
         for point in self:
             result.append(point.norm2())
         return result
-
 
 
 def load_input_data(path):
@@ -174,11 +144,10 @@ def load_input_data(path):
     positions = []
     velocities = []
 
-    Point = Point3D
-    cls = Points[Point]
+    Point = Points.dtype
 
-    positions = cls.empty(number_particles)
-    velocities = cls.empty(number_particles)
+    positions = Points.empty(number_particles)
+    velocities = Points.empty(number_particles)
 
     for index, mass in enumerate(masses_np):
         masses.append(float(mass))
