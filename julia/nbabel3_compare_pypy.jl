@@ -135,8 +135,8 @@ function compute_energy(positions, velocities, masses)
     end
 
     Epot = 0.
-    @inbounds for i = 1:N - 1
-        @simd for j = i + 1:N
+    for i = 1:N - 1
+        for j = i + 1:N
             dr = positions[i] - positions[j]
             rinv = 1 / norm(dr)
             Epot -= masses[i] * masses[j] * rinv
@@ -151,7 +151,7 @@ function read_ICs(fname::String)
 
     N = size(ICs, 1)
 
-    Point = Point4D
+    Point = Point3D
 
     positions = Vector{Point}(undef, N)
     velocities = Vector{Point}(undef, N)

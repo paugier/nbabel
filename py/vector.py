@@ -30,13 +30,22 @@ class Vector(metaclass=MetaVector):
     def empty(cls, size):
         return cls(size)
 
+    @classmethod
+    def zeros(cls, size):
+        vector = cls.empty(size)
+        i = 0
+        while i < size:
+            vector[i] = cls.dtype._zero()
+            i += 1
+        return vector
+
     def zeros_like(self):
-        points = self.empty(len(self))
+        vector = self.empty(len(self))
         i = 0
         while i < len(self):
-            points[i] = self.dtype._zero()
+            vector[i] = self.dtype._zero()
             i += 1
-        return points
+        return vector
 
     def __init__(self, size, data=None):
         if data is None:
