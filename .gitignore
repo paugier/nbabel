@@ -16,3 +16,4 @@ rust/nbabel
 profile.png
 profile.pstats
 output.log
+target/
