@@ -30,8 +30,8 @@ Python. So the `Point` objects are mutable (by default). One can subclass
 `pypy microbench_pypy4.py` gives
 
 ```
-Point3D: 11.301 ms
-Point4D: 22.050 ms
+Point3D: 10.888 ms
+Point4D: 20.978 ms
 ```
 
 - With Point3D, PyPy is 3.5 times slower than PyPy.

@@ -107,15 +107,11 @@ class Points(Vector):
 def compute_accelerations(accelerations, masses, positions):
     nb_particules = len(masses)
     for i0 in range(nb_particules - 1):
-        mass0 = masses[i0]
-        position0 = positions[i0]
         for i1 in range(i0 + 1, nb_particules):
-            mass1 = masses[i1]
-            position1 = positions[i1]
-            delta = position0 - position1
+            delta = positions[i0] - positions[i1]
             distance_cube = delta.norm_cube()
-            accelerations[i0] -= mass1 / distance_cube * delta
-            accelerations[i1] += mass0 / distance_cube * delta
+            accelerations[i0] -= masses[i1] / distance_cube * delta
+            accelerations[i1] += masses[i0] / distance_cube * delta
 
 
 def main(Point):
