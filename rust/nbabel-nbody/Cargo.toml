@@ -1,0 +1,20 @@
+[package]
+name = "nbabel"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+packed_simd = { version = "0.3.4", package = "packed_simd_2" }
+
+[[bin]]
+name = "nbabel"
+path = "src/main.rs"
+
+[lib]
+name = "nbabel_lib"
+path = "src/lib.rs"
+
+[features]
+default = [ ]
+sleef-sys = [ "packed_simd/sleef-sys" ]
+core_arch = [ "packed_simd/core_arch" ]

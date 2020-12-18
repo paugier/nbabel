@@ -7,7 +7,7 @@ Contributed by Ilia Schelokov, modified by Darley Barreto with help of Rust disc
 use std::default::Default;
 use std::ops::{Add, AddAssign, Mul, Sub, SubAssign};
 use std::path::Path;
-use std::{fs, mem, env};
+use std::{fs, mem};
 
 #[derive(Clone, Copy, Default)]
 struct Vec3D(f64, f64, f64);
@@ -29,13 +29,6 @@ impl Sub for &Vec3D {
     type Output = Vec3D;
     fn sub(self, rhs: Self) -> Self::Output {
         Vec3D(self.0 - rhs.0, self.1 - rhs.1, self.2 - rhs.2)
-    }
-}
-
-impl Mul<&Vec3D> for f64 {
-    type Output = Vec3D;
-    fn mul(self, rhs: &Vec3D) -> Self::Output {
-        Vec3D(self * rhs.0, self * rhs.1, self * rhs.2)
     }
 }
 
@@ -88,11 +81,12 @@ impl Bodies {
     }
 
     pub fn compute_energy(&self, pe: f64) -> f64 {
-        pe + &self
+        let res: f64 = self
             .particles
             .iter()
             .map(|p| 0.5 * p.mass * p.velocity.sum_squares())
-            .sum()
+            .sum();
+        pe + res
     }
 
     pub fn advance_velocities(&mut self, dt: f64) {
@@ -150,18 +144,15 @@ pub fn parse_row(line: &str) -> Particle {
     }
 }
 
-fn main() {
-    let path = env::args_os()
-        .nth(1)
-        .and_then(|s| s.into_string().ok())
-        .unwrap_or("../data/input128".to_string());
-
-    let mut bodies = Bodies::new(&path);
-
+pub fn run(path: &str) {
     let mut pe;
     let mut energy = 0.;
     let (tend, dt) = (10.0, 0.001); // end time, timestep
     let (mut old_energy, energy0) = (-0.25, -0.25);
+
+    println!("Running Scalar version");
+
+    let mut bodies = Bodies::new(path);
 
     bodies.accelerate();
 
@@ -170,17 +161,17 @@ fn main() {
         pe = bodies.accelerate();
         bodies.advance_velocities(dt);
 
-        if step % 100 == 0 {
-            energy = bodies.compute_energy(pe);
-            println!(
-                "t = {:5.2}, E = {:.10},  dE/E = {:+.10}",
-                dt * step as f64,
-                energy,
-                (energy - old_energy) / old_energy
-            );
-            old_energy = energy;
-        }
+        // if step % 100 == 0 {
+        //     energy = bodies.compute_energy(pe);
+        //     println!(
+        //         "t = {:5.2}, E = {:.10},  dE/E = {:+.10}",
+        //         dt * step as f64,
+        //         energy,
+        //         (energy - old_energy) / old_energy
+        //     );
+        //     old_energy = energy;
+        // }
     }
 
-    println!("Final dE/E = {}", (energy - energy0) / energy0);
+    // println!("Final dE/E = {}", (energy - energy0) / energy0);
 }
