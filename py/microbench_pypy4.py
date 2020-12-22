@@ -114,10 +114,10 @@ def compute_accelerations(accelerations, masses, positions):
             accelerations[i1] += masses[i0] / distance_cube * delta
 
 
-def main(Point):
+number_particles = 1000
 
-    number_particles = 1000
-    nb_steps = 200
+
+def main(Point):
 
     Points_ = Points[Point]
 
@@ -134,20 +134,17 @@ def main(Point):
     compute_accelerations(accelerations, masses, positions)
     t_start = perf_counter()
     compute_accelerations(accelerations, masses, positions)
-    clock_time = perf_counter()-t_start
+    clock_time = perf_counter() - t_start
 
-    nb_steps = int(2 / clock_time)
-
+    nb_steps = int(2 / clock_time) or 4
     times = []
 
     for step in range(nb_steps):
         t_start = perf_counter()
         compute_accelerations(accelerations, masses, positions)
-        times.append(perf_counter()-t_start)
+        times.append(perf_counter() - t_start)
 
-    print(
-        f"{Point.__name__}: {min(times) * 1000:.3f} ms"
-    )
+    print(f"{Point.__name__}: {min(times) * 1000:.3f} ms")
 
 
 if __name__ == "__main__":
