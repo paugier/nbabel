@@ -11,6 +11,10 @@ def sum_x(positions):
     return result
 
 
+def get_x(vec, index):
+    return vec[index].x
+
+
 if __name__ == "__main__":
 
     positions = Vector[Point3D].zeros(number_particles)
@@ -29,11 +33,14 @@ if __name__ == "__main__":
 
     assert sum_x(positions_list) == sum_x(positions)
 
-
     from IPython import get_ipython
+
     ipython = get_ipython()
 
     print("sum_x(positions)")
     ipython.magic("timeit sum_x(positions)")
     print("sum_x(positions_list)")
     ipython.magic("timeit sum_x(positions_list)")
+
+    print("get_x(positions, 2)")
+    ipython.magic("timeit get_x(positions, 2)")

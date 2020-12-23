@@ -9,6 +9,10 @@ function sum_x(positions)
     return result
 end
 
+function get_x(vec, index)
+    return vec[index].x
+end
+
 number_particles = 1024
 nb_steps = 200
 
@@ -20,4 +24,7 @@ for i in eachindex(positions)
     global x += 1.0
 end
 
+print("sum_x(positions)")
 @btime sum_x(positions)
+print("get_x(positions, 2)")
+@btime get_x(positions, 2)
