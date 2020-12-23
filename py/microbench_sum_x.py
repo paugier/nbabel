@@ -6,13 +6,23 @@ from microbench_pypy_list import Point3D as P3D_list
 
 def sum_x(positions):
     result = 0.0
-    for i in range(len(positions)):
-        result += positions[i].x
+    for position in positions:
+        result += position.x
     return result
 
 
 def get_x(vec, index):
     return vec[index].x
+
+
+def get_xs(vec):
+    for point in vec:
+        point.x
+
+
+def get_objects(vec):
+    for point in vec:
+        point
 
 
 if __name__ == "__main__":
@@ -37,10 +47,11 @@ if __name__ == "__main__":
 
     ipython = get_ipython()
 
-    print("sum_x(positions)")
-    ipython.magic("timeit sum_x(positions)")
-    print("sum_x(positions_list)")
-    ipython.magic("timeit sum_x(positions_list)")
+    def bench(call):
+        print(call)
+        ipython.magic("timeit " + call)
 
-    print("get_x(positions, 2)")
-    ipython.magic("timeit get_x(positions, 2)")
+    bench("sum_x(positions)")
+    bench("get_x(positions, 2)")
+    bench("get_xs(positions)")
+    bench("get_objects(positions)")
