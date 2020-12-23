@@ -1,4 +1,6 @@
-from microbench_pypy4 import Point3D, Points, number_particles
+from vector import Vector
+
+from microbench_pypy4 import Point3D, number_particles
 from microbench_pypy_list import Point3D as P3D_list
 
 
@@ -11,14 +13,14 @@ def sum_x(positions):
 
 if __name__ == "__main__":
 
-    positions = Points[Point3D].zeros(number_particles)
+    positions = Vector[Point3D].zeros(number_particles)
 
     x = 0.0
     for position in positions:
         position.x = x
         x += 1.0
 
-    positions_list = Points[P3D_list].zeros(number_particles)
+    positions_list = Vector[P3D_list].zeros(number_particles)
 
     x = 0.0
     for position in positions_list:

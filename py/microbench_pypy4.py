@@ -1,6 +1,5 @@
 from math import sqrt
 from time import perf_counter
-from datetime import timedelta
 
 from vector import Vector
 
