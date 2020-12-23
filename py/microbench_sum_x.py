@@ -1,3 +1,10 @@
+"""
+run with IPython::
+
+  ipython microbench_sum_x.py
+
+"""
+
 from vector import Vector
 
 from microbench_pypy4 import Point3D, number_particles
@@ -55,3 +62,10 @@ if __name__ == "__main__":
     bench("get_x(positions, 2)")
     bench("get_xs(positions)")
     bench("get_objects(positions)")
+
+    def loop(l):
+        for o in l:
+            o
+
+    vec = [object() for _ in range(number_particles)]
+    bench("loop(vec)")
