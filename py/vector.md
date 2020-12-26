@@ -8,7 +8,7 @@ ahead-of-time Python compilers to support this API. The global principle is to
 locally disable some dynamical features of Python which are issues for
 performance.
 
-First, we need a data structure that does not exit yet in Python: a container
+First, we need a data structure that does not exist yet in Python: a container
 for homogeneous objects. Since we start with 1D sequence, let's call that a
 `Vector` (as in Julia).
 
@@ -25,7 +25,7 @@ with lists.
   able to disable dynamic features of Python for these classes. We need to be
   able to declare a class to be immutable and that one can't dynamically add
   attributes to the instances. For objects containing only simple fixed size
-  objects, the size of the instances will be fixed and can easily be computed.
+  objects, the size of the instances will be fixed and computable.
 
   For some cases, it would also be interesting to declare that the instances of
   the class are immutable.
@@ -39,7 +39,7 @@ checks would be disabled.
 
 Let's say that we import the extension as:
 
-```
+```python
 import vecpy as vp
 ```
 
@@ -55,10 +55,10 @@ VectorF = vp.Vector[float]
 ```
 
 Since all Python floats have the same size (they are "float64"), they can be
-store continuously in memory. In contrast, in Python 3, the size of an `int` is
-not fixed (an `int` object can stored very large integers) so `vp.Vector[int]`
-should raise an error. To define an array of integer, one can use for example
-`vp.Vector["int32"]`.
+stored continuously in memory. In contrast, in Python 3, the size of an `int`
+is not fixed (an `int` object can stored very large integers) so
+`vp.Vector[int]` should raise an error. To define an array of integer, one can
+use for example `vp.Vector["int32"]`.
 
 We can then declare vectors of different size like this:
 
