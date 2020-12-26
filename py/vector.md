@@ -175,8 +175,12 @@ Unfortunately, I don't think this can be implemented in Python. I guess one
 could use RPython but the resulting extensions would only be usable with PyPy.
 Using C with the standard CPython C-API would be terrible in terms of
 performance for PyPy and other alternative implementations. I guess it would
-make sense to use Cython with a backend using HPy. However, the HPy project is
-very immature and this Cython backend targetting the HPy API is just mentionned
-in some HPy documents. It could be interesting to try to implement the core of
-such extension in HPy. I wonder if it could be possible with HPy to tell the
-PyPy JIT how to accelerate code using `Vector`.
+make sense to use Cython with a backend using HPy. However, HPy is still in the
+early stages of development and this Cython backend targetting the HPy API is
+just mentionned in some HPy documents. It could be interesting to try to
+implement the core of such extension in C using the HPy API.
+
+- Could it be possible with HPy to tell the PyPy JIT how to accelerate code
+using `Vector`? Or would we need to modify PyPy JIT?
+
+- Could we use `memcpy` in `__modify_from__` to copy the data of an object?
