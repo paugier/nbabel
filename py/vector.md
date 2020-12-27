@@ -66,19 +66,31 @@ VectorF = vp.Vector[float]
 
 Since all Python floats have the same size (they are "float64"), they can be
 stored continuously in memory. In contrast, in Python 3, the size of an `int`
-is not fixed (an `int` object can stored very large integers) so
+is not fixed (an `int` object can store very large integers) so
 `vp.Vector[int]` should raise an error. To define an array of integer, one can
 use for example `vp.Vector["int32"]`.
 
 We can then declare vectors of different size like this:
 
-```
-vec_4f = VectorF.empty(4)
+```python
+vec_100f = VectorF.empty(100)
+vec_4f = VectorF.ones(4)
 vec_2f = VectorF([2, 3])
-vec_100f = VectorF.zeros(100)
 ```
 
 We see that the size of the instances of `VectorF` is not fixed.
+
+These vectors can of course be used as sequences, similarly to Numpy arrays:
+
+```python
+number = vec_2f[0]  # a float
+
+tmp = 10 * vec_4f - 5  # another vector of floats
+# no difficulty to speedup this loop
+s = 0.0
+for number in tmp:
+    s += number
+```
 
 ### Fixed-size vectors and vectors of fixed-size vector
 
@@ -107,9 +119,10 @@ class Point(vp.Vector.subclass(float, size=3)):
     ...
 
 class Points(Vector[Point]):
+    # in case we want to add methods
     ...
 
-# or just
+# or just (simpler)
 Points = Vector[Point]
 
 points = Points.empty(size=1000)
@@ -121,8 +134,11 @@ point[0] = 1
 points[0] = point  # copy
 ```
 
-A Python interpreters with a JIT adapted for numerical tasks (like PyPy) could
-run codes using such vectors very efficiently.
+A Python interpreter with a JIT adapted for numerical tasks (like PyPy) could
+run codes using such vectors very efficiently (fast iteration, much less type
+checks, etc.). In particular, this simple code would be enough to define the
+objects used in https://github.com/paugier/nbabel/blob/master/py/bench_pypy4.py
+with no blocker to accelerate the execution.
 
 ### Vector of instances of user-defined class
 
@@ -132,9 +148,9 @@ done with a special class method `__size_of_instance__` (question: how one can
 implement this?). We could use a decorator `vp.fixed_size_instances`.
 
 Note: the special attribute `__slots__` can already be used in Python to
-declare that one can't set a new attribute to an instance. The decorator
-`vp.fixed_size_instances` could automatically set `__slots__` from type
-annotations, see this example:
+declare that it's going to be impossible to set a new attribute to an instance.
+The decorator `vp.fixed_size_instances` could automatically set `__slots__`
+from type annotations, see this example:
 
 ```python
 @vp.fixed_size_instances
@@ -146,9 +162,8 @@ class MyNumericalClass:
     ...
 ```
 
-For such simple cases, a decorator could also set class methods like
-`__zero__`, `__one__` and `__empty__`, and instance methods `__fill__`,
-`__add__`, etc.
+For such simple cases, a decorator could also set class methods like `zero`,
+`one` and `empty`, and instance methods `fill`, `__add__`, etc.
 
 Of course, it should be forbidden to dynamically modify the class. We could use
 a decorator `@vp.immutable_class`.
@@ -191,8 +206,8 @@ simple numerical types into contiguous Numpy arrays (and inversely).
 
 Unfortunately, I don't think this extension can be implemented in Python. I
 guess one could use RPython but the resulting extensions would only be usable
-with PyPy. Using C with the standard CPython C-API would be terrible in terms
-of performance for PyPy and other alternative implementations. I guess it would
+with PyPy. Using the standard CPython C-API would be terrible in terms of
+performance for PyPy and other alternative implementations. I guess it would
 make sense to use Cython with a backend using HPy. However, HPy is still in the
 early stages of development and this Cython backend targetting the HPy API is
 just mentionned in some HPy documents. It could be interesting to try to
@@ -201,4 +216,4 @@ implement the core of such extension in C using the HPy API.
 - Could it be possible with HPy to tell the PyPy JIT how to accelerate code
 using `Vector`? Or would we need to also modify PyPy JIT?
 
-- Could we use `memcpy` in `__modify_from__` to copy the data of an object?
+- Could we use `memcpy` in `__modify_from__` to copy all the data of an object?
