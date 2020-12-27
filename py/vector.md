@@ -1,39 +1,48 @@
-# Simple efficient 1d vector for Python
+# Simple efficient 1d vector for Python: a proposal for a new extension
 
-The goal of the proposed extension is to be able to execute very efficiency
-numerical pure Python codes. It should not be difficult to strongly accelerate
-codes using this extension with JIT to reach nearly the same performance as
-what can be done with Julia. Moreover, it should not be too difficult for
-ahead-of-time Python compilers to support this API. The global principle is to
-locally disable some dynamical features of Python which are issues for
-performance.
+This document proposes and describes a new Python extension fully compatible
+with PyPy JIT to write computationally intensive code in pure Python style.
 
-First, we need a data structure that does not exist yet in Python: a container
-for homogeneous objects. Since we start with 1D sequence, let's call that a
-`Vector` (as in Julia).
+Both Python JITs (like PyPy and Numba) and ahead-of-time Python compilers (like
+Pythran) could support this API. The global principle is to be able to disable
+some dynamical features of Python for some objects to ease important
+optimizations. Experiments with the N-Body problem
+(https://github.com/paugier/nbabel/blob/master/py) suggest that this could lead
+with PyPy to approximately a x4 speedup for pure Python style codes so that
+such Python codes could be nearly as efficient as optimized Julia/C++/Fortran
+codes.
+
+We need a data structure that does not exist yet in pure Python: a container
+for objects of the same types. Since we start with 1D sequence, let's call this
+structure a `Vector` (as in Julia).
+
+- The elements have to be stored continuously in memory. Therefore, iterating
+on the elements contained in the container could be much faster than with
+lists. Moreover, JIT and AOT compilers could know the type of the elements
+without type checks.
 
 - The mathematical operators would act on elements (like Numpy arrays and in
 contrast to `list`, `tuple` and `array.array`). For standard numerical types,
-such operations would be fast (or even very fast, with SIMD).
+such operations would be fast (or even very fast, using SIMD).
 
-- For user-defined classes for which the size in memory of one instance is
-constant, the interpreter could store the objects continuously so that
-iterating on the elements contained in the container could be much faster than
-with lists.
+- For user-defined classes, a fundamental property for contiguous storage is
+that all instances of the class have the same size in memory.
 
-  For contiguous storage of instances of user-defined classes, one needs to be
-  able to disable dynamic features of Python for these classes. We need to be
-  able to declare a class to be immutable and that one can't dynamically add
-  attributes to the instances. For objects containing only simple fixed size
-  objects, the size of the instances will be fixed and computable.
+  Therefore, one needs to be able to disable dynamic features of Python for
+  these classes. We need to be able to declare a class to be immutable and that
+  one can't dynamically add attributes to the instances. For objects containing
+  only fixed size objects, the size of the instances is fixed and computable.
 
-  For some cases, it would also be interesting to declare that the instances of
-  the class are immutable.
+  We also need to be able to declare the types of the attributes, but there is
+  already a simple syntax for that in Python >= 3.6.
 
-- Such containers could support different modes of executions, "debug", "dev"
-and "perf", that can be activated locally (with an API) and globally (with an
-environment variable). For the performance mode, some type checks and bound
-checks would be disabled.
+  For some cases, being able to declare that the instances of the class are
+  immutable should also allow other optimizations.
+
+- The `Vector` containers could support different modes of executions, "debug",
+"dev" and "perf", that can be activated locally (with an API) and globally
+(with an environment variable). For the performance mode, some type checks and
+bound checks would be disabled.
 
 ## API
 
