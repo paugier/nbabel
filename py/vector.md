@@ -37,7 +37,7 @@ that all instances of the class have the same size in memory.
   already a simple syntax for that in Python >= 3.6.
 
   For some cases, being able to declare that the instances of the class are
-  immutable should also allow other optimizations.
+  immutable should also help for other optimizations.
 
 - The `Vector` containers could support different modes of executions, "debug",
 "dev" and "perf", that can be activated locally (with an API) and globally
@@ -136,9 +136,10 @@ points[0] = point  # copy
 
 A Python interpreter with a JIT adapted for numerical tasks (like PyPy) could
 run codes using such vectors very efficiently (fast iteration, much less type
-checks, etc.). In particular, this simple code would be enough to define the
-objects used in https://github.com/paugier/nbabel/blob/master/py/bench_pypy4.py
-with no blocker to accelerate the execution.
+checks, etc.). In particular, the latter simple code would basically be enough
+to define the objects used in
+https://github.com/paugier/nbabel/blob/master/py/bench_pypy4.py with no blocker
+to accelerate the execution.
 
 ### Vector of instances of user-defined class
 
