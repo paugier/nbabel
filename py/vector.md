@@ -52,8 +52,9 @@ Let's say that we import the extension as:
 import vecpy as vp
 ```
 
-A `Vector` can only store objects of homogeneous type, with fixed size
-instances.
+A `Vector` can only store objects homogeneous in type (and only for types for
+which all instances have the same size). To be simple, here, we propose that
+the types of the objects are explicitly declared.
 
 ### Vectors of numbers
 
@@ -79,15 +80,15 @@ vec_100f = VectorF.zeros(100)
 
 We see that the size of the instances of `VectorF` is not fixed.
 
-### Fixed-size vectors
+### Fixed-size vectors and vectors of fixed-size vector
+
+We should be able to declare a fixed-size vector class:
 
 ```python
 Vector4F = vp.Vector[float].subclass(size=4)
 # can also be written as
 Vector4F = vp.Vector.subclass(float, size=4)
 ```
-
-### Vectors of fixed-size vector
 
 All `Vector4F` instances have the same size in memory, so they can be stored in
 another `Vector` and we can write:
@@ -126,8 +127,8 @@ run codes using such vectors very efficiently.
 ### Vector of instances of user-defined class
 
 Under the hood, during the creation of a new concrete `Vector` class, we have
-to obtain the size of an instance. For user-defined classes, this could be done
-with a special class method `__size_of_instance__` (question: how one can
+to obtain the size of one instance. For user-defined classes, this could be
+done with a special class method `__size_of_instance__` (question: how one can
 implement this?). We could use a decorator `vp.fixed_size_instances`.
 
 Note: the special attribute `__slots__` can already be used in Python to
@@ -173,23 +174,31 @@ print(a)
 
 should return `[1, 1, 0, 0]`. Moreover, Vectors should have a `copy` method.
 
-### Compatibility with Numpy
+## Comparison and compatibility with Numpy
 
-It should be easy and very efficient to transform vectors of simple numerical
-types into contiguous Numpy arrays (and inversely).
+`vecpy` would be much simpler than Numpy and targets specifically alternative
+PyPy implementations with a JIT. The goal is only to provide an efficient
+container for computationally intensive tasks in pure Python codes.
+
+Numpy arrays can't contain Python objects continuously in memory. Moreover,
+Numpy uses the CPython C API so that it's very difficult (or impossible) for
+alternative Python interpreters to strongly accelerate Numpy codes.
+
+It should be easy and very efficient (without copy) to convert vectors of
+simple numerical types into contiguous Numpy arrays (and inversely).
 
 ## Notes on a possible implementation
 
-Unfortunately, I don't think this can be implemented in Python. I guess one
-could use RPython but the resulting extensions would only be usable with PyPy.
-Using C with the standard CPython C-API would be terrible in terms of
-performance for PyPy and other alternative implementations. I guess it would
+Unfortunately, I don't think this extension can be implemented in Python. I
+guess one could use RPython but the resulting extensions would only be usable
+with PyPy. Using C with the standard CPython C-API would be terrible in terms
+of performance for PyPy and other alternative implementations. I guess it would
 make sense to use Cython with a backend using HPy. However, HPy is still in the
 early stages of development and this Cython backend targetting the HPy API is
 just mentionned in some HPy documents. It could be interesting to try to
 implement the core of such extension in C using the HPy API.
 
 - Could it be possible with HPy to tell the PyPy JIT how to accelerate code
-using `Vector`? Or would we need to modify PyPy JIT?
+using `Vector`? Or would we need to also modify PyPy JIT?
 
 - Could we use `memcpy` in `__modify_from__` to copy the data of an object?
