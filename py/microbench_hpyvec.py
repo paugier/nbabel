@@ -5,6 +5,19 @@ from hpyvec import Vector
 
 
 class Point(Vector[float].subclass(size=3)):
+
+    @property
+    def x(self):
+        return self[0]
+
+    @property
+    def y(self):
+        return self[1]
+
+    @property
+    def z(self):
+        return self[2]
+
     def norm(self):
         return sqrt(self.norm2())
 
