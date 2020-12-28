@@ -203,6 +203,21 @@ alternative Python interpreters to strongly accelerate Numpy codes.
 It should be easy and very efficient (without copy) to convert vectors of
 simple numerical types into contiguous Numpy arrays (and inversely).
 
+## Comparison with `array.array`
+
+`array.array` (https://docs.python.org/3/library/array.html) can only contain
+few simple numerical types. Moreover,
+
+```python
+In [1]: from array import array
+In [2]: a = array("f", [1., 1.])
+In [3]: 2*a
+Out[3]: array('f', [1.0, 1.0, 1.0, 1.0])
+```
+
+which is not what we usually want for such containers, especially for people
+used to Numpy.
+
 ## Notes on a possible implementation
 
 Unfortunately, I don't think this extension can be implemented in Python. I
