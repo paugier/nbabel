@@ -14,16 +14,20 @@ function get_x(vec, index)
 end
 
 function get_xs(vec)
+    x = vec[1].x
     for i in eachindex(vec)
-        get_x(vec, i)
+        x = get_x(vec, i)
     end
+    return x
 end
 
 
 function get_objects(vec)
+    elem = vec[1]
     for i in eachindex(vec)
-        vec[i]
+        elem = vec[i]
     end
+    return elem
 end
 
 
