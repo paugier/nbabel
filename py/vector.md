@@ -1,27 +1,65 @@
 # Simple efficient 1d vector for Python: a proposal for a new extension
 
+## Motivation
+
+I did some experiments on writting numerically intensive codes in pure Python
+style and benchmarking them using PyPy. I conclude from these experiments and
+my experience with scientific Python (in particular with the [FluidDyn
+project](https://fluiddyn.readthedocs.io) and
+[Transonic](https://transonic.readthedocs.io)) and scientific computing that:
+
+1. PyPy is very promissing but it is really limited by some missing features of
+Python. Even with the fastest implementation in pure Python (which is not easy
+to write because we need to implement from scratch very basic data structures),
+the performances are not so good compared to what can be done with other
+languages. It's interesting to compare with Julia because the 2 technologies
+are somehow similar (JIT compilation of 2 dynamic languages). To be fair, the
+Julia code is in some aspects nicer and runs (something like 4 to 6 times)
+faster.
+
+2. It seems that the problem is not really about the Python language but about
+the lack of a Python extension specialized for this task.
+
+Note that Numpy API is not adapted for this task. Numpy has been designed for
+CPython, an interpreter without JIT compilation. (i) The strategy to be
+(relatively) efficient is to avoid interactions with the Python interpreter in
+computationally intensive parts. (ii) Thus, Numpy is not built to define array
+types of particular dtype and size, and to use these types for pure Python
+object oriented codes. (iii) Finally (but this could be changed), the core of
+Numpy uses the CPython C API so it cannot be accelerated by alternative Python
+implementations (in particular PyPy).
+
+I think there are algorithms for which pure Python OOP style is very adapted
+and in some sense better than Numpy style. Since the 2 programming styles are
+complementary, I think we need a Python API compatible with OOP to express a
+data organisation compatible with numerically intensive computing.
+
+## Goal and proposed API
+
 This document proposes and describes a new Python extension to write
 computationally intensive code in pure Python style. Of course, it has to be
 fully compatible with efficient Python interpreters, like PyPy. Both Python
 JITs (like PyPy and Numba) and ahead-of-time Python compilers (like Pythran)
 could support this API.
 
-There are 3 main principles behind this project:
+The 3 main principles behind this project are:
 
-- First, one needs an API to compute with (i) native variables, (ii) containers
-similar to C `struct` and (iii) native arrays of these variables.
+1. One needs a Python API compatible with Python OOP for (i) native variables,
+(ii) containers similar to C `struct` and (iii) native contiguous arrays of
+native variables and "`struct`".
 
-- Second, one needs to be able to disable some dynamical features of Python for
-some objects to ease important optimizations.
+2. One needs to be able to disable some dynamical features of Python for some
+objects to ease important optimizations.
 
-- Last, one needs to support different modes of executions, "debug", "dev" and
-"perf", that can be activated locally (with an API) and globally (with an
-environment variable). For the performance mode, some type checks and bound
-checks would be disabled.
+3. One needs to support different modes of executions, "debug", "dev" and
+"perf", that can be activated locally (with an API, as with the
+`no_bound_check` decorator used further) and globally (with an environment
+variable). In the performance mode, some type checks and bound checks would be
+disabled.
 
 Experiments with the N-Body problem
 (https://github.com/paugier/nbabel/blob/master/py) suggest that this could lead
-with PyPy to approximately a x4 speedup for pure Python style codes so that
+with PyPy to approximately a x5 speedup for pure Python style codes so that
 such Python codes could be nearly as efficient as optimized Julia/C++/Fortran
 codes.
 
@@ -38,10 +76,10 @@ We need 4 data structures and types that do not exist in pure Python:
 
 ### 1. `NativeVariable` and concrete subclasses like `NativeFloat64`
 
-Types for Python objects containing a pointer towards a native variable
-(`NativeVariable` and concrete subclasses like `NativeFloat64`). In contrast
-with Python and Numpy numerical objects, the `NativeVariable` instances are
-mutable (and have methods `set`, `get` and `copy`).
+These are types for Python objects containing a pointer towards a native
+variable (`NativeVariable` and concrete subclasses like `NativeFloat64`). In
+contrast with Python and Numpy numerical objects, the `NativeVariable`
+instances are mutable (and have methods `set`, `get` and `copy`).
 
 ---
 
@@ -51,14 +89,14 @@ There should also be immutable versions of these classes.
 
 ---
 
-### 2. A metaclass to define C `struct` like classes
+### 2. A metaclass to define C `struct`-like classes
 
 One needs to be able to disable dynamic features of Python for user-defined
 classes. We need to be able to declare a class to be immutable and that one
-can't dynamically add attributes to the instances. I think with need what I
-call a `NativeBag` (similar to a C `struct` but different enough not to be
-called `struct`). We can use a constructor to build them from a `dict` or a
-`class`.
+can't dynamically add attributes to the instances or change the class of the
+instance. I think we need what I call here a `NativeBag` (similar to a C
+`struct` but different enough not to be called "`struct`"). There could be a
+constructor to build them from a `dict` or a standard `class`.
 
 ```python
 # from a dict
@@ -113,7 +151,6 @@ p = ImmutablePoint(42, 42)
 
 with pytest.raises(TypeError):
     p.x = 0.
-
 ```
 
 ---
@@ -121,17 +158,18 @@ with pytest.raises(TypeError):
 ### 3. A container for homogeneous objects
 
 In pure Python, there is no container specialized to contain only homogeneous
-objects (objects of the same types and of the same size, actually, there is the
-module `array`, but it's very limited as explained below). Since we start with
-1D sequence, let's call this type a `Vector` (as in Julia).
+objects (objects of the same types and of the same size). (Actually, there is
+the module `array`, but it's very limited as explained below.) Since we mostly
+need 1D sequence, let's call this type a `Vector` (as in Julia).
 
-The elements have to be stored continuously in memory. Since we are in Python,
-we actually need 2 continuous arrays: one for the Python objects accessible
-from Python and a second one for the native variables. Therefore, iterating on
-the elements could be much faster than with lists (just a pointer increment).
-Moreover, JIT and AOT compilers could know the type of the elements without
-type check. Alignment of the native data is of course very important for
-performance.
+The elements have to be stored contiguously in memory. Alignment of the native
+data is of course very important for performance. Since we are in Python, we
+actually also need few Python objects accessible from Python. Iterating on the
+elements could be much faster than with lists (in many cases just checking than
+there are no other reference to the object and increment one or few
+pointer(s)). For small arrays, we could even have another native array
+containing one Python objects per element. Moreover, JIT and AOT compilers
+could know the type of the elements without type check.
 
 The mathematical operators would act on elements (like Numpy arrays and in
 contrast to `list`, `tuple` and `array.array`). For standard numerical types,
@@ -156,10 +194,10 @@ corresponding native numbers can be stored continuously in memory.
 
 ##### Note Python 3 `int`
 
-In contrast, in Python 3, the size of an `int`
-is not fixed (an `int` object can store very large integers) so
-`vp.Vector[int]` should raise an error. To define an array of integer, one can
-use for example `vp.Vector["int32"]`.
+In contrast, in Python 3, the size of an `int` is not fixed (an `int` object
+can store very large integers) so `vp.Vector[int]` should raise an error. To
+define an array of fixed-size integers, one can use for example
+`vp.Vector["int32"]`.
 
 ---
 
@@ -185,7 +223,7 @@ for number in tmp:
     s += number
 ```
 
-#### Fixed-size vectors and vectors of fixed-size vector
+#### Fixed-size vectors and types "vector of fixed-size vectors"
 
 We should be able to declare a fixed-size vector class:
 
@@ -232,9 +270,9 @@ points[10] = point  # fast copy (can use memcopy)
 ```
 
 A Python interpreter with a JIT adapted for numerical tasks (like PyPy) could
-run codes using such vectors very efficiently than codes using standard Python
-list (fast iteration, much less type checks, etc.). In particular, the simple
-code just above would basically be enough to define the objects used in
+run codes using such vectors much more efficiently than codes using standard
+Python list (fast iteration, much less type checks, etc.). In particular, the
+simple code just above would basically be enough to define the objects used in
 https://github.com/paugier/nbabel/blob/master/py/bench_pypy4.py with no blocker
 to accelerate the execution.
 
@@ -266,11 +304,12 @@ velocities = Points.empty(1000)
 
 Note that the object `positions` contains:
 
-- 1 native array of 1000 Python objects (here `NativeFloat64`) and
 - 1 native array of 4000 floats.
 
-This is of course memory consumming but very interesting in terms of
-performance. One can think about how this code could be accelerated with a good
+- 1 native array containing few `Point4D` objects which are used when a
+`Point4D` is available from Python (`elem = positions[0]`).
+
+One can think about how the following code could be accelerated with a good
 JIT. I added the type annotations but note that they are actually useless for
 PyPy.
 
