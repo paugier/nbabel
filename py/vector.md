@@ -3,10 +3,10 @@
 ## Motivation
 
 I did some experiments on writting numerically intensive codes in pure Python
-style and benchmarking them using PyPy. I conclude from these experiments and
-my experience with scientific Python (in particular with the [FluidDyn
-project](https://fluiddyn.readthedocs.io) and
-[Transonic](https://transonic.readthedocs.io)) and scientific computing that:
+object-oriented programming (OOP) and benchmarking them using PyPy. I conclude
+from these experiments and my experience on scientific computing (in Python
+with [FluidDyn project](https://fluiddyn.readthedocs.io) and
+[Transonic](https://transonic.readthedocs.io)) that:
 
 1. PyPy is very promissing but it is really limited by some missing features of
 Python. Even with the fastest implementation in pure Python (which is not easy
@@ -18,29 +18,31 @@ Julia code is in some aspects nicer and runs (something like 4 to 6 times)
 faster.
 
 2. It seems that the problem is not really about the Python language but about
-the lack of a Python extension specialized for this task.
+the lack of a Python extension specialized for this task (Python OOP for
+computing).
 
 Note that Numpy API is not adapted for this task. Numpy has been designed for
 CPython, an interpreter without JIT compilation. (i) The strategy to be
 (relatively) efficient is to avoid interactions with the Python interpreter in
 computationally intensive parts. (ii) Thus, Numpy is not built to define array
-types of particular dtype and size, and to use these types for pure Python
-object oriented codes. (iii) Finally (but this could be changed), the core of
-Numpy uses the CPython C API so it cannot be accelerated by alternative Python
+types of particular dtype and size, and to use these types for Python object
+oriented codes. (iii) Finally (but [this could be
+changed](https://github.com/hpyproject/hpy/issues/137)), the core of Numpy uses
+the CPython C API so it cannot be accelerated by alternative Python
 implementations (in particular PyPy).
 
-I think there are algorithms for which pure Python OOP style is very adapted
-and in some sense better than Numpy style. Since the 2 programming styles are
+I think there are algorithms for which Python OOP style is very adapted and in
+some sense better than Numpy style. Since the 2 programming styles are
 complementary, I think we need a Python API compatible with OOP to express a
 data organisation compatible with numerically intensive computing.
 
 ## Goal and proposed API
 
 This document proposes and describes a new Python extension to write
-computationally intensive code in pure Python style. Of course, it has to be
-fully compatible with efficient Python interpreters, like PyPy. Both Python
-JITs (like PyPy and Numba) and ahead-of-time Python compilers (like Pythran)
-could support this API.
+computationally intensive code in OOP style. Of course, it has to be fully
+compatible with efficient Python interpreters, like PyPy. Both Python JITs
+(like PyPy, Numba or GraalPython) and ahead-of-time Python compilers (like
+Pythran or Cython) could support this API.
 
 The 3 main principles behind this project are:
 
@@ -69,6 +71,14 @@ Let's say that we import the extension as:
 import vecpy as vp
 ```
 
+---
+
+Disclaimer: this proposition is just a crazy idea from a scientist using
+Python. I write this document to get some feedback about the project and its
+technical feasibility.
+
+---
+
 ## Data structures and types
 
 We need 4 data structures and types that do not exist in pure Python:
@@ -92,11 +102,22 @@ There should also be immutable versions of these classes.
 ### 2. A metaclass to define C `struct`-like classes
 
 One needs to be able to disable dynamic features of Python for user-defined
-classes. We need to be able to declare a class to be immutable and that one
-can't dynamically add attributes to the instances or change the class of the
-instance. I think we need what I call here a `NativeBag` (similar to a C
-`struct` but different enough not to be called "`struct`"). There could be a
-constructor to build them from a `dict` or a standard `class`.
+classes.
+
+1. Standard Python classes and instances are too dynamics for very good
+performance. For such numerically intensive codes, one needs **immutable
+classes** and **less dynamic instances**: we don't want to be able to add
+attributes to the instances or dynamically change its class.
+
+2. The types of the attributes have to be fixed and defined in the class. The
+types could be limited to types corresponding to native types.
+
+3. The native data have to be stored contiguously (as for C `struct`). The
+corresponding Python object are `NativeVariable` pointing towards the raw data.
+
+I think we need what I call here a `NativeBag` (I don't use the word `struct`
+for clarity). There could be a constructor to build them from a `dict` or a
+standard `class`.
 
 ```python
 # from a dict
@@ -157,19 +178,26 @@ with pytest.raises(TypeError):
 
 ### 3. A container for homogeneous objects
 
-In pure Python, there is no container specialized to contain only homogeneous
-objects (objects of the same types and of the same size). (Actually, there is
-the module `array`, but it's very limited as explained below.) Since we mostly
-need 1D sequence, let's call this type a `Vector` (as in Julia).
+In pure Python, there is no container specialized to contain a fixed number of
+homogeneous objects (objects of the same types and of the same size).
+(Actually, there is the module `array`, but it's very limited as explained
+below.) Since we mostly need 1D sequence, let's call this type a `Vector` (as
+in Julia).
 
-The elements have to be stored contiguously in memory. Alignment of the native
-data is of course very important for performance. Since we are in Python, we
-actually also need few Python objects accessible from Python. Iterating on the
-elements could be much faster than with lists (in many cases just checking than
-there are no other reference to the object and increment one or few
-pointer(s)). For small arrays, we could even have another native array
-containing one Python objects per element. Moreover, JIT and AOT compilers
-could know the type of the elements without type check.
+The native elements have to be stored contiguously in memory. Alignment of the
+native data is of course very important for performance. Moreover, JIT and AOT
+compilers could know the type of the elements without type check.
+
+---
+
+**Note implementation detail:** Since we are in Python, we actually also need
+few Python objects accessible from Python. Iterating on the elements could be
+faster than with lists (in many cases just checking than there are no other
+reference to the object and increment one or few pointer(s)). For small arrays,
+we could even have another native array containing one Python objects per
+element.
+
+---
 
 The mathematical operators would act on elements (like Numpy arrays and in
 contrast to `list`, `tuple` and `array.array`). For standard numerical types,
@@ -192,12 +220,10 @@ corresponding native numbers can be stored continuously in memory.
 
 ---
 
-##### Note Python 3 `int`
-
-In contrast, in Python 3, the size of an `int` is not fixed (an `int` object
-can store very large integers) so `vp.Vector[int]` should raise an error. To
-define an array of fixed-size integers, one can use for example
-`vp.Vector["int32"]`.
+**Note Python 3 `int`:** In contrast, in Python 3, the size of an `int` is not
+fixed (an `int` object can store very large integers) so `vp.Vector[int]`
+should raise an error. To define an array of fixed-size integers, one can use
+for example `vp.Vector["int32"]`.
 
 ---
 
@@ -248,7 +274,7 @@ class Point(vp.Vector.subclass(float, size=4)):
 
     def square(self):
         # a JIT could completely remove the overhead,
-        # vectorize this and even use a SIMD instruction
+        # vectorize this and use a SIMD instruction
         return self.x**2 + self.y**2 + self.z**2 + self.w**2
 
     ...
@@ -262,7 +288,7 @@ Points = Vector[Point]
 
 points = Points.empty(size=1000)
 
-points[10] = [1, 2, 3]
+points[10] = [1, 2, 3, 0]
 # or
 point = points.dtype.zero()
 point.x += 1
@@ -294,7 +320,7 @@ class Point4D:
 
     def square(self):
         # a JIT could completely remove the overhead,
-        # vectorize this and even use a SIMD instruction
+        # vectorize this and use a SIMD instruction
         return self.x**2 + self.y**2 + self.z**2 + self.w**2
 
 Points = vp.Vector[Point4D]
@@ -332,11 +358,10 @@ def compute_accelerations(
 
 ---
 
-##### NOTE `__modify_from__` (implementation detail)
-
-Setting the value of an element of a vector (`vec[i] = something`) implies a
-copy, a type check and potentially a cast. We could use a special method
-`__modify_from__` for these tasks so that ``vec[i] = something`` would be turned into
+**Note `__modify_from__` (implementation detail):** Setting the value of an
+element of a vector (`vec[i] = something`) implies a copy, a type check and
+potentially a cast. We could use a special method `__modify_from__` for these
+tasks so that ``vec[i] = something`` would be turned into
 
 ```python
 vec[i].__modify_from__(something)
@@ -346,9 +371,7 @@ vec[i].__modify_from__(something)
 
 ---
 
-##### NOTE on views
-
-As in Numpy, we should prefer views to copies for slicing:
+**Note on views:** As in Numpy, we should prefer views to copies for slicing:
 
 ```python
 a = vp.Vector[float].zeros(4)
@@ -381,15 +404,15 @@ be useless for performance).
 ## Comparison and compatibility with Numpy
 
 `vecpy` would be much simpler than Numpy (much smaller API) and targets
-specifically alternative PyPy implementations with a JIT. The goal is only to
+specifically alternative Python implementations with a JIT. The goal is only to
 provide an API adated for computationally intensive tasks in pure Python codes.
 
 Numpy arrays can't contain Python objects continuously in memory. Moreover,
 Numpy uses the CPython C API so that it's very difficult (or impossible?) for
-alternative Python interpreters to strongly accelerate Numpy codes.
+alternative Python interpreters to accelerate Numpy codes.
 
-It should be easy and very efficient (without copy) to convert vectors of
-simple numerical types into contiguous Numpy arrays (and inversely).
+It should be easy and efficient (without copy) to convert vectors of simple
+numerical types into contiguous Numpy arrays (and inversely).
 
 ## Comparison with `array.array`
 
@@ -424,3 +447,9 @@ accelerate code using `Vector`? Or would we need to also modify PyPy JIT?
 (needed for `Vector`)
 
 - Could we use `memcpy` in `__modify_from__` to copy all the data of an object?
+
+---
+
+Using cffi could be another option...
+
+---
