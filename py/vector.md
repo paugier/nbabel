@@ -21,12 +21,12 @@ faster.
 the lack of a Python extension specialized for this task (Python OOP for
 computing).
 
-Note that Numpy API is not adapted for this task. Numpy has been designed for
-CPython, an interpreter without JIT compilation. (i) The strategy to be
-(relatively) efficient is to avoid interactions with the Python interpreter in
-computationally intensive parts. (ii) Thus, Numpy is not built to define array
-types of particular dtype and size, and to use these types for Python object
-oriented codes. (iii) Finally (but [this could be
+In my humble opinion, Numpy API is not adapted for this task. Numpy has been
+designed for CPython, an interpreter without JIT compilation. (i) The strategy
+to be (relatively) efficient is to avoid interactions with the Python
+interpreter in computationally intensive parts. (ii) Thus, Numpy is not built
+to define array types of particular dtype and size, and to use these types for
+Python object oriented codes. (iii) Finally (but [this could be
 changed](https://github.com/hpyproject/hpy/issues/137)), the core of Numpy uses
 the CPython C API so it cannot be accelerated by alternative Python
 implementations (in particular PyPy).

@@ -55,7 +55,7 @@ if __name__ == "__main__":
     ipython = get_ipython()
 
     def bench(call):
-        print(call)
+        print(call + "\n  ", end="")
         ipython.magic("timeit " + call)
 
     bench("sum_x(positions)")
