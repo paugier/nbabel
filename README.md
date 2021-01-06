@@ -26,7 +26,7 @@ To give an idea of what it gives compared to the figure published in Nature Astr
 **Note:** these benchmarks are run sequentially with a Intel(R) Core(TM)
 i5-8400 CPU @ 2.80GHz.
 
-**Note 2:** With Numba, the elapsed times are 46 s and 181 s, respectively.
+**Note 2:** With Numba, the elapsed times are 44 s and 153 s, respectively.
 
 **Note 3:** With PyPy, a pure Python implementation (bench_pypy4.py) runs for
 1024 particles in 151 s, i.e. only 3 times slower than the C++ implementation
