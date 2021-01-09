@@ -148,5 +148,9 @@ def main(Point):
 
 if __name__ == "__main__":
 
-    main(Point3D)
-    main(Point4D)
+    import sys
+
+    if "4" in sys.argv:
+        main(Point4D)
+    else:
+        main(Point3D)
