@@ -93,7 +93,7 @@ codes.
 Let's say that we import the extension as:
 
 ```python
-import vecpy as vp
+import ooperf as oo
 ```
 
 ---
@@ -133,10 +133,10 @@ standard `class`.
 
 ```python
 # from a dict
-Point2D = vp.native_bag(dict(x=float, y=float))
+Point2D = oo.native_bag(dict(x=float, y=float))
 
 # or with class syntax
-@vp.native_bag
+@oo.native_bag
 class Point3D:
     x: float
     y: float
@@ -174,7 +174,7 @@ Immutability is a very important property for high performance in Julia.
 By default, `NativeBag` should be immutable:
 
 ```python
-ImmutablePoint = vp.native_bag(dict(x=float, y=float))
+ImmutablePoint = oo.native_bag(dict(x=float, y=float))
 p = ImmutablePoint(42, 42)
 with pytest.raises(TypeError):
     p.x = 0.
@@ -183,7 +183,7 @@ with pytest.raises(TypeError):
 I don't know if mutable `NativeBag` would really be useful:
 
 ```python
-MutablePoint = vp.native_bag(dict(x=float, y=float), mutable=True)
+MutablePoint = oo.native_bag(dict(x=float, y=float), mutable=True)
 p = MutablePoint(42, 42)
 p.x = 0.
 ```
@@ -193,10 +193,9 @@ p.x = 0.
 ### 2. A container for homogeneous objects
 
 In pure Python, there is no container specialized to contain a fixed number of
-homogeneous objects (objects of the same types and of the same size).
-(Actually, there is the module `array`, but it's very limited as explained
-below.) Since we first need 1D sequence, let's call this type a `Vector` (as
-in Julia).
+homogeneous objects (objects of the same types). (Actually, there is the module
+`array`, but it's very limited as explained below.) Since we first need 1D
+sequence, let's call this type a `Vector` (as in Julia).
 
 The native elements have to be stored contiguously in memory. Alignment of the
 native data is of course very important for performance. Moreover, JIT and AOT
@@ -215,7 +214,7 @@ elements (the `dtype`) is explicitly declared.
 We can declare a type `Vector` of floats as:
 
 ```python
-VectorF = vp.Vector[float]
+VectorF = oo.Vector[float]
 ```
 
 Since all Python floats have the same size (they are "float64"), the
@@ -224,9 +223,9 @@ corresponding native numbers can be stored continuously in memory.
 ---
 
 **Note Python 3 `int`:** In contrast, in Python 3, the size of an `int` is not
-fixed (an `int` object can store very large integers) so `vp.Vector[int]`
+fixed (an `int` object can store very large integers) so `oo.Vector[int]`
 should raise an error. To define an array of fixed-size integers, one can use
-for example `vp.Vector["int32"]`.
+for example `oo.Vector["int32"]`.
 
 ---
 
@@ -259,7 +258,7 @@ of the instances (the Python object and its associated native data) is fixed
 and computable, so one should be able to use:
 
 ```python
-@vp.native_bag
+@oo.native_bag
 class Point4D:
     x: float
     y: float
@@ -271,12 +270,13 @@ class Point4D:
         # vectorize this and use a SIMD instruction
         return self.x**2 + self.y**2 + self.z**2 + self.w**2
 
-Points = vp.Vector[Point4D]
+Points = oo.Vector[Point4D]
 positions = Points.empty(1000)
 velocities = Points.empty(1000)
 ```
 
-Note that the object `positions` contains 1 native array of 4000 floats.
+Note that the object `positions` contains 1 native array of 4000 contiguous
+floats.
 
 A Python interpreter with a JIT adapted for numerical tasks (like PyPy) could
 run codes using such vectors/objects much more efficiently than codes using
@@ -288,7 +288,7 @@ following code could be accelerated with a good JIT. I added the type
 annotations but note that they are actually useless for PyPy.
 
 ```python
-@vp.no_bound_check
+@oo.no_bound_check
 def compute_accelerations(
         accelerations: Vector[Point],
         masses: Vector[float],
@@ -309,7 +309,7 @@ def compute_accelerations(
 **Note on views:** As in Numpy, we should prefer views to copies for slicing:
 
 ```python
-a = vp.Vector[float].zeros(4)
+a = oo.Vector[float].zeros(4)
 b = a[:2]
 b += 1
 print(a)
@@ -326,7 +326,7 @@ have homogeneous lists. It would allow some optimizations compared to what can
 be done with standard heterogenous lists.
 
 ```python
-Points = vp.HomogeneousList[Point]
+Points = oo.HomogeneousList[Point]
 points = Points.empty(1000)
 ```
 
@@ -384,11 +384,6 @@ implement the core of such extension in C using the HPy API.
 
 - Could it be possible with HPy to tell the PyPy JIT (in the extension) how to
 accelerate code using `Vector`? Or would we need to also modify PyPy JIT?
-
-- Is it possible to initialize a C array of (homogeneous) Python objects?
-(needed for `Vector`)
-
-- Could we use `memcpy` in `__modify_from__` to copy all the data of an object?
 
 ---
 
