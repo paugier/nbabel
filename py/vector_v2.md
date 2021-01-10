@@ -1,4 +1,4 @@
-# Simple efficient 1d vector for Python: a proposal for a new extension
+# Performance and object-oriented Python: a proposal for a new extension
 
 ## Motivation
 
@@ -10,7 +10,7 @@ I conclude from these experiments and my experience on scientific computing (in
 particular in Python with [FluidDyn project](https://fluiddyn.readthedocs.io)
 and [Transonic](https://transonic.readthedocs.io)) that:
 
-1. PyPy is very promissing but it is really limited by some missing features of
+1. PyPy is very promissing but is really limited by some missing features of
 Python. Even with the fastest implementation in pure Python (which is not easy
 to write because we need to implement from scratch very basic data structures),
 the performances are not so good compared to what can be done with other
