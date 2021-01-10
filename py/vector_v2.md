@@ -339,8 +339,8 @@ provide an API adated for computationally intensive tasks in pure Python codes.
 Numpy arrays can't contain Python objects continuously in memory. It's possible
 to define new structured data types in Numpy
 (<https://numpy.org/doc/stable/reference/arrays.dtypes.html>), but one can't
-use them in OOP (for example to associated methods to these dtypes). Moreover,
-these dtypes are mutable:
+use them for OOP (for example to associated methods with these dtypes).
+Moreover, these dtypes are mutable:
 
 ```python
 dt = np.dtype([("x", float), ("y", float)])

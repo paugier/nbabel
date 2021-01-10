@@ -53,13 +53,13 @@ sum_few_norm2(points)
 
 The three functions run in approximately 1 μs.
 
-- In `sum_few_x`, we loop over a vector of `struc` (only few elements) and
+- In `sum_few_x`, we loop over a vector of `struct` (only few elements) and
 compute the sum of the `x` attr.
 
-- In `sum_all_x`, we loop over a vector of `struc` (all elements) and compute
+- In `sum_all_x`, we loop over a vector of `struct` (all elements) and compute
 the sum of the `x` attr.
 
-- In `sum_few_norm2`, we loop over a vector of `struc` (only few elements) and
+- In `sum_few_norm2`, we loop over a vector of `struct` (only few elements) and
 compute the sum of the square of the norm of the elements with a function
 `norm` associated with the type of the element `Point`.
 
