@@ -89,6 +89,6 @@ sum_few_norm2_func(points)
 
 We see that these simple functions are 2 to 3 times slower than in Julia.
 Having less dynamic objects (pointers and C struct, using cffi) helps a bit
-(but one can associated a method to the type of the elements). However, we can
-guess that there is a problem of vectorization with `sum_few_norm2`, which is
-still 2.4 slower than in Julia.
+(but one cannot associated a method with the type of the elements). However, we
+can guess that there is a problem of vectorization with `sum_few_norm2`, which
+is still 2.4 slower than in Julia.

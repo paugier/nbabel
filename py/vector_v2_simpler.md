@@ -15,7 +15,30 @@ the performances are not so good compared to what can be done with other
 languages. It's interesting to compare with Julia because the 2 technologies
 are somehow similar (JIT compilation of 2 dynamic languages). To be fair, the
 Julia code is in some aspects nicer and runs (something like 4 to 6 times)
-faster.
+faster. Julia's fastest implementation is based on `struct` defined by:
+
+```julia
+struct Point4D
+    x::Float64
+    y::Float64
+    z::Float64
+    w::Float64
+end
+Point4D(x,y,z) = Point4D(x, y, z, 0)
+norm2(vec::Point4D) = vec.x^2 + vec.y^2 + vec.z^2 + vec.w^2
+norm(vec::Point4D) = sqrt(norm2(vec))
+import Base: +, -, *, zero
+-(vec1::Point4D,vec2::Point4D) = Point4D(vec1.x - vec2.x, vec1.y - vec2.y, vec1.z - vec2.z, vec1.w - vec2.w)
+...
+
+points = Vector{Point}(undef, number_particles)
+```
+
+We'd like to be able to write something like that in object-oriented Python.
+Note that by default a `struct` type is **immutable** and that `points` (a
+vector of `Point`) corresponds in memory to a contiguous array of `4 *
+number_particles` floats. (Note that it is like in Numpy for which
+`np.ones(2)[0]` is a `np.float64` scalar which is immutable.)
 
 2. It seems that the problem is not really about the Python language but about
 the lack of a Python extension specialized for this task (Python OOP for
@@ -25,8 +48,8 @@ In my humble opinion, Numpy API is not adapted for this task. Numpy has been
 designed for CPython, an interpreter without JIT compilation. (i) The strategy
 to be (relatively) efficient is to avoid interactions with the Python
 interpreter in computationally intensive parts. (ii) Thus, Numpy is not built
-to define array types of particular dtype and size, and to use these types for
-Python object oriented codes. (iii) Finally (but [this could be
+to define array types of particular dtype (to use these types for Python object
+oriented codes and type annotations). (iii) Finally (but [this could be
 changed](https://github.com/hpyproject/hpy/issues/137)), the core of Numpy uses
 the CPython C API so it cannot be accelerated by alternative Python
 implementations (in particular PyPy).
@@ -46,9 +69,9 @@ Pythran or Cython) could support this API.
 
 The 3 main principles behind this project are:
 
-1. One needs a Python API compatible with Python OOP for (i) containers of
-native variables similar to C `struct` and (ii) native contiguous arrays of
-native variables and "`struct`".
+1. One needs a Python API compatible with Python OOP for (i) pool of native
+variables similar to C `struct` and (ii) native contiguous arrays of native
+variables and "`struct`".
 
 2. One needs to be able to disable some dynamical features of Python for some
 objects to ease important optimizations.
@@ -81,25 +104,10 @@ technical feasibility.
 
 ## Data structures and types
 
-We need 4 data structures and types that do not exist in pure Python:
-`NativeVariable`, `NativeBag`, `Vector` and `HomogeneousList`.
+We need 3 data structures and types that do not exist in pure Python:
+`NativeBag`, `Vector` and `HomogeneousList`.
 
-### 1. `NativeVariable` and concrete subclasses like `NativeFloat64`
-
-These are types for Python objects containing a pointer towards a native
-variable (`NativeVariable` and concrete subclasses like `NativeFloat64`). In
-contrast with Python and Numpy numerical objects, the `NativeVariable`
-instances are mutable (and have methods `set`, `get` and `copy`).
-
----
-
-#### Note: immutable versions
-
-There should also be immutable versions of these classes.
-
----
-
-### 2. A metaclass to define C `struct`-like classes
+### 1. A metaclass to define C `struct`-like classes
 
 One needs to be able to disable dynamic features of Python for user-defined
 classes.
@@ -113,7 +121,7 @@ attributes to the instances or dynamically change its class.
 types could be limited to types corresponding to native types.
 
 3. The native data have to be stored contiguously (as for C `struct`). The
-corresponding Python object are `NativeVariable` pointing towards the raw data.
+corresponding Python objects point towards the raw data.
 
 I think we need what I call here a `NativeBag` (I don't use the word `struct`
 for clarity). There could be a constructor to build them from a `dict` or a
@@ -138,11 +146,7 @@ class Point3D:
 p = Point2D(1, 1)
 x = p.x
 
-assert isinstance(x, vp.NativeFloat64)
-assert isinstance(x.value, float)
-
-x.set(2)
-assert p.x == 2.
+assert isinstance(x, float)
 
 # behavior appropriate for good performance:
 
@@ -160,23 +164,29 @@ For such simple cases, the decorator could also set class methods like `zero`,
 
 ---
 
-#### Immutable `NativeBag`
+#### Mutability
 
-For some cases, being able to declare that the instances of the class are
-immutable should also help for other optimizations.
+Immutability is a very important property for high performance in Julia.
+By default, `NativeBag` should be immutable:
 
 ```python
-ImmutablePoint = vp.native_bag(dict(x=float, y=float), mutable=False)
-
+ImmutablePoint = vp.native_bag(dict(x=float, y=float))
 p = ImmutablePoint(42, 42)
-
 with pytest.raises(TypeError):
     p.x = 0.
 ```
 
+I don't know if mutable `NativeBag` would really be useful:
+
+```python
+MutablePoint = vp.native_bag(dict(x=float, y=float), mutable=True)
+p = MutablePoint(42, 42)
+p.x = 0.
+```
+
 ---
 
-### 3. A container for homogeneous objects
+### 2. A container for homogeneous objects
 
 In pure Python, there is no container specialized to contain a fixed number of
 homogeneous objects (objects of the same types and of the same size).
@@ -227,7 +237,7 @@ vec_2f = VectorF([2, 3])
 These vectors can of course be used as sequences, similarly to Numpy arrays:
 
 ```python
-number = vec_2f[0]  # a NativeFloat64
+number = vec_2f[0]  # a float
 
 tmp = 10 * vec_4f - 5  # another vector of floats
 # no difficulty to speedup this loop (here, a JIT can bypass the Python objects)
@@ -262,9 +272,7 @@ positions = Points.empty(1000)
 velocities = Points.empty(1000)
 ```
 
-Note that the object `positions` contains:
-
-- 1 native array of 4000 floats.
+Note that the object `positions` contains 1 native array of 4000 floats.
 
 A Python interpreter with a JIT adapted for numerical tasks (like PyPy) could
 run codes using such vectors/objects much more efficiently than codes using
@@ -307,7 +315,7 @@ should return `[1, 1, 0, 0]`. Moreover, Vectors should have a `copy` method.
 
 ---
 
-### 4. `HomogeneousList`
+### 3. `HomogeneousList`
 
 `list`s behave like arrays of references. For some cases, it could be useful to
 have homogeneous lists. It would allow some optimizations compared to what can
@@ -318,17 +326,28 @@ Points = vp.HomogeneousList[Point]
 points = Points.empty(1000)
 ```
 
-`HomogeneousList` would also be useful to work with immutable elements.
-
 ## Comparison and compatibility with Numpy
 
 `vecpy` would be much simpler than Numpy (very small API) and targets
 specifically alternative Python implementations with a JIT. The goal is only to
 provide an API adated for computationally intensive tasks in pure Python codes.
 
-Numpy arrays can't contain Python objects continuously in memory. Moreover,
-Numpy uses the CPython C API so that it's very difficult (or impossible?) for
-alternative Python interpreters to accelerate Numpy codes.
+Numpy arrays can't contain Python objects continuously in memory. It's possible
+to define new structured data types in Numpy
+(<https://numpy.org/doc/stable/reference/arrays.dtypes.html>), but one can't
+use them in OOP (for example to associated methods to these dtypes). Moreover,
+these dtypes are mutable:
+
+```python
+dt = np.dtype([("x", float), ("y", float)])
+a = np.ones(2, dtype=dt)
+elem = a[0]
+# the elements are mutable (this modifies the array)
+elem["x"] = 2.
+```
+
+Moreover, Numpy uses the CPython C API so that it's very difficult (or
+impossible?) for alternative Python interpreters to accelerate Numpy codes.
 
 It should be easy and efficient (without copy) to convert vectors of simple
 numerical types into contiguous Numpy arrays (and inversely).
