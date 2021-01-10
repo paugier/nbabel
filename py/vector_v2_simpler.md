@@ -3,10 +3,12 @@
 ## Motivation
 
 I did some experiments on writting numerically intensive codes in pure Python
-object-oriented programming (OOP) and benchmarking them using PyPy. I conclude
-from these experiments and my experience on scientific computing (in particular
-in Python with [FluidDyn project](https://fluiddyn.readthedocs.io) and
-[Transonic](https://transonic.readthedocs.io)) that:
+object-oriented programming (OOP) and benchmarking them using PyPy (see [this
+project](https://github.com/paugier/nbabel) and more specifically [these
+microbenchmarks](https://github.com/paugier/nbabel/tree/master/py/microbench)).
+I conclude from these experiments and my experience on scientific computing (in
+particular in Python with [FluidDyn project](https://fluiddyn.readthedocs.io)
+and [Transonic](https://transonic.readthedocs.io)) that:
 
 1. PyPy is very promissing but it is really limited by some missing features of
 Python. Even with the fastest implementation in pure Python (which is not easy
@@ -113,12 +115,14 @@ One needs to be able to disable dynamic features of Python for user-defined
 classes.
 
 1. Standard Python classes and instances are too dynamics for very good
-performance. For such numerically intensive codes, one needs **immutable
-classes** and **less dynamic instances**: we don't want to be able to add
-attributes to the instances or dynamically change its class.
+performance. For numerically intensive codes, one needs **immutable classes**
+and **less dynamic instances**: we don't want to be able to add attributes to
+the instances or dynamically change its class. Moreover, in many cases, we need
+**immutable instances**.
 
 2. The types of the attributes have to be fixed and defined in the class. The
-types could be limited to types corresponding to native types.
+types of the attributes could be limited to types corresponding to native types
+(and maybe vectors of native types).
 
 3. The native data have to be stored contiguously (as for C `struct`). The
 corresponding Python objects point towards the raw data.
