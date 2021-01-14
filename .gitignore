@@ -8,6 +8,7 @@ cpp/main
 fortran/nbabel
 fortran/output*
 
+*.so
 *.mod
 rust/nbabel
 
@@ -17,3 +18,6 @@ profile.png
 profile.pstats
 output.log
 target/
+
+py/**/*.c
+py/**/*.html

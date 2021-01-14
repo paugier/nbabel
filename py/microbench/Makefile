@@ -11,3 +11,7 @@ cffi:
 
 ju:
 	julia microbench_sum_x.jl
+
+icy: util_cython.pyx
+	cythonize -a -i util_cython.pyx
+	ipython microbench_cython.py
