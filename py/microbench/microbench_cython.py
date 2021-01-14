@@ -38,6 +38,10 @@ if __name__ == "__main__":
         points[i] = Point(x, x, x)
         x += 1.0
 
+    for _ in range(1000):
+        sum_few_x(points)
+        sum_few_norm2(points)
+
     bench("sum_few_x(points)")
     bench("sum_all_x(points)")
     bench("sum_few_norm2(points)")
