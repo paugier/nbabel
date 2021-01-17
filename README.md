@@ -4,11 +4,11 @@ Here are some elapsed times (in s) for 5 **implementations** (of course, these
 numbers do not characterized the languages but only particular implementations
 in some languages).
 
-| # particles |   Py | C++ | Fortran | Julia | Rust |
-|-------------|------|-----|---------|-------|------|
-|     1024    |   30 |  55 |   41    |    45 |   34 |
-|     2048    |  124 | 231 |  166    |   173 |  137 |
-|    16384    | 7220 |   ? |    ?    | 11100 |    ? |
+| # particles |   Py |   C++ | Fortran | Julia | Rust |
+|-------------|------|-------|---------|-------|------|
+|     1024    |   30 |    55 |     41  |    45 |   34 |
+|     2048    |  124 |   231 |    166  |   173 |  137 |
+|    16384    | 7220 | 14640 |  10914  | 11100 |    ? |
 
 The implementations in C++, Fortran and Julia come from https://www.nbabel.org/
 and have recently been used in an article published in Nature Astronomy

@@ -128,7 +128,7 @@ program nbabel
    ! prepare file IO
    call get_command_argument(1, filename)
    call get_command_argument(2, cstars)
-   read (cstars, '(i4)') nstars
+   read (cstars, '(i5)') nstars
    !print *, "Enter name of input file & number of stars"
    !read *, filename, nstars
 
