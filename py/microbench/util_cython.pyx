@@ -11,36 +11,36 @@ ctypedef struct point_:
     float x, y, z
 
 
-cdef int n_freelist = 8
+cdef int n_flist = 8
 
-cdef point_ *freelist_struct_points = <point_ *>malloc(n_freelist * sizeof(point_))
-cdef int* freelist_is_used = <int *>malloc(n_freelist * sizeof(int))
+cdef point_ *flist_struct_points = <point_ *>malloc(n_flist * sizeof(point_))
+cdef int* flist_is_used = <int *>malloc(n_flist * sizeof(int))
 
-cdef i
-for i in range(n_freelist):
-    freelist_is_used[i] = 0
+cdef int i
+for i in range(n_flist):
+    flist_is_used[i] = 0
 
 
 @cython.freelist(8)
 cdef class Point:
     cdef point_ *_ptr
 
-    cdef int _freelist_index, _freelist_unused_found
+    cdef int _flist_index, _flist_unused_found
 
     def __cinit__(self, x, y, z):
 
-        self._freelist_unused_found = 0
+        self._flist_unused_found = 0
 
-        for self._freelist_index in range(n_freelist):
-            if freelist_is_used[self._freelist_index] == 0:
-                self._freelist_unused_found = 1
+        for self._flist_index in range(n_flist):
+            if flist_is_used[self._flist_index] == 0:
+                self._flist_unused_found = 1
                 break
 
-        # print("__cinit__", self._freelist_unused_found, self._freelist_index)
+        # print("__cinit__", self._flist_unused_found, self._flist_index)
 
-        if self._freelist_unused_found:
-            freelist_is_used[self._freelist_index] = 1
-            self._ptr = freelist_struct_points + self._freelist_index
+        if self._flist_unused_found:
+            flist_is_used[self._flist_index] = 1
+            self._ptr = flist_struct_points + self._flist_index
         else:
             self._ptr = <point_ *>malloc(sizeof(point_))
         if self._ptr is NULL:
@@ -51,10 +51,10 @@ cdef class Point:
             self._ptr.y = y
 
     def __dealloc__(self):
-        # print("__dealloc__", self._freelist_unused_found, <unsigned int> self._ptr)
+        # print("__dealloc__", self._flist_unused_found, <unsigned int> self._ptr)
 
-        if self._freelist_unused_found:
-            freelist_is_used[self._freelist_index] = 0
+        if self._flist_unused_found:
+            flist_is_used[self._flist_index] = 0
         elif self._ptr is not NULL:
             free(self._ptr)
             self._ptr = NULL
