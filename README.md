@@ -4,10 +4,11 @@ Here are some elapsed times (in s) for 5 **implementations** (of course, these
 numbers do not characterized the languages but only particular implementations
 in some languages).
 
-| # particles |  Py | C++ | Fortran | Julia | Rust |
-|-------------|-----|-----|---------|-------|------|
-|     1024    |  30 |  55 |   41    |   45  |   34 |
-|     2048    | 124 | 231 |  166    |  173  |  137 |
+| # particles |   Py | C++ | Fortran | Julia | Rust |
+|-------------|------|-----|---------|-------|------|
+|     1024    |   30 |  55 |   41    |    45 |   34 |
+|     2048    |  124 | 231 |  166    |   173 |  137 |
+|    16384    | 7220 |   ? |    ?    | 11100 |    ? |
 
 The implementations in C++, Fortran and Julia come from https://www.nbabel.org/
 and have recently been used in an article published in Nature Astronomy
@@ -34,7 +35,7 @@ i5-8400 CPU @ 2.80GHz.
 
 **Note 4:** The directory "julia" contains some more advanced and faster
 implementations. The sequential optimized Julia implementation runs on my PC in
-27.2 s and 104.4 s, respectively (i.e. 1.1-1.2 times faster than our fast and
+27.2 s, 104.4 s and 8900 s, respectively (i.e. +- 20% compared to our fast and
 simple Python implementation).
 
 ## Smaller benchmarks between different Python solutions

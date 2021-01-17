@@ -118,7 +118,12 @@ if __name__ == "__main__":
     import sys
 
     t_start = perf_counter()
-    time_end, time_step = 10.0, 0.001
+    try:
+        time_end = float(sys.argv[2])
+    except IndexError:
+        time_end = 10.
+
+    time_step = 0.001
     nb_steps = int(time_end / time_step) + 1
 
     path_input = sys.argv[1]

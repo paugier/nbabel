@@ -14,7 +14,11 @@ Benchmarks measure the time reported by system time, as output by the `Makefile`
 `@inbounds` flags are added to O(N^2) loops, but the benchmark appears to be somewhat
 dependent on bounds checking anyway, particularly for the parallel version, which
 allocates larger arrays for non-concurrent sums. Thus, two benchmarks were performed, with and
-without a global flag to avoid bounds checking:
+without a global flag to avoid bounds checking.
+
+[This page of the Julia
+forum](https://discourse.julialang.org/t/nbabel-nbody-integrator-speed-up)
+shows the work done for these optimized implementations.
 
 ### Single-threaded in a Intel(R) Core(TM) i7-8550U CPU @ 1.80GHz
 

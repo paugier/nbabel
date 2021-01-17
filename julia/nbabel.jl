@@ -19,10 +19,9 @@ using Printf
 using DelimitedFiles
 
 tbeg = 0.0
-tend = 10.0
 dt = 0.001
 
-function NBabel(fname::String; show=false)
+function NBabel(fname::String; tend = 10.0, show=false)
 
     if show
 	    println("Reading file : $fname")
@@ -194,4 +193,3 @@ end
 
 #using .NB
 #NBabel(ARGS[1],show=parse(Bool,ARGS[2]))
-

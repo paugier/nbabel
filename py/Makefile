@@ -17,6 +17,9 @@ bench1k: __pythran__/bench.py
 bench2k: __pythran__/bench.py
 	time python bench.py ../data/input2k
 
+bench16k: __pythran__/bench.py
+	time python bench.py ../data/input16k 0.2
+
 bench256: __pythran__/bench.py
 	python bench.py ../data/input256
 
