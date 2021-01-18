@@ -62,12 +62,10 @@ def loop(time_step, nb_steps, masses, positions, velocities):
         time += time_step
 
         if not step % 100:
-            energy, energy_kin, energy_pot = compute_energies(
-                masses, positions, velocities
-            )
+            energy, _, _ = compute_energies(masses, positions, velocities)
             print(
-                f"t = {time_step * step:4.2f}, E = {energy:.6f}, "
-                f"dE/E = {(energy - energy_previous) / energy_previous:+.6e}"
+                f"t = {time_step * step:5.2f}, E = {energy:.10f}, "
+                f"dE/E = {(energy - energy_previous) / energy_previous:+.10f}"
             )
             energy_previous = energy
 
