@@ -37,7 +37,7 @@ Zwart, 2020).
 
 **Note 4:** The directory "julia" contains some more advanced and faster
 implementations. The sequential optimized Julia implementation runs on my PC in
-27.2 s, 104.4 s and 8900 s, respectively (i.e. +- 20% compared to our fast and
+22 s, 82 s and 5340 s, respectively (i.e. 25-30% faster than our fast and
 simple Python implementation).
 
 **Note 5:** From the high level Numpy implementation
