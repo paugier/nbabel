@@ -70,7 +70,7 @@ function main3()
     @btime compute_acceleration!($accelerations, $masses, $positions)
 end
 
-print("With Tuple{Float64, Float64, Float64, Float64}:\n")
-main4()
 print("With Tuple{Float64, Float64, Float64}:\n")
 main3()
+print("With Tuple{Float64, Float64, Float64, Float64}:\n")
+main4()
