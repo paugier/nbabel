@@ -1,6 +1,7 @@
 import numpy as np
 
 from transonic import jit, wait_for_all_extensions
+from transonic.util import timeit_verbose as timeit
 
 
 def advance_positions(positions, velocities, accelerations, time_step):
@@ -27,8 +28,7 @@ def advance_positions_loops(positions, velocities, accelerations, time_step):
                 + 0.5 * time_step ** 2 * accelerations[i0, i1]
             )
 
-
-shape = 256, 3
+shape = 256, 4
 
 positions = np.zeros(shape)
 velocities = np.zeros_like(positions)
@@ -41,3 +41,9 @@ advance_positions_simd(positions, velocities, accelerations, time_step)
 advance_positions_loops(positions, velocities, accelerations, time_step)
 
 wait_for_all_extensions()
+
+glo = globals()
+norm = timeit("advance_positions(positions, velocities, accelerations, time_step)", globals=glo)
+timeit("advance_positions_nosimd(positions, velocities, accelerations, time_step)",norm=norm, globals=glo)
+timeit("advance_positions_simd(positions, velocities, accelerations, time_step)",norm=norm, globals=glo)
+timeit("advance_positions_loops(positions, velocities, accelerations, time_step)",norm=norm, globals=glo)
