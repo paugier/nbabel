@@ -18,7 +18,7 @@ def compute(accelerations: "float[:,:]", masses: "float[:]", positions: "float[:
             for i in range(dim):
                 vector[i] = position0[i] - positions[index_p1, i]
             distance = sqrt(sum(vector ** 2))
-            coef = 1.0 / distance ** dim
+            coef = 1.0 / distance ** 3
             for i in range(dim):
                 accelerations[index_p0, i] -= coef * mass1 * vector[i]
                 accelerations[index_p1, i] += coef * mass0 * vector[i]
