@@ -1,9 +1,12 @@
 import datetime
 import time
 import gzip
-import os
+import platform
 
 import requests
+
+import pandas as pd
+import matplotlib.pyplot as plt
 
 from execo_g5k import get_host_attributes
 
@@ -21,29 +24,32 @@ def getwatt(node=None, from_ts=None, to_ts=None):
     """
 
     if node is None:
-        node = os.environ["HOSTNAME"]
+        node = platform.node().split(".")[0]
 
     if to_ts is None:
         to_ts = time.time()
 
     if from_ts is None:
-        from_ts = to_ts - 3600
+        from_ts = to_ts - 200
 
     watt = []
     host_attrs = get_host_attributes(node)
     node_wattmetre = host_attrs["sensors"]["power"]["via"]["pdu"][0]
+    first_part_address = (
+        "http://wattmetre.lyon.grid5000.fr/data/"
+        + node_wattmetre["uid"]
+        + "-log/power.csv."
+    )
+
     for ts in range(int(from_ts), int(to_ts) + 3600, 3600):
         suffix = datetime.datetime.fromtimestamp(ts).strftime("%Y-%m-%dT%H")
         if suffix != datetime.datetime.fromtimestamp(time.time()).strftime(
             "%Y-%m-%dT%H"
         ):
             suffix += ".gz"
-        data = requests.get(
-            "http://wattmetre.lyon.grid5000.fr/data/"
-            + node_wattmetre["uid"]
-            + "-log/power.csv."
-            + suffix
-        ).content
+        address = first_part_address + suffix
+        print("getting file:", address)
+        data = requests.get(address).content
         if suffix.endswith(".gz"):
             data = gzip.decompress(data)
         for l in str(data).split("\\n")[1:-1]:
@@ -59,4 +65,12 @@ def getwatt(node=None, from_ts=None, to_ts=None):
 
 if __name__ == "__main__":
 
-    getwatt()
+    conso = getwatt()
+
+    df = pd.DataFrame(conso, columns=["timestamp", "power"])
+    df['date'] = pd.to_datetime(df['timestamp'])
+    df.head()
+
+    df.plot(x="date", y="power")
+
+    plt.show()
