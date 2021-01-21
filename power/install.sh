@@ -8,6 +8,8 @@ pip install conda-app
 conda-app install mercurial
 export PATH=$PATH:$HOME/miniconda3/envs/_env_mercurial/bin
 
+pip install execo
+
 hg clone https://github.com/paugier/nbabel.git
 
 conda install pythran transonic numba clangdev pandas openblas blas-devel -y
