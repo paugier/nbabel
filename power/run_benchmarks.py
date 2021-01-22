@@ -23,8 +23,8 @@ import h5py
 # parameters of this script
 # TODO argparse
 nb_particles_short = "1k"
-time_julia_bench = 1.0  # (s)
-t_sleep_before = 1  # (s)
+time_julia_bench = 30.0  # (s)
+t_sleep_before = 4  # (s)
 
 
 def time_as_str(decimal=0):
@@ -73,18 +73,18 @@ implementations = {
         "julia -O3 --check-bounds=no -- run.jl "
         "nbabel.jl ../data/input{nb_particles_short} true {t_end}",
     ),
-    # "c++ nbabel.org": (
-    #     "cpp",
-    #     "cat ../data/input{nb_particles_short} | time ./main {t_end}",
-    # ),
-    # "pypy": (
-    #     "py",
-    #     "pypy bench_pypy4.py ../data/input{nb_particles_short} {t_end}",
-    # ),
-    # "numba": (
-    #     "py",
-    #     "python bench_numba.py ../data/input{nb_particles_short} {t_end}",
-    # ),
+    "c++ nbabel.org": (
+        "cpp",
+        "cat ../data/input{nb_particles_short} | time ./main {t_end}",
+    ),
+    "pypy": (
+        "py",
+        "pypy bench_pypy4.py ../data/input{nb_particles_short} {t_end}",
+    ),
+    "numba": (
+        "py",
+        "python bench_numba.py ../data/input{nb_particles_short} {t_end}",
+    ),
     "julia optimized": (
         "julia",
         "julia -O3 --check-bounds=no -- run.jl "
@@ -94,14 +94,14 @@ implementations = {
         "py",
         "python bench.py ../data/input{nb_particles_short} {t_end}",
     ),
-    # "pythran high-level jit": (
-    #     "py",
-    #     "python bench_numpy_highlevel_jit.py ../data/input{nb_particles_short} {t_end}",
-    # ),
-    # "fortran nbabel.org": (
-    #     "fortran",
-    #     "./nbabel ../data/input{nb_particles_short} {nb_particles} {t_end}",
-    # ),
+    "pythran high-level jit": (
+        "py",
+        "python bench_numpy_highlevel_jit.py ../data/input{nb_particles_short} {t_end}",
+    ),
+    "fortran nbabel.org": (
+        "fortran",
+        "./nbabel ../data/input{nb_particles_short} {nb_particles} {t_end}",
+    ),
 }
 
 print("First run to evaluate t_end for time_julia_bench")
@@ -221,4 +221,4 @@ if "grid5000" in node:
             "watts", data=watts, compression="gzip", compression_opts=9
         )
 
-    print("File {path_result} saved")
+    print(f"File {path_result} saved")
