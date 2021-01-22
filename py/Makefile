@@ -2,6 +2,10 @@
 CC=gcc
 CXX=g++
 
+build: __pythran__/bench.py
+	# launching to "warm the jit"
+	python bench_numpy_highlevel_jit.py ../data/input16 0.1
+
 bench0:
 	python bench0.py ../data/input16
 

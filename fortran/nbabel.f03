@@ -123,11 +123,23 @@ program nbabel
    real(fflt) :: start_time, stop_time
 
    type(particle) :: pList ! particle list object
-   character(len=255) :: filename, cstars
+   character(len=255) :: filename, cstars, ctend
+   integer :: nargs
 
    ! prepare file IO
+
+   nargs = command_argument_count()
+
    call get_command_argument(1, filename)
    call get_command_argument(2, cstars)
+
+   if (nargs > 2) then
+      call get_command_argument(3, ctend)
+      read (ctend,*) tend
+   else
+      tend = 10.0_fflt
+   endif
+
    read (cstars, '(i5)') nstars
    !print *, "Enter name of input file & number of stars"
    !read *, filename, nstars
@@ -146,7 +158,6 @@ program nbabel
    call cpu_time(start_time)
 
    t = 0.0_fflt
-   tend = 10.0_fflt
    counter = 0
 
    call pList%getAPE(PE)

@@ -19,7 +19,8 @@ import pandas as pd
 # parameters of this script
 # TODO argparse
 nb_particles_short = "1k"
-time_julia_bench = 4.0  # (s)
+time_julia_bench = 5.0  # (s)
+t_sleep_before = 1  # (s)
 
 
 def run(command):
@@ -51,6 +52,15 @@ def create_command(command_template, nb_particles_short, t_end):
 
 
 implementations = {
+    "julia nbabel.org": (
+        "julia",
+        "julia -O3 --check-bounds=no -- run.jl "
+        "nbabel.jl ../data/input{nb_particles_short} true {t_end}",
+    ),
+    "c++ nbabel.org": (
+        "cpp",
+        "cat ../data/input{nb_particles_short} | time ./main {t_end}",
+    ),
     "pypy": (
         "py",
         "pypy bench_pypy4.py ../data/input{nb_particles_short} {t_end}",
@@ -68,18 +78,14 @@ implementations = {
         "py",
         "python bench.py ../data/input{nb_particles_short} {t_end}",
     ),
-    # "c++ old": (
-    #     "cpp",
-    # TODO in c++ code, support t_end
-    #     "cat ../data/input{nb_particles_short} | time ./main"
-    # )
-    # "fortran old": (
-    #     "fortran",
-    #     "pypy bench_pypy4.py ../data/input{nb_particles_short} {t_end}",
-    #     # TODO in fortran code, support t_end
-    #     # TODO here, nb_particles
-    #     "./nbabel ../data/input{nb_particles_short} {nb_particles} {t_end}",
-    # ),
+    "pythran high-level jit": (
+        "py",
+        "python bench_numpy_highlevel_jit.py ../data/input{nb_particles_short} {t_end}",
+    ),
+    "fortran nbabel.org": (
+        "fortran",
+        "./nbabel ../data/input{nb_particles_short} {nb_particles} {t_end}",
+    ),
 }
 
 print("First run to evaluate t_end for time_julia_bench")
@@ -101,19 +107,35 @@ print(f"We'll run the benchmarks with t_end = {t_end}")
 lines = []
 index_run = 0
 
-for implementation, (name_dir, command_template) in implementations.items():
-    working_dir = path_base_repo / name_dir
+for _ in range(2):
+    for implementation, (name_dir, command_template) in implementations.items():
+        working_dir = path_base_repo / name_dir
 
-    # warmup
-    for _ in range(1):
-        command = create_command(command_template, nb_particles_short, t_end/10)
-        run(command)
+        # warmup
+        for _ in range(1):
+            command = create_command(command_template, nb_particles_short, 0.01)
+            run(command)
 
-    sleep(1)
+        command = create_command(command_template, nb_particles_short, t_end)
+        sleep(1)
 
-    command = create_command(command_template, nb_particles_short, t_end)
+        t_perf_start = perf_counter()
+        timestamp_start = time()
+        sleep(t_sleep_before)
+        elapsed_time = perf_counter() - t_perf_start
+        timestamp_end = time()
 
-    for _ in range(2):
+        lines.append(
+            [
+                "sleep(t_sleep_before)",
+                name_dir,
+                index_run,
+                timestamp_start,
+                timestamp_end,
+                elapsed_time,
+            ]
+        )
+
         t_perf_start = perf_counter()
         timestamp_start = time()
         run(command)
@@ -141,8 +163,13 @@ df = pd.DataFrame(
     columns=columns,
 )
 
+df.sort_values("implementation", inplace=True)
+
+elapsed_pythran = df[df.implementation == "pythran"]["elapsed_time"].min()
+df["ratio_elapsed"] = df["elapsed_time"] / elapsed_pythran
+
 print(df)
-# TODO add ratio to average Pythran
+
 # TODO save df in csv
 
 # TODO get power data

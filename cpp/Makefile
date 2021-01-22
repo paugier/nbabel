@@ -1,3 +1,5 @@
+build: main
+
 bench256: main
 	cat ../data/input256 | time ./main
 
