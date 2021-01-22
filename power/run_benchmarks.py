@@ -16,12 +16,14 @@ from time import time, perf_counter, sleep
 from datetime import datetime
 import platform
 
+import numpy as np
 import pandas as pd
+import h5py
 
 # parameters of this script
 # TODO argparse
 nb_particles_short = "1k"
-time_julia_bench = 20.0  # (s)
+time_julia_bench = 1.0  # (s)
 t_sleep_before = 1  # (s)
 
 
@@ -71,18 +73,18 @@ implementations = {
         "julia -O3 --check-bounds=no -- run.jl "
         "nbabel.jl ../data/input{nb_particles_short} true {t_end}",
     ),
-    "c++ nbabel.org": (
-        "cpp",
-        "cat ../data/input{nb_particles_short} | time ./main {t_end}",
-    ),
-    "pypy": (
-        "py",
-        "pypy bench_pypy4.py ../data/input{nb_particles_short} {t_end}",
-    ),
-    "numba": (
-        "py",
-        "python bench_numba.py ../data/input{nb_particles_short} {t_end}",
-    ),
+    # "c++ nbabel.org": (
+    #     "cpp",
+    #     "cat ../data/input{nb_particles_short} | time ./main {t_end}",
+    # ),
+    # "pypy": (
+    #     "py",
+    #     "pypy bench_pypy4.py ../data/input{nb_particles_short} {t_end}",
+    # ),
+    # "numba": (
+    #     "py",
+    #     "python bench_numba.py ../data/input{nb_particles_short} {t_end}",
+    # ),
     "julia optimized": (
         "julia",
         "julia -O3 --check-bounds=no -- run.jl "
@@ -92,14 +94,14 @@ implementations = {
         "py",
         "python bench.py ../data/input{nb_particles_short} {t_end}",
     ),
-    "pythran high-level jit": (
-        "py",
-        "python bench_numpy_highlevel_jit.py ../data/input{nb_particles_short} {t_end}",
-    ),
-    "fortran nbabel.org": (
-        "fortran",
-        "./nbabel ../data/input{nb_particles_short} {nb_particles} {t_end}",
-    ),
+    # "pythran high-level jit": (
+    #     "py",
+    #     "python bench_numpy_highlevel_jit.py ../data/input{nb_particles_short} {t_end}",
+    # ),
+    # "fortran nbabel.org": (
+    #     "fortran",
+    #     "./nbabel ../data/input{nb_particles_short} {nb_particles} {t_end}",
+    # ),
 }
 
 print("First run to evaluate t_end for time_julia_bench")
@@ -119,6 +121,7 @@ t_end = t_end * time_julia_bench / elapsed_time
 print(f"We'll run the benchmarks with t_end = {t_end}")
 
 timestamp_before = time()
+time_as_str = time_as_str()
 
 lines = []
 index_run = 0
@@ -192,8 +195,24 @@ node = platform.node()
 
 path_dir_result = path_base_repo / "power/results"
 path_dir_result.mkdir(exist_ok=True)
-path_result = path_dir_result / f"{node}_{time_as_str()}.csv"
+path_result = path_dir_result / f"{node}_{time_as_str}.csv"
 df.to_csv(path_result)
 
-# TODO get power data
-# TODO save power data and other informations (t_end, hostname, ...) is a hdf5 file
+if "grid5000" in node:
+    from getwatt import getwatt
+
+    conso = np.array(getwatt(node.split(".")[0], timestamp_before, time()))
+    path_result = path_result.with_suffix(".h5")
+
+    times = conso[:, 0]
+    watts = conso[:, 1]
+
+    with h5py.File(str(path_result), "w") as file:
+        file.attrs["t_end"] = t_end
+        file.attrs["node"] = node
+        file.attrs["nb_particles_short"] = nb_particles_short
+        file.attrs["time_julia_bench"] = time_julia_bench
+        file.attrs["t_sleep_before"] = t_sleep_before
+
+        file.create_dataset("times", data=times)
+        file.create_dataset("watts", data=watts)
