@@ -20,10 +20,6 @@ import numpy as np
 import pandas as pd
 import h5py
 
-# parameters of this script
-# TODO argparse
-nb_particles_short = "1k"
-time_julia_bench = 30.0  # (s)
 t_sleep_before = 4  # (s)
 
 
@@ -39,7 +35,7 @@ def time_as_str(decimal=0):
     return ret
 
 
-def run(command):
+def run(command, working_dir):
     print(f"launching command:\n{command}")
     try:
         return subprocess.run(
@@ -54,17 +50,6 @@ def run(command):
 
 
 path_base_repo = Path(__file__).absolute().parent.parent
-
-nb_particles_dict = {"1k": 1024, "2k": 2048, "16k": 16384}
-nb_particles = nb_particles_dict[nb_particles_short]
-
-
-def create_command(command_template, nb_particles_short, t_end):
-    return command_template.format(
-        nb_particles_short=nb_particles_short,
-        t_end=t_end,
-        nb_particles=nb_particles,
-    )
 
 
 implementations = {
@@ -104,121 +89,151 @@ implementations = {
     ),
 }
 
-print("First run to evaluate t_end for time_julia_bench")
-t_end = 0.1
-if nb_particles_short == "16k":
-    t_end = 0.05
 
-name_dir, command_template = implementations["julia optimized"]
-working_dir = path_base_repo / name_dir
-command = create_command(command_template, nb_particles_short, t_end)
+nb_particles_dict = {"1k": 1024, "2k": 2048, "16k": 16384}
 
-t_perf_start = perf_counter()
-run(command)
-elapsed_time = perf_counter() - t_perf_start
 
-t_end = t_end * time_julia_bench / elapsed_time
-print(f"We'll run the benchmarks with t_end = {t_end}")
+def run_benchmarks(nb_particles_short, time_julia_bench):
 
-timestamp_before = time()
-time_as_str = time_as_str()
+    nb_particles = nb_particles_dict[nb_particles_short]
 
-lines = []
-index_run = 0
-
-for _ in range(2):
-    for implementation, (name_dir, command_template) in implementations.items():
-        working_dir = path_base_repo / name_dir
-
-        # warmup
-        for _ in range(1):
-            command = create_command(command_template, nb_particles_short, 0.01)
-            run(command)
-
-        command = create_command(command_template, nb_particles_short, t_end)
-        sleep(1)
-
-        t_perf_start = perf_counter()
-        timestamp_start = time()
-        sleep(t_sleep_before)
-        elapsed_time = perf_counter() - t_perf_start
-        timestamp_end = time()
-
-        lines.append(
-            [
-                "sleep(t_sleep_before)",
-                name_dir,
-                index_run,
-                timestamp_start,
-                timestamp_end,
-                elapsed_time,
-            ]
+    def create_command(command_template, nb_particles_short, t_end):
+        return command_template.format(
+            nb_particles_short=nb_particles_short,
+            t_end=t_end,
+            nb_particles=nb_particles,
         )
 
-        t_perf_start = perf_counter()
-        timestamp_start = time()
-        run(command)
-        elapsed_time = perf_counter() - t_perf_start
-        timestamp_end = time()
+    print("First run to evaluate t_end for time_julia_bench")
+    t_end = 0.1
+    if nb_particles_short == "16k":
+        t_end = 0.05
 
-        sleep(2)
+    name_dir, command_template = implementations["julia optimized"]
+    working_dir = path_base_repo / name_dir
+    command = create_command(command_template, nb_particles_short, t_end)
 
-        lines.append(
-            [
-                implementation,
-                name_dir,
-                index_run,
-                timestamp_start,
-                timestamp_end,
-                elapsed_time,
-            ]
-        )
-        index_run += 1
+    t_perf_start = perf_counter()
+    run(command, working_dir)
+    elapsed_time = perf_counter() - t_perf_start
 
-columns = (
-    "implementation language index timestamp_start timestamp_end elapsed_time"
-).split()
+    t_end = t_end * time_julia_bench / elapsed_time
+    print(f"We'll run the benchmarks with t_end = {t_end}")
 
-df = pd.DataFrame(
-    lines,
-    columns=columns,
-)
+    timestamp_before = time()
+    time_as_str = time_as_str()
 
-df.sort_values("implementation", inplace=True)
+    lines = []
+    index_run = 0
 
-elapsed_pythran = df[df.implementation == "pythran"]["elapsed_time"].min()
-df["ratio_elapsed"] = df["elapsed_time"] / elapsed_pythran
+    for _ in range(2):
+        for implementation, (
+            name_dir,
+            command_template,
+        ) in implementations.items():
+            working_dir = path_base_repo / name_dir
 
-print(df)
+            # warmup
+            for _ in range(1):
+                command = create_command(
+                    command_template, nb_particles_short, 0.01
+                )
+                run(command, working_dir)
 
-node = platform.node()
+            command = create_command(command_template, nb_particles_short, t_end)
+            sleep(2)
 
-path_dir_result = path_base_repo / "power/tmp"
-path_dir_result.mkdir(exist_ok=True)
-path_result = path_dir_result / f"{node}_{time_as_str}.csv"
-df.to_csv(path_result)
+            t_perf_start = perf_counter()
+            timestamp_start = time()
+            sleep(t_sleep_before)
+            elapsed_time = perf_counter() - t_perf_start
+            timestamp_end = time()
 
-if "grid5000" in node:
-    from getwatt import getwatt
+            sleep(2)
 
-    conso = np.array(getwatt(node.split(".")[0], timestamp_before, time()))
-    path_result = path_result.with_suffix(".h5")
+            lines.append(
+                [
+                    "sleep(t_sleep_before)",
+                    name_dir,
+                    index_run,
+                    timestamp_start,
+                    timestamp_end,
+                    elapsed_time,
+                ]
+            )
 
-    times = conso[:, 0]
-    watts = conso[:, 1]
+            t_perf_start = perf_counter()
+            timestamp_start = time()
+            run(command, working_dir)
+            elapsed_time = perf_counter() - t_perf_start
+            timestamp_end = time()
 
-    with h5py.File(str(path_result), "w") as file:
-        file.attrs["t_end"] = t_end
-        file.attrs["node"] = node
-        file.attrs["nb_particles_short"] = nb_particles_short
-        file.attrs["time_julia_bench"] = time_julia_bench
-        file.attrs["t_sleep_before"] = t_sleep_before
+            sleep(2)
 
-        file.create_dataset(
-            "times", data=times, compression="gzip", compression_opts=9
-        )
-        file.create_dataset(
-            "watts", data=watts, compression="gzip", compression_opts=9
-        )
+            lines.append(
+                [
+                    implementation,
+                    name_dir,
+                    index_run,
+                    timestamp_start,
+                    timestamp_end,
+                    elapsed_time,
+                ]
+            )
+            index_run += 1
 
-    print(f"File {path_result} saved")
+    columns = (
+        "implementation language index timestamp_start timestamp_end elapsed_time"
+    ).split()
+
+    df = pd.DataFrame(
+        lines,
+        columns=columns,
+    )
+
+    df.sort_values("implementation", inplace=True)
+
+    elapsed_pythran = df[df.implementation == "pythran"]["elapsed_time"].min()
+    df["ratio_elapsed"] = df["elapsed_time"] / elapsed_pythran
+
+    print(df)
+
+    node = platform.node()
+
+    path_dir_result = path_base_repo / "power/tmp"
+    path_dir_result.mkdir(exist_ok=True)
+    path_result = path_dir_result / f"{node}_{time_as_str}.csv"
+    df.to_csv(path_result)
+
+    if "grid5000" in node:
+        from getwatt import getwatt
+
+        conso = np.array(getwatt(node.split(".")[0], timestamp_before, time()))
+        path_result = path_result.with_suffix(".h5")
+
+        times = conso[:, 0]
+        watts = conso[:, 1]
+
+        with h5py.File(str(path_result), "w") as file:
+            file.attrs["t_end"] = t_end
+            file.attrs["node"] = node
+            file.attrs["nb_particles_short"] = nb_particles_short
+            file.attrs["time_julia_bench"] = time_julia_bench
+            file.attrs["t_sleep_before"] = t_sleep_before
+
+            file.create_dataset(
+                "times", data=times, compression="gzip", compression_opts=9
+            )
+            file.create_dataset(
+                "watts", data=watts, compression="gzip", compression_opts=9
+            )
+
+        print(f"File {path_result} saved")
+
+
+if __name__ == "__main__":
+
+    nb_particles_short = "1k"
+    time_julia_bench = 4.0  # (s)
+
+    run_benchmarks(nb_particles_short, time_julia_bench)
