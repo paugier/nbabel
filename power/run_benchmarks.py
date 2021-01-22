@@ -13,14 +13,27 @@ warning: this script does not take care of compilation.
 from pathlib import Path
 import subprocess
 from time import time, perf_counter, sleep
+from datetime import datetime
 
 import pandas as pd
 
 # parameters of this script
 # TODO argparse
 nb_particles_short = "1k"
-time_julia_bench = 5.0  # (s)
+time_julia_bench = 1.0  # (s)
 t_sleep_before = 1  # (s)
+
+
+def time_as_str(decimal=0):
+    """Return a string coding the time."""
+    dt = datetime.now()
+    ret = dt.strftime("%Y-%m-%d_%H-%M-%S")
+    if decimal > 0:
+        if not isinstance(decimal, int):
+            raise TypeError
+
+        ret += f".{dt.microsecond:06d}"[: decimal + 1]
+    return ret
 
 
 def run(command):
@@ -107,7 +120,7 @@ print(f"We'll run the benchmarks with t_end = {t_end}")
 lines = []
 index_run = 0
 
-for _ in range(2):
+for _ in range(1):
     for implementation, (name_dir, command_template) in implementations.items():
         working_dir = path_base_repo / name_dir
 
@@ -142,6 +155,8 @@ for _ in range(2):
         elapsed_time = perf_counter() - t_perf_start
         timestamp_end = time()
 
+        sleep(1)
+
         lines.append(
             [
                 implementation,
@@ -170,7 +185,10 @@ df["ratio_elapsed"] = df["elapsed_time"] / elapsed_pythran
 
 print(df)
 
-# TODO save df in csv
+path_dir_result = path_base_repo / "power/results"
+path_dir_result.mkdir(exist_ok=True)
+path_result = path_dir_result / f"times{time_as_str()}.csv"
+df.to_csv(path_result)
 
 # TODO get power data
 # TODO save power data and other informations (t_end, hostname, ...) is a hdf5 file
