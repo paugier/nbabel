@@ -30,7 +30,7 @@ def getwatt(node=None, from_ts=None, to_ts=None):
         to_ts = time.time()
 
     if from_ts is None:
-        from_ts = to_ts - 200
+        from_ts = to_ts - 300
 
     watt = []
     host_attrs = get_host_attributes(node)
@@ -69,8 +69,8 @@ if __name__ == "__main__":
 
     df = pd.DataFrame(conso, columns=["timestamp", "power"])
     df['date'] = pd.to_datetime(df['timestamp'])
-    df.head()
+    print(df.head())
 
-    df.plot(x="date", y="power")
+    df.plot(x="timestamp", y="power")
 
     plt.show()

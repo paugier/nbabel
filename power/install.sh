@@ -15,7 +15,6 @@ hg clone https://github.com/paugier/nbabel.git
 conda install pythran transonic numba clangdev pandas openblas blas-devel requests matplotlib -y
 conda create -n env_pypy pypy pandas -y
 
-
 wget https://julialang-s3.julialang.org/bin/linux/x64/1.5/julia-1.5.3-linux-x86_64.tar.gz
 tar -xzf julia-1.5.3-linux-x86_64.tar.gz julia-1.5.3
 export PATH=$PATH:$HOME/julia-1.5.3/bin

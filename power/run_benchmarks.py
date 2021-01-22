@@ -14,13 +14,14 @@ from pathlib import Path
 import subprocess
 from time import time, perf_counter, sleep
 from datetime import datetime
+import platform
 
 import pandas as pd
 
 # parameters of this script
 # TODO argparse
 nb_particles_short = "1k"
-time_julia_bench = 1.0  # (s)
+time_julia_bench = 20.0  # (s)
 t_sleep_before = 1  # (s)
 
 
@@ -117,6 +118,8 @@ elapsed_time = perf_counter() - t_perf_start
 t_end = t_end * time_julia_bench / elapsed_time
 print(f"We'll run the benchmarks with t_end = {t_end}")
 
+timestamp_before = time()
+
 lines = []
 index_run = 0
 
@@ -185,9 +188,11 @@ df["ratio_elapsed"] = df["elapsed_time"] / elapsed_pythran
 
 print(df)
 
+node = platform.node()
+
 path_dir_result = path_base_repo / "power/results"
 path_dir_result.mkdir(exist_ok=True)
-path_result = path_dir_result / f"times{time_as_str()}.csv"
+path_result = path_dir_result / f"{node}_{time_as_str()}.csv"
 df.to_csv(path_result)
 
 # TODO get power data
