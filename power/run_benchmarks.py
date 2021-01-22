@@ -126,7 +126,7 @@ time_as_str = time_as_str()
 lines = []
 index_run = 0
 
-for _ in range(1):
+for _ in range(2):
     for implementation, (name_dir, command_template) in implementations.items():
         working_dir = path_base_repo / name_dir
 
@@ -161,7 +161,7 @@ for _ in range(1):
         elapsed_time = perf_counter() - t_perf_start
         timestamp_end = time()
 
-        sleep(1)
+        sleep(2)
 
         lines.append(
             [
@@ -193,7 +193,7 @@ print(df)
 
 node = platform.node()
 
-path_dir_result = path_base_repo / "power/results"
+path_dir_result = path_base_repo / "power/tmp"
 path_dir_result.mkdir(exist_ok=True)
 path_result = path_dir_result / f"{node}_{time_as_str}.csv"
 df.to_csv(path_result)
@@ -214,5 +214,11 @@ if "grid5000" in node:
         file.attrs["time_julia_bench"] = time_julia_bench
         file.attrs["t_sleep_before"] = t_sleep_before
 
-        file.create_dataset("times", data=times)
-        file.create_dataset("watts", data=watts)
+        file.create_dataset(
+            "times", data=times, compression="gzip", compression_opts=9
+        )
+        file.create_dataset(
+            "watts", data=watts, compression="gzip", compression_opts=9
+        )
+
+    print("File {path_result} saved")
