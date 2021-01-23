@@ -23,7 +23,7 @@ import h5py
 t_sleep_before = 4  # (s)
 
 
-def time_as_str(decimal=0):
+def get_time_as_str(decimal=0):
     """Return a string coding the time."""
     dt = datetime.now()
     ret = dt.strftime("%Y-%m-%d_%H-%M-%S")
@@ -121,7 +121,7 @@ def run_benchmarks(nb_particles_short, time_julia_bench):
     print(f"We'll run the benchmarks with t_end = {t_end}")
 
     timestamp_before = time()
-    time_as_str = time_as_str()
+    time_as_str = get_time_as_str()
 
     lines = []
     index_run = 0
