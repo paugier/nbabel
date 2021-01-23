@@ -233,7 +233,17 @@ def run_benchmarks(nb_particles_short, time_julia_bench):
 
 if __name__ == "__main__":
 
-    nb_particles_short = "1k"
-    time_julia_bench = 4.0  # (s)
+    import sys
+
+    if len(sys.argv) > 1:
+        # can be "1k", "2k", "16k"
+        nb_particles_short = sys.argv[1]
+    else:
+        nb_particles_short = "1k"
+
+    if len(sys.argv) > 2:
+        time_julia_bench = sys.argv[2]
+    else:
+        time_julia_bench = 20.0  # (s)
 
     run_benchmarks(nb_particles_short, time_julia_bench)

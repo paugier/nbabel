@@ -31,7 +31,8 @@ with h5py.File(path_h5) as file:
     times = file["times"][:]
     watts = file["watts"][:]
 
-watt_sleep = np.percentile(watts, 5)
+power_sleep = np.percentile(watts, 5)
+nb_cores = 32
 
 # fig, ax = plt.subplots()
 # ax.plot(times, watts)
@@ -57,27 +58,117 @@ for index, row in df.iterrows():
 
     consommations[index] = trapz(watts_run, times_run)  # in J
 
-df["consommation"] = consommations
 
+df["consommation"] = consommations
 df["power"] = df["consommation"] / df["elapsed_time"]
+
+df["consommation_core"] = (
+    consommations - df["elapsed_time"] * power_sleep * (nb_cores - 1) / nb_cores
+)
 
 print(df)
 
-df_out = (
-    df.loc[:, ["implementation", "language", "elapsed_time", "consommation", "power"]]
-    .groupby(["implementation"])
-    .mean()
-)
+columns = [
+    "implementation",
+    "language",
+    "elapsed_time",
+    "consommation",
+    "power",
+    "consommation_core",
+]
+
+df_out = df.loc[:, columns].groupby(["implementation", "language"]).mean()
 df_out.drop("sleep(t_sleep_before)", inplace=True)
 
 print(df_out)
 
-ax = df_out.plot(x="elapsed_time", y="consommation", kind="scatter", loglog=True)
+
+def compute_CO2_mass(consommation):
+    """
+    kWh = 3.6e6 J
+    0.283 kWh -> 1 kg
+
+    Also takes into account difference in t_end
+    """
+    return consommation / 3.6 / 0.283 * 1e-6 * (10 / t_end)
+
+
+df_out["CO2"] = compute_CO2_mass(df_out["consommation"])
+df_out["CO2_core"] = compute_CO2_mass(df_out["consommation_core"])
+
+
+fig, ax = plt.subplots()
+fig, ax1 = plt.subplots()
 
 for index, row in df_out.iterrows():
-    ax.text(row.elapsed_time, row.consommation, row.name)
+
+    marker = "o"
+    color = "b"
+    if row.name[1] == "py":
+        marker = "s"
+        color = "r"
+    elif row.name[1] in ("cpp", "fortran"):
+        color = "g"
+
+    factor_time = 0.93
+    factor_cons = 1.03
+
+    name = row.name[0].capitalize()
+    if name.endswith("Pythran high-level jit"):
+        name = "Pythran\n naive"
+    elif name == "Pypy":
+        name = "PyPy"
+
+    if name == "Numba":
+        factor_cons = 0.94
+    elif name == "Pythran\n naive":
+        factor_cons = 0.85
+
+    ax.plot(row.elapsed_time, row.CO2, marker=marker, color=color)
+    ax.text(factor_time * row.elapsed_time, factor_cons * row.CO2, name)
+
+    ax1.plot(row.elapsed_time, row.CO2_core, marker=marker, color=color)
+    ax1.text(factor_time * row.elapsed_time, factor_cons * row.CO2_core, name)
+
+ax.set_ylabel("Production CO2 full node during run (kg)")
+ax1.set_ylabel("Production CO2 used core(s) during run (kg)")
+
+for _ in (ax, ax1):
+    _.set_xscale("log")
+    _.set_yscale("log")
+    _.set_xlabel("Elapsed time (s)")
+    _.figure.tight_layout()
 
 
-ax.figure.tight_layout()
+# for index, row in df_out.iterrows():
+
+#     marker = "o"
+#     color = "b"
+#     if row.name[1] == "py":
+#         marker = "s"
+#         color = "r"
+
+
+#     factor_time = 0.93
+#     factor_cons = 1.03
+
+#     name = row.name[0].capitalize()
+#     if name.endswith("Pythran high-level jit"):
+#         name = "Pythran\n naive"
+#     elif name == "Pypy":
+#         name = "PyPy"
+
+#     if name == "Numba":
+#         factor_cons = 0.94
+#     elif name == "Pythran\n naive":
+#         factor_cons = 0.85
+
+
+# ax.set_xscale("log")
+# ax.set_yscale("log")
+
+# ax.set_xlabel("Elapsed time (s)")
+# ax.figure.tight_layout()
+
 
 plt.show()
