@@ -10,11 +10,20 @@ here = Path(__file__).absolute().parent
 
 dir_saved = here / "saved"
 
-paths_csv = sorted(dir_saved.glob("*.csv"))
+paths_h5 = sorted(dir_saved.glob("*.h5"))
 
-path_csv = paths_csv[0]
+for path in paths_h5:
+    with h5py.File(path) as file:
+        nb_particles_short = file.attrs["nb_particles_short"]
+        print(path)
+        print(nb_particles_short)
 
-path_h5 = path_csv.with_suffix(".h5")
+import sys
+sys.exit()
+
+path_h5 = paths_csv[0]
+
+path_csv = path_csv.with_suffix(".csv")
 
 assert path_csv.exists()
 assert path_h5.exists()
@@ -32,7 +41,8 @@ with h5py.File(path_h5) as file:
     watts = file["watts"][:]
 
 power_sleep = np.percentile(watts, 5)
-nb_cores = 32
+nb_cores = 12
+power_sleep_1core = power_sleep / nb_cores
 
 # fig, ax = plt.subplots()
 # ax.plot(times, watts)
@@ -62,10 +72,6 @@ for index, row in df.iterrows():
 df["consommation"] = consommations
 df["power"] = df["consommation"] / df["elapsed_time"]
 
-df["consommation_core"] = (
-    consommations - df["elapsed_time"] * power_sleep * (nb_cores - 1) / nb_cores
-)
-
 print(df)
 
 columns = [
@@ -74,13 +80,23 @@ columns = [
     "elapsed_time",
     "consommation",
     "power",
-    "consommation_core",
 ]
 
 df_out = df.loc[:, columns].groupby(["implementation", "language"]).mean()
 df_out.drop("sleep(t_sleep_before)", inplace=True)
 
 print(df_out)
+
+elapsed_max = df["elapsed_time"].max()
+
+df_out["consommation_core"] = df_out["consommation"] - df_out[
+    "elapsed_time"
+] * power_sleep_1core * (nb_cores - 1)
+
+
+df_out["consommation_alt"] = (
+    df_out["consommation"] + (elapsed_max - df_out["elapsed_time"]) * power_sleep
+)
 
 
 def compute_CO2_mass(consommation):
@@ -94,11 +110,13 @@ def compute_CO2_mass(consommation):
 
 
 df_out["CO2"] = compute_CO2_mass(df_out["consommation"])
+df_out["CO2_alt"] = compute_CO2_mass(df_out["consommation_alt"])
 df_out["CO2_core"] = compute_CO2_mass(df_out["consommation_core"])
 
 
 fig, ax = plt.subplots()
 fig, ax1 = plt.subplots()
+fig, ax2 = plt.subplots()
 
 for index, row in df_out.iterrows():
 
@@ -130,45 +148,19 @@ for index, row in df_out.iterrows():
     ax1.plot(row.elapsed_time, row.CO2_core, marker=marker, color=color)
     ax1.text(factor_time * row.elapsed_time, factor_cons * row.CO2_core, name)
 
+    ax2.plot(row.elapsed_time, row.CO2_alt, marker=marker, color=color)
+    ax2.text(factor_time * row.elapsed_time, factor_cons * row.CO2_alt, name)
+
+
 ax.set_ylabel("Production CO2 full node during run (kg)")
 ax1.set_ylabel("Production CO2 used core(s) during run (kg)")
+ax2.set_ylabel("Production CO2 full node during time slowest run (kg)")
 
-for _ in (ax, ax1):
+for _ in (ax, ax1, ax2):
     _.set_xscale("log")
     _.set_yscale("log")
     _.set_xlabel("Elapsed time (s)")
     _.figure.tight_layout()
-
-
-# for index, row in df_out.iterrows():
-
-#     marker = "o"
-#     color = "b"
-#     if row.name[1] == "py":
-#         marker = "s"
-#         color = "r"
-
-
-#     factor_time = 0.93
-#     factor_cons = 1.03
-
-#     name = row.name[0].capitalize()
-#     if name.endswith("Pythran high-level jit"):
-#         name = "Pythran\n naive"
-#     elif name == "Pypy":
-#         name = "PyPy"
-
-#     if name == "Numba":
-#         factor_cons = 0.94
-#     elif name == "Pythran\n naive":
-#         factor_cons = 0.85
-
-
-# ax.set_xscale("log")
-# ax.set_yscale("log")
-
-# ax.set_xlabel("Elapsed time (s)")
-# ax.figure.tight_layout()
 
 
 plt.show()

@@ -203,7 +203,9 @@ def run_benchmarks(nb_particles_short, time_julia_bench):
 
     path_dir_result = path_base_repo / "power/tmp"
     path_dir_result.mkdir(exist_ok=True)
-    path_result = path_dir_result / f"{node}_{time_as_str}.csv"
+    path_result = (
+        path_dir_result / f"{nb_particles_short}_{node}_{time_as_str}.csv"
+    )
     df.to_csv(path_result)
 
     if "grid5000" in node:
