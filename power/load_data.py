@@ -10,20 +10,13 @@ here = Path(__file__).absolute().parent
 
 dir_saved = here / "saved"
 
-paths_h5 = sorted(dir_saved.glob("*.h5"))
+nb_particles_short = "2k"
 
-for path in paths_h5:
-    with h5py.File(path) as file:
-        nb_particles_short = file.attrs["nb_particles_short"]
-        print(path)
-        print(nb_particles_short)
+paths_h5 = sorted(dir_saved.glob(f"{nb_particles_short}_*.h5"))
 
-import sys
-sys.exit()
+path_h5 = paths_h5[0]
 
-path_h5 = paths_csv[0]
-
-path_csv = path_csv.with_suffix(".csv")
+path_csv = path_h5.with_suffix(".csv")
 
 assert path_csv.exists()
 assert path_h5.exists()
