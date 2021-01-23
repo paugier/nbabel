@@ -15,6 +15,7 @@ import subprocess
 from time import time, perf_counter, sleep
 from datetime import datetime
 import platform
+import os
 
 import numpy as np
 import pandas as pd
@@ -50,7 +51,7 @@ def run(command, working_dir):
 
 
 path_base_repo = Path(__file__).absolute().parent.parent
-
+nb_cpus = os.cpu_count()
 
 implementations = {
     "julia nbabel.org": (
@@ -220,6 +221,7 @@ def run_benchmarks(nb_particles_short, time_julia_bench):
             file.attrs["nb_particles_short"] = nb_particles_short
             file.attrs["time_julia_bench"] = time_julia_bench
             file.attrs["t_sleep_before"] = t_sleep_before
+            file.attrs["nb_cpus"] = nb_cpus
 
             file.create_dataset(
                 "times", data=times, compression="gzip", compression_opts=9
@@ -242,7 +244,7 @@ if __name__ == "__main__":
         nb_particles_short = "1k"
 
     if len(sys.argv) > 2:
-        time_julia_bench = sys.argv[2]
+        time_julia_bench = float(sys.argv[2])
     else:
         time_julia_bench = 20.0  # (s)
 
