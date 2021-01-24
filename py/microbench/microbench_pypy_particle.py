@@ -1,8 +1,6 @@
 from math import sqrt
 from time import perf_counter
 
-from vector import Vector
-
 
 class Point3D:
     def __init__(self, x, y, z):
@@ -60,7 +58,7 @@ def make_inlined_point(name):
     return property(get, set)
 
 
-class Particle(object):
+class Particle:
     position = make_inlined_point("position")
     acceleration = make_inlined_point("acceleration")
 
@@ -68,12 +66,6 @@ class Particle(object):
         self.mass = mass
         self.position = position
         self.acceleration = acceleration
-
-
-class Points(Vector):
-    def reset_to_0(self):
-        for point in self:
-            point.reset_to_0()
 
 
 def compute_accelerations(particles):
