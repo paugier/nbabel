@@ -1,6 +1,5 @@
 import datetime
 import time
-import gzip
 import bz2
 import platform
 

@@ -1,4 +1,5 @@
 from pathlib import Path
+from pprint import pprint
 
 import numpy as np
 import pandas as pd
@@ -15,8 +16,9 @@ dir_saved = here / "saved"
 nb_particles_short = "16k"
 
 paths_h5 = sorted(dir_saved.glob(f"{nb_particles_short}_*.h5"))
+pprint(paths_h5)
 
-path_h5 = paths_h5[-1]
+path_h5 = paths_h5[0]
 
 path_csv = path_h5.with_suffix(".csv")
 
@@ -101,13 +103,15 @@ def compute_CO2_mass(consommation):
 
     Also takes into account difference in t_end
     """
-    return consommation / 3.6 / 0.283 * 1e-6 * (10 / t_end)
+
+    return consommation * (10 / t_end) / 3.6e6 / 0.283
 
 
 df_out["CO2"] = compute_CO2_mass(df_out["consommation"])
 df_out["CO2_alt"] = compute_CO2_mass(df_out["consommation_alt"])
 df_out["CO2_core"] = compute_CO2_mass(df_out["consommation_core"])
-
+# in days
+df_out.elapsed_time *= 10 / t_end / (24 * 3600)
 
 fig, ax0 = plt.subplots()
 fig, ax1 = plt.subplots()
@@ -162,27 +166,40 @@ for index, row in df_out.iterrows():
     name = row.name[0].capitalize()
     if name.endswith("Pythran high-level jit"):
         name = "Pythran\n naive"
-    elif name == "Pypy":
-        name = "PyPy"
+    elif name.startswith("Pypy"):
+        name = name.replace("Pypy", "PyPy")
 
     factor_time = -0.008
     factor_cons = 0.005
 
     if nb_particles_short == "16k":
-        if name == "PyPy":
-            factor_cons = -0.003
-            factor_time = -0.018
+        if "2021-01-24_09-14-08" in path_h5.name:
+            if name == "PyPy":
+                factor_cons = -0.003
+                factor_time = -0.018
 
-        elif name == "Pythran\n naive":
-            factor_time = -0.01
-            factor_cons = -0.020
+            elif name == "Pythran\n naive":
+                factor_time = -0.01
+                factor_cons = -0.020
 
-        elif name.startswith("Fortran"):
-            factor_cons = -0.01
+            elif name.startswith("Fortran"):
+                factor_cons = -0.01
 
-        elif name.startswith("Julia nbabel"):
-            factor_time = 0.005
-            factor_cons = -0.004
+            elif name.startswith("Julia nbabel"):
+                factor_time = 0.005
+                factor_cons = -0.004
+        elif "2021-01-25_14-08-35" in path_h5.name:
+            if name == "Pythran\n naive":
+                factor_time = -0.01
+                factor_cons = -0.020
+
+            elif name == "Numba":
+                factor_time = -0.024
+                factor_cons = -0.003
+
+            elif name.startswith("Fortran"):
+                factor_time = 0.004
+                factor_cons = -0.007
 
     elif nb_particles_short == "1k":
 
@@ -209,7 +226,7 @@ ax2.set_ylabel("Production CO$_2$ full node during time slowest run (kg)")
 for _ in (ax0, ax1, ax2):
     _.set_xscale("log")
     _.set_yscale("log")
-    _.set_xlabel("Elapsed time (s)")
+    _.set_xlabel("Elapsed time (day)")
     _.set_title(f"{nb_particles_short} particles, 10 N-Body time units")
     _.figure.tight_layout()
 

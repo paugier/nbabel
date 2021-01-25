@@ -95,7 +95,7 @@ def run_benchmarks(nb_particles_short, time_julia_bench):
             lines.append(
                 [
                     "sleep(t_sleep_before)",
-                    1
+                    1,
                     "None",
                     index_run,
                     timestamp_start,
@@ -116,7 +116,7 @@ def run_benchmarks(nb_particles_short, time_julia_bench):
             lines.append(
                 [
                     f"nbabel5_threads.jl",
-                    nb_threads
+                    nb_threads,
                     "julia",
                     index_run,
                     timestamp_start,
@@ -137,7 +137,9 @@ def run_benchmarks(nb_particles_short, time_julia_bench):
 
     df.sort_values("nb_threads", inplace=True)
 
-    elapsed_serial = df[(df.language == "julia") and df.nb_threads == 1]["elapsed_time"].min()
+    elapsed_serial = df[(df.language == "julia") and df.nb_threads == 1][
+        "elapsed_time"
+    ].min()
     df["ratio_elapsed"] = df["elapsed_time"] / elapsed_serial
 
     print(df)
@@ -147,7 +149,8 @@ def run_benchmarks(nb_particles_short, time_julia_bench):
     path_dir_result = path_base_repo / "power/tmp"
     path_dir_result.mkdir(exist_ok=True)
     path_result = (
-        path_dir_result / f"parallel_julia_{nb_particles_short}_{node}_{time_as_str}.csv"
+        path_dir_result
+        / f"parallel_julia_{nb_particles_short}_{node}_{time_as_str}.csv"
     )
     df.to_csv(path_result)
 
