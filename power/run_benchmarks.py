@@ -16,6 +16,7 @@ from time import time, perf_counter, sleep
 from datetime import datetime
 import platform
 import os
+import gzip
 
 import numpy as np
 import pandas as pd
@@ -218,26 +219,47 @@ def run_benchmarks(nb_particles_short, time_julia_bench):
     if "grid5000" in node:
         from getwatt import getwatt
 
-        conso = np.array(getwatt(node.split(".")[0], timestamp_before, time()))
-        path_result = path_result.with_suffix(".h5")
-
-        times = conso[:, 0]
-        watts = conso[:, 1]
+        timestamp_end = time()
+        node_shortname = node.split(".")[0]
+        try:
+            conso = np.array(
+                getwatt(node_shortname, timestamp_before, timestamp_end)
+            )
+        except gzip.BadGzipFile:
+            print(
+                "Error gzip.BadGzipFile. "
+                "Power data will need to be upload later."
+            )
+            conso = False
+            path_result = path_result.with_name(
+                path_result.stem + "_incomplete" + ".h5"
+            )
+        else:
+            path_result = path_result.with_suffix(".h5")
 
         with h5py.File(str(path_result), "w") as file:
             file.attrs["t_end"] = t_end
             file.attrs["node"] = node
+            file.attrs["node_shortname"] = node_shortname
             file.attrs["nb_particles_short"] = nb_particles_short
             file.attrs["time_julia_bench"] = time_julia_bench
             file.attrs["t_sleep_before"] = t_sleep_before
             file.attrs["nb_cpus"] = nb_cpus
+            file.attrs["timestamp_before"] = timestamp_before
+            file.attrs["timestamp_end"] = timestamp_end
 
-            file.create_dataset(
-                "times", data=times, compression="gzip", compression_opts=9
-            )
-            file.create_dataset(
-                "watts", data=watts, compression="gzip", compression_opts=9
-            )
+        if conso:
+            times = conso[:, 0]
+            watts = conso[:, 1]
+
+            with h5py.File(str(path_result), "a") as file:
+
+                file.create_dataset(
+                    "times", data=times, compression="gzip", compression_opts=9
+                )
+                file.create_dataset(
+                    "watts", data=watts, compression="gzip", compression_opts=9
+                )
 
         print(f"File {path_result} saved")
 
