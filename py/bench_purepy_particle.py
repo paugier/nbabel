@@ -148,13 +148,12 @@ if __name__ == "__main__":
     cluster = Cluster()
     with open(sys.argv[1]) as input_file:
         for line in input_file:
-            # try/except is a blunt instrument to clean up input
             try:
                 cluster.append(Particle(*[float(x) for x in line.split()[1:]]))
-            except Exception:
+            except TypeError:
                 pass
 
-    old_energy = energy0 = -0.25
+    old_energy = energy0 = energy = -0.25
     cluster.accelerate()
     for step in range(1, int(time_end / time_step + 1)):
         cluster.step(time_step)

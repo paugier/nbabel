@@ -37,7 +37,7 @@ def get_time_as_str(decimal=0):
 
 
 def run(command, working_dir):
-    print(f"launching command {datetime.now()}:\n{command}")
+    print(f"launching command ({datetime.now()}):\n{command}")
     try:
         return subprocess.run(
             command, shell=True, check=True, cwd=working_dir, capture_output=True
