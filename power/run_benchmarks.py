@@ -230,11 +230,12 @@ def run_benchmarks(nb_particles_short, time_julia_bench):
                 "Error gzip.BadGzipFile. "
                 "Power data will need to be upload later."
             )
-            conso = False
+            error_BadGzipFile = True
             path_result = path_result.with_name(
                 path_result.stem + "_incomplete" + ".h5"
             )
         else:
+            error_BadGzipFile = False
             path_result = path_result.with_suffix(".h5")
 
         with h5py.File(str(path_result), "w") as file:
@@ -248,18 +249,18 @@ def run_benchmarks(nb_particles_short, time_julia_bench):
             file.attrs["timestamp_before"] = timestamp_before
             file.attrs["timestamp_end"] = timestamp_end
 
-        if conso:
-            times = conso[:, 0]
-            watts = conso[:, 1]
+        if error_BadGzipFile:
+            return
 
-            with h5py.File(str(path_result), "a") as file:
-
-                file.create_dataset(
-                    "times", data=times, compression="gzip", compression_opts=9
-                )
-                file.create_dataset(
-                    "watts", data=watts, compression="gzip", compression_opts=9
-                )
+        times = conso[:, 0]
+        watts = conso[:, 1]
+        with h5py.File(str(path_result), "a") as file:
+            file.create_dataset(
+                "times", data=times, compression="gzip", compression_opts=9
+            )
+            file.create_dataset(
+                "watts", data=watts, compression="gzip", compression_opts=9
+            )
 
         print(f"File {path_result} saved")
 
