@@ -2,21 +2,18 @@ from math import sqrt
 from time import perf_counter
 from datetime import timedelta
 
-import pandas as pd
-
 from vector import Vector
 
 
 class Point:
-
-    # not needed for PyPy but can be written
-    x: float
-    y: float
-    z: float
-
     @classmethod
     def _zero(cls):
         return cls(0.0, 0.0, 0.0)
+
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
 
     def norm(self):
         return sqrt(self.norm2())
@@ -27,11 +24,6 @@ class Point:
 
     def __repr__(self):
         return f"[{self.x:.10f}, {self.y:.10f}, {self.z:.10f}]"
-
-    def __init__(self, x, y, z):
-        self.x = x
-        self.y = y
-        self.z = z
 
     def norm2(self):
         return self.x ** 2 + self.y ** 2 + self.z ** 2
@@ -54,7 +46,6 @@ class Point:
 
 
 class Points(Vector):
-
     def reset_to_0(self):
         for point in self:
             point.reset_to_0()
@@ -67,29 +58,31 @@ class Points(Vector):
 
 
 def load_input_data(path):
-    df = pd.read_csv(
-        path, names=["mass", "x", "y", "z", "vx", "vy", "vz"], delimiter=r"\s+"
-    )
-
-    masses_np = df["mass"].values
-    positions_np = df.loc[:, ["x", "y", "z"]].values
-    velocities_np = df.loc[:, ["vx", "vy", "vz"]].values
-
-    number_particles = len(masses_np)
 
     masses = []
-    positions = []
-    velocities = []
+    positions_tuples = []
+    velocities_tuples = []
 
-    Points_ = Points[Point]
+    with open(path) as input_file:
+        for line in input_file:
+            if not line.strip():
+                continue
 
-    positions = Points_.empty(number_particles)
-    velocities = Points_.empty(number_particles)
+            mass, x, y, z, vx, vy, vz = [float(x) for x in line.split()[1:]]
+            masses.append(mass)
+            positions_tuples.append((x, y, z))
+            velocities_tuples.append((vx, vy, vz))
 
-    for index, mass in enumerate(masses_np):
-        masses.append(float(mass))
-        positions[index] = Point(*[float(n) for n in positions_np[index]])
-        velocities[index] = Point(*[float(n) for n in velocities_np[index]])
+    number_particles = len(masses)
+
+    VectorPoints = Points[Point]
+
+    positions = VectorPoints.empty(number_particles)
+    velocities = VectorPoints.empty(number_particles)
+
+    for index in range(number_particles):
+        positions[index] = Point(*[n for n in positions_tuples[index]])
+        velocities[index] = Point(*[n for n in velocities_tuples[index]])
 
     return masses, positions, velocities
 
@@ -195,7 +188,12 @@ if __name__ == "__main__":
     import sys
 
     t_start = perf_counter()
-    time_end, time_step = 10.0, 0.001
+    try:
+        time_end = float(sys.argv[2])
+    except IndexError:
+        time_end = 10.0
+
+    time_step = 0.001
     nb_steps = int(time_end / time_step) + 1
 
     path_input = sys.argv[1]

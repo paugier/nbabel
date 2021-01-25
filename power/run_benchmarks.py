@@ -37,7 +37,7 @@ def get_time_as_str(decimal=0):
 
 
 def run(command, working_dir):
-    print(f"launching command ({datetime.now()}):\n{command}")
+    print(f"launching command ({datetime.now():%Y-%m-%d %H:%M:%S}):\n{command}")
     try:
         return subprocess.run(
             command, shell=True, check=True, cwd=working_dir, capture_output=True
@@ -65,11 +65,11 @@ implementations = {
     ),
     "pypy": (
         "py",
-        "pypy bench_pypy4.py ../data/input{nb_particles_short} {t_end}",
+        "pypy bench_purepy_Point.py ../data/input{nb_particles_short} {t_end}",
     ),
     "pypy map-improvements": (
         "py",
-        "pypy-map-improvements bench_purepy_particle.py ../data/input{nb_particles_short} {t_end}",
+        "pypy-map-improvements bench_purepy_Particle.py ../data/input{nb_particles_short} {t_end}",
     ),
     "numba": (
         "py",
@@ -131,7 +131,9 @@ def run_benchmarks(nb_particles_short, time_julia_bench):
     lines = []
     index_run = 0
 
-    for _ in range(2):
+    nb_loops = 2
+    for i_loop in range(nb_loops):
+        print(f"--- Running all benchmarks ({i_loop+1}/{nb_loops}) ---")
         for implementation, (
             name_dir,
             command_template,

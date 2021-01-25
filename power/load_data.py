@@ -12,11 +12,11 @@ here = Path(__file__).absolute().parent
 
 dir_saved = here / "saved"
 
-nb_particles_short = "16k"
+nb_particles_short = "1k"
 
 paths_h5 = sorted(dir_saved.glob(f"{nb_particles_short}_*.h5"))
 
-path_h5 = paths_h5[0]
+path_h5 = paths_h5[-1]
 
 path_csv = path_h5.with_suffix(".csv")
 
