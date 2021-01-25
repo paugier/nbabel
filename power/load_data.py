@@ -12,7 +12,7 @@ here = Path(__file__).absolute().parent
 
 dir_saved = here / "saved"
 
-nb_particles_short = "1k"
+nb_particles_short = "16k"
 
 paths_h5 = sorted(dir_saved.glob(f"{nb_particles_short}_*.h5"))
 
@@ -210,6 +210,7 @@ for _ in (ax0, ax1, ax2):
     _.set_xscale("log")
     _.set_yscale("log")
     _.set_xlabel("Elapsed time (s)")
+    _.set_title(f"{nb_particles_short} particles, 10 N-Body time units")
     _.figure.tight_layout()
 
 
@@ -242,7 +243,7 @@ ax0.legend(
             markerfacecolor="g",
             markeredgecolor="g",
             markersize=10,
-            label="C++ & Fortran",
+            label="Static languages",
         ),
         Line2D(
             [0],

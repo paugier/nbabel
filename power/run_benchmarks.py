@@ -55,27 +55,6 @@ path_base_repo = Path(__file__).absolute().parent.parent
 nb_cpus = os.cpu_count()
 
 implementations = {
-    "julia nbabel.org": (
-        "julia",
-        "julia -O3 --check-bounds=no -- run.jl "
-        "nbabel.jl ../data/input{nb_particles_short} true {t_end}",
-    ),
-    "c++ nbabel.org": (
-        "cpp",
-        "cat ../data/input{nb_particles_short} | time ./main {t_end}",
-    ),
-    "pypy": (
-        "py",
-        "pypy bench_purepy_Point.py ../data/input{nb_particles_short} {t_end}",
-    ),
-    "pypy map-improvements": (
-        "py",
-        "pypy-map-improvements bench_purepy_Particle.py ../data/input{nb_particles_short} {t_end}",
-    ),
-    "numba": (
-        "py",
-        "python bench_numba.py ../data/input{nb_particles_short} {t_end}",
-    ),
     "julia optimized": (
         "julia",
         "julia -O3 --check-bounds=no -- run.jl "
@@ -85,16 +64,36 @@ implementations = {
         "py",
         "python bench.py ../data/input{nb_particles_short} {t_end}",
     ),
-    "pythran high-level jit": (
+    "pypy map-improvements": (
         "py",
-        "python bench_numpy_highlevel_jit.py ../data/input{nb_particles_short} {t_end}",
+        "pypy-map-improvements bench_purepy_Particle.py ../data/input{nb_particles_short} {t_end}",
+    ),
+    "numba": (
+        "py",
+        "python bench_numba.py ../data/input{nb_particles_short} {t_end}",
+    ),
+    "julia nbabel.org": (
+        "julia",
+        "julia -O3 --check-bounds=no -- run.jl "
+        "nbabel.jl ../data/input{nb_particles_short} true {t_end}",
     ),
     "fortran nbabel.org": (
         "fortran",
         "./nbabel ../data/input{nb_particles_short} {nb_particles} {t_end}",
     ),
+    "c++ nbabel.org": (
+        "cpp",
+        "cat ../data/input{nb_particles_short} | time ./main {t_end}",
+    ),
+    "pythran high-level jit": (
+        "py",
+        "python bench_numpy_highlevel_jit.py ../data/input{nb_particles_short} {t_end}",
+    ),
+    "pypy": (
+        "py",
+        "pypy bench_purepy_Point.py ../data/input{nb_particles_short} {t_end}",
+    ),
 }
-
 
 nb_particles_dict = {"1k": 1024, "2k": 2048, "16k": 16384}
 
@@ -144,7 +143,7 @@ def run_benchmarks(nb_particles_short, time_julia_bench):
             # warmup
             for _ in range(1):
                 command = create_command(
-                    command_template, nb_particles_short, 0.01
+                    command_template, nb_particles_short, 0.004
                 )
                 run(command, working_dir)
 
@@ -216,53 +215,52 @@ def run_benchmarks(nb_particles_short, time_julia_bench):
     )
     df.to_csv(path_result)
 
-    if "grid5000" in node:
-        from getwatt import getwatt
+    if "grid5000" not in node:
+        return
 
-        timestamp_end = time()
-        node_shortname = node.split(".")[0]
-        try:
-            conso = np.array(
-                getwatt(node_shortname, timestamp_before, timestamp_end)
-            )
-        except gzip.BadGzipFile:
-            print(
-                "Error gzip.BadGzipFile. "
-                "Power data will need to be upload later."
-            )
-            error_BadGzipFile = True
-            path_result = path_result.with_name(
-                path_result.stem + "_incomplete" + ".h5"
-            )
-        else:
-            error_BadGzipFile = False
-            path_result = path_result.with_suffix(".h5")
+    from getwatt import getwatt
 
-        with h5py.File(str(path_result), "w") as file:
-            file.attrs["t_end"] = t_end
-            file.attrs["node"] = node
-            file.attrs["node_shortname"] = node_shortname
-            file.attrs["nb_particles_short"] = nb_particles_short
-            file.attrs["time_julia_bench"] = time_julia_bench
-            file.attrs["t_sleep_before"] = t_sleep_before
-            file.attrs["nb_cpus"] = nb_cpus
-            file.attrs["timestamp_before"] = timestamp_before
-            file.attrs["timestamp_end"] = timestamp_end
+    timestamp_end = time()
+    node_shortname = node.split(".")[0]
+    try:
+        conso = np.array(getwatt(node_shortname, timestamp_before, timestamp_end))
+    except gzip.BadGzipFile:
+        print(
+            "Error gzip.BadGzipFile. " "Power data will need to be upload later."
+        )
+        error_BadGzipFile = True
+        path_result = path_result.with_name(
+            path_result.stem + "_incomplete" + ".h5"
+        )
+    else:
+        error_BadGzipFile = False
+        path_result = path_result.with_suffix(".h5")
 
-        if error_BadGzipFile:
-            return
+    with h5py.File(str(path_result), "w") as file:
+        file.attrs["t_end"] = t_end
+        file.attrs["node"] = node
+        file.attrs["node_shortname"] = node_shortname
+        file.attrs["nb_particles_short"] = nb_particles_short
+        file.attrs["time_julia_bench"] = time_julia_bench
+        file.attrs["t_sleep_before"] = t_sleep_before
+        file.attrs["nb_cpus"] = nb_cpus
+        file.attrs["timestamp_before"] = timestamp_before
+        file.attrs["timestamp_end"] = timestamp_end
 
-        times = conso[:, 0]
-        watts = conso[:, 1]
-        with h5py.File(str(path_result), "a") as file:
-            file.create_dataset(
-                "times", data=times, compression="gzip", compression_opts=9
-            )
-            file.create_dataset(
-                "watts", data=watts, compression="gzip", compression_opts=9
-            )
+    if error_BadGzipFile:
+        return
 
-        print(f"File {path_result} saved")
+    times = conso[:, 0]
+    watts = conso[:, 1]
+    with h5py.File(str(path_result), "a") as file:
+        file.create_dataset(
+            "times", data=times, compression="gzip", compression_opts=9
+        )
+        file.create_dataset(
+            "watts", data=watts, compression="gzip", compression_opts=9
+        )
+
+    print(f"File {path_result} saved")
 
 
 if __name__ == "__main__":
