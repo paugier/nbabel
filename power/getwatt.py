@@ -1,6 +1,7 @@
 import datetime
 import time
 import gzip
+import bz2
 import platform
 
 import requests
@@ -46,12 +47,14 @@ def getwatt(node=None, from_ts=None, to_ts=None):
         if suffix != datetime.datetime.fromtimestamp(time.time()).strftime(
             "%Y-%m-%dT%H"
         ):
-            suffix += ".gz"
+            suffix += ".bz2"
         address = first_part_address + suffix
         print("getting file:", address)
         data = requests.get(address).content
         if suffix.endswith(".gz"):
             data = gzip.decompress(data)
+        elif suffix.endswith(".bz2"):
+            data = bz2.decompress(data)
         for l in str(data).split("\\n")[1:-1]:
             l = l.split(",")
             if l[3] == "OK" and l[4 + node_wattmetre["port"]] != "":
