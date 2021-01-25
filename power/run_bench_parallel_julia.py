@@ -28,9 +28,17 @@ working_dir = path_base_repo / "julia"
 
 nb_cpus = os.cpu_count()
 
+if nb_cpus == 12:
+    nb_threads_list = [1, 2, 4, 6, 8, 12]
+elif nb_cpus == 6:
+    nb_threads_list = [1, 2, 4, 6]
+else:
+    nb_threads_list = [1, 2, 4]
+
+
 command_template = (
     "julia -t{nb_threads} -O3 --check-bounds=no -- run.jl "
-    "nbabel5_threads.jl ../data/input{nb_particles_short} true {t_end}"
+    "nbabel5_{threads}.jl ../data/input{nb_particles_short} true {t_end}"
 )
 
 nb_particles_dict = {"1k": 1024, "2k": 2048, "16k": 16384}
@@ -41,23 +49,36 @@ def run_benchmarks(nb_particles_short, time_julia_bench):
     nb_particles = nb_particles_dict[nb_particles_short]
 
     def create_command(command_template, nb_particles_short, t_end, nb_threads=1):
+
+        if nb_threads == 1:
+            threads = "serial"
+        else:
+            threads = "threads"
+
         return command_template.format(
             nb_particles_short=nb_particles_short,
             t_end=t_end,
             nb_particles=nb_particles,
             nb_threads=nb_threads,
+            threads=threads,
         )
 
     print("First run to evaluate t_end for time_julia_bench")
-    t_end = 0.1
-    if nb_particles_short == "16k":
+
+    if nb_particles_short == "1k":
+        t_end = 2
+    elif nb_particles_short == "2k":
+        t_end = 0.5
+    elif nb_particles_short == "16k":
         t_end = 0.05
 
     command = create_command(command_template, nb_particles_short, t_end)
 
+    run(command, working_dir)
     t_perf_start = perf_counter()
     run(command, working_dir)
     elapsed_time = perf_counter() - t_perf_start
+    print(f"elapsed time: {elapsed_time:.3f} s")
 
     t_end = t_end * time_julia_bench / elapsed_time
     print(f"We'll run the benchmarks with t_end = {t_end}")
@@ -71,7 +92,7 @@ def run_benchmarks(nb_particles_short, time_julia_bench):
     nb_loops = 2
     for i_loop in range(nb_loops):
         print(f"--- Running all benchmarks ({i_loop+1}/{nb_loops}) ---")
-        for nb_threads in [1, 2, 4, 6, 8, 12]:
+        for nb_threads in nb_threads_list:
             # warmup
             for _ in range(1):
                 command = create_command(
@@ -137,12 +158,12 @@ def run_benchmarks(nb_particles_short, time_julia_bench):
 
     df.sort_values("nb_threads", inplace=True)
 
-    elapsed_serial = df[(df.language == "julia") and df.nb_threads == 1][
+    elapsed_serial = df[(df.language == "julia") & (df.nb_threads == 1)][
         "elapsed_time"
     ].min()
     df["ratio_elapsed"] = df["elapsed_time"] / elapsed_serial
 
-    print(df)
+    print(df[df.language == "julia"])
 
     node = platform.node()
 
