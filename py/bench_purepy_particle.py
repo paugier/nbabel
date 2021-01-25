@@ -118,8 +118,8 @@ class Cluster(list):
 
         nb_particules = len(self)
         for i0 in range(nb_particules - 1):
+            p0 = self[i0]
             for i1 in range(i0 + 1, nb_particules):
-                p0 = self[i0]
                 p1 = self[i1]
                 delta = p0.position - p1.position
                 distance_cube = delta.norm_cube()
@@ -151,7 +151,7 @@ if __name__ == "__main__":
             # try/except is a blunt instrument to clean up input
             try:
                 cluster.append(Particle(*[float(x) for x in line.split()[1:]]))
-            except:
+            except Exception:
                 pass
 
     old_energy = energy0 = -0.25

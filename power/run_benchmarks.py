@@ -37,7 +37,7 @@ def get_time_as_str(decimal=0):
 
 
 def run(command, working_dir):
-    print(f"launching command:\n{command}")
+    print(f"launching command {datetime.now()}:\n{command}")
     try:
         return subprocess.run(
             command, shell=True, check=True, cwd=working_dir, capture_output=True
@@ -66,6 +66,10 @@ implementations = {
     "pypy": (
         "py",
         "pypy bench_pypy4.py ../data/input{nb_particles_short} {t_end}",
+    ),
+    "pypy map-improvements": (
+        "py",
+        "pypy-map-improvements bench_purepy_particle.py ../data/input{nb_particles_short} {t_end}",
     ),
     "numba": (
         "py",
@@ -168,6 +172,7 @@ def run_benchmarks(nb_particles_short, time_julia_bench):
             run(command, working_dir)
             elapsed_time = perf_counter() - t_perf_start
             timestamp_end = time()
+            print(f"elapsed time: {elapsed_time:.3f} s")
 
             sleep(2)
 

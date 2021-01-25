@@ -2,13 +2,10 @@ from math import sqrt
 from time import perf_counter
 from datetime import timedelta
 
-import pandas as pd
-
 from vector import Vector
 
 
-class PointND:
-
+class Point3D:
     @classmethod
     def _zero(cls):
         return cls(0.0, 0.0, 0.0)
@@ -22,62 +19,6 @@ class PointND:
 
     def __repr__(self):
         return f"[{self.x:.10f}, {self.y:.10f}, {self.z:.10f}]"
-
-
-class Point4D(PointND):
-    # not needed for PyPy
-    __slots__ = list("xyzw")
-
-    # not needed for PyPy but can be written
-    x: float
-    y: float
-    z: float
-    w: float
-
-    def __init__(self, x, y, z, w=0.0):
-        self.x = x
-        self.y = y
-        self.z = z
-        self.w = w
-
-    def norm2(self):
-        return self.x ** 2 + self.y ** 2 + self.z ** 2 + self.w ** 2
-
-    def __add__(self, other):
-        return Point4D(
-            self.x + other.x, self.y + other.y, self.z + other.z, self.w + other.w
-        )
-
-    def __sub__(self, other):
-        return Point4D(
-            self.x - other.x, self.y - other.y, self.z - other.z, self.w - other.w
-        )
-
-    def __mul__(self, other):
-        return Point4D(
-            other * self.x, other * self.y, other * self.z, other * self.w
-        )
-
-    __rmul__ = __mul__
-
-    def __repr__(self):
-        return f"[{self.x:.10f}, {self.y:.10f}, {self.z:.10f}]"
-
-    def reset_to_0(self):
-        self.x = 0.0
-        self.y = 0.0
-        self.z = 0.0
-        self.w = 0.0
-
-
-class Point3D(PointND):
-    # not needed for PyPy
-    __slots__ = list("xyz")
-
-    # not needed for PyPy but can be written
-    x: float
-    y: float
-    z: float
 
     def __init__(self, x, y, z):
         self.x = x
@@ -105,7 +46,6 @@ class Point3D(PointND):
 
 
 class Points(Vector):
-
     def reset_to_0(self):
         for point in self:
             point.reset_to_0()
@@ -118,30 +58,31 @@ class Points(Vector):
 
 
 def load_input_data(path):
-    df = pd.read_csv(
-        path, names=["mass", "x", "y", "z", "vx", "vy", "vz"], delimiter=r"\s+"
-    )
-
-    masses_np = df["mass"].values
-    positions_np = df.loc[:, ["x", "y", "z"]].values
-    velocities_np = df.loc[:, ["vx", "vy", "vz"]].values
-
-    number_particles = len(masses_np)
 
     masses = []
-    positions = []
-    velocities = []
+    positions_tuples = []
+    velocities_tuples = []
 
-    Point = Point3D
-    Points_ = Points[Point]
+    with open(path) as input_file:
+        for line in input_file:
+            if not line.strip():
+                continue
 
-    positions = Points_.empty(number_particles)
-    velocities = Points_.empty(number_particles)
+            mass, x, y, z, vx, vy, vz = [float(x) for x in line.split()[1:]]
+            masses.append(mass)
+            positions_tuples.append((x, y, z))
+            velocities_tuples.append((vx, vy, vz))
 
-    for index, mass in enumerate(masses_np):
-        masses.append(float(mass))
-        positions[index] = Point(*[float(n) for n in positions_np[index]])
-        velocities[index] = Point(*[float(n) for n in velocities_np[index]])
+    number_particles = len(masses)
+
+    VectorPoints = Points[Point3D]
+
+    positions = VectorPoints.empty(number_particles)
+    velocities = VectorPoints.empty(number_particles)
+
+    for index in range(number_particles):
+        positions[index] = Point3D(*[n for n in positions_tuples[index]])
+        velocities[index] = Point3D(*[n for n in velocities_tuples[index]])
 
     return masses, positions, velocities
 
@@ -250,7 +191,7 @@ if __name__ == "__main__":
     try:
         time_end = float(sys.argv[2])
     except IndexError:
-        time_end = 10.
+        time_end = 10.0
 
     time_step = 0.001
     nb_steps = int(time_end / time_step) + 1

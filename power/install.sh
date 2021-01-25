@@ -18,3 +18,14 @@ conda create -n env_pypy pypy pandas -y
 wget https://julialang-s3.julialang.org/bin/linux/x64/1.5/julia-1.5.3-linux-x86_64.tar.gz
 tar -xzf julia-1.5.3-linux-x86_64.tar.gz julia-1.5.3
 export PATH=$PATH:$HOME/julia-1.5.3/bin
+
+
+mkdir $HOME/opt
+
+wget http://buildbot.pypy.org/nightly/map-improvements-3.7/pypy-c-jit-latest-linux64.tar.bz2
+
+tar -xvjf pypy-c-jit-latest-linux64.tar.bz2
+mv pypy-c-jit*-linux64 opt/pypy-map-improvements
+mkdir -p $HOME/.local/bin
+ln -s $HOME/opt/pypy-map-improvements/bin/pypy $HOME/.local/bin/pypy-map-improvements
+export PATH=$PATH:$HOME/.local/bin
