@@ -51,9 +51,7 @@ def getwatt(node=None, from_ts=None, to_ts=None):
         address = first_part_address + suffix
         print("getting file:", address)
         data = requests.get(address).content
-        if suffix.endswith(".gz"):
-            data = gzip.decompress(data)
-        elif suffix.endswith(".bz2"):
+        if suffix.endswith(".bz2"):
             data = bz2.decompress(data)
         for l in str(data).split("\\n")[1:-1]:
             l = l.split(",")
@@ -61,7 +59,7 @@ def getwatt(node=None, from_ts=None, to_ts=None):
                 ts, value = (float(l[2]), float(l[4 + node_wattmetre["port"]]))
                 if from_ts <= ts and ts <= to_ts:
                     watt.append((ts, value))
-        if not suffix.endswith(".gz"):
+        if not suffix.endswith(".bz2"):
             break
     return watt
 
