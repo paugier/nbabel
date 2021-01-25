@@ -28,8 +28,8 @@ working_dir = path_base_repo / "julia"
 
 nb_cpus = os.cpu_count()
 
-if nb_cpus == 12:
-    nb_threads_list = [1, 2, 4, 6, 8, 12]
+if nb_cpus == 24:
+    nb_threads_list = [1, 2, 4, 6, 8, 12, 16, 24]
 elif nb_cpus == 6:
     nb_threads_list = [1, 2, 4, 6]
 else:
