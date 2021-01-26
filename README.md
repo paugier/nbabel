@@ -31,9 +31,11 @@ i5-8400 CPU @ 2.80GHz.
 respectively. This is approximately 20% faster than the C++ implementation.
 
 **Note 3:** With PyPy, a pure Python implementation (bench_pypy_Point.py) runs
-for 1024 particles in 151 s, i.e. only 3 times slower than the C++
+for 1024 particles in 133 s, i.e. only 2.4 times slower than the C++
 implementation (compared to ~50 times slower as shown in the figure taken from
-Zwart, 2020).
+Zwart, 2020). Moreover, with a new version of PyPy (branch map-improvements),
+another implementation (bench_purepy_Particle.py) runs in 55 s, i.e. same speed
+than the C++ implementation!
 
 **Note 4:** The directory "julia" contains some more advanced and faster
 implementations. The sequential optimized Julia implementation runs on my PC in
@@ -44,20 +46,3 @@ simple Python implementation).
 (bench_numpy_highlevel.py), if one (i) adds an import `from transonic import
 jit` and (ii) decorates the function `loop` with `@jit`, the case for 1024
 particles runs in 136 s (2.5 times slower than the C++ implementation).
-
-## Smaller benchmarks between different Python solutions
-
-We can also compare different solutions in Python. Since some solutions are
-very slow, we need to compare on a much smaller problem (only 128 particles).
-Here are the elapsed times (in s):
-
-| Transonic-Pythran | Numba | High-level Numpy | PyPy OOP | PyPy lists |
-|-------------------|-------|------------------|----------|------------|
-| 0.48              | 0.87  | 686              |  2.6     |  4.3       |
-
-For comparison, we have for this case `{"c++": 0.85, "Fortran": 0.62, "Julia":
-2.57}`.
-
-Note that just adding `from transonic import jit` to the simple high-level
-Numpy code and then decorating the function `loop` with `@jit`, the elapsed
-time decreases to 2.1 s (a ~ x300 speedup!, with Pythran 0.9.8).
