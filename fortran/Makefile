@@ -1,3 +1,5 @@
+make build: nbabel
+
 bench256: nbabel
 	time ./nbabel ../data/input256 256
 

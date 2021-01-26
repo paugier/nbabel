@@ -21,3 +21,5 @@ target/
 
 py/**/*.c
 py/**/*.html
+
+power/tmp

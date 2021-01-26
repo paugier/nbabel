@@ -133,7 +133,7 @@ public:
   }
 };
 
-int main() {
+int main(int argc, char* argv[]) {
 
   Cluster cl;
   real m;
@@ -161,7 +161,13 @@ int main() {
 
   // Start time, end time and simulation step
   real t = 0.0;
-  real tend = 10.0;
+  real tend;
+
+  if (argc > 1)
+    tend = strtod(argv[1], NULL);
+  else
+    tend = 10.0;
+
   real dt = 1e-3;
   int k = 0;
 
