@@ -176,6 +176,8 @@ def run_benchmarks(nb_particles_short, time_sequential_bench):
 
     from getwatt import getwatt
 
+    path_result = path_result.with_suffix(".h5")
+
     timestamp_end = time()
     node_shortname = node.split(".")[0]
     with h5py.File(str(path_result), "w") as file:
