@@ -3,6 +3,7 @@ import pandas as pd
 import h5py
 from scipy.integrate import trapz
 
+import matplotlib.pyplot as plt
 
 def load_data(path_h5):
 
@@ -47,9 +48,10 @@ def load_data(path_h5):
         times_run = times[cond]
         watts_run = watts[cond]
 
-        # fig, ax0 = plt.subplots()
-        # ax0.plot(times_run, watts_run)
-        # ax0.set_title(row.implementation)
+        # fig, ax1 = plt.subplots()
+        # ax1.plot(times_run, watts_run)
+        # nb_threads = row.nb_threads
+        # ax1.set_title(f"{row.implementation} nb_threads={nb_threads}")
 
         consommations[index] = trapz(watts_run, times_run)  # in J
 
