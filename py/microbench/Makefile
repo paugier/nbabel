@@ -22,5 +22,14 @@ pythran: __pythran__/microbench_pythran.py
 __pythran__/microbench_pythran.py: microbench_pythran.py
 	transonic microbench_pythran.py -af "-march=native -Ofast -mfma"
 
+
+pythran_omp: __pythran__/microbench_pythran_omp.py
+	python microbench_pythran_omp.py
+
+__pythran__/microbench_pythran_omp.py: microbench_pythran_omp.py
+	transonic microbench_pythran_omp.py -af "-march=native -Ofast -fopenmp"
+
+
+
 julia_tuple:
 	julia microbench_ju_tuple.jl
