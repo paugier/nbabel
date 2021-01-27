@@ -21,6 +21,9 @@ bench1k: __pythran__/bench.py
 bench1k_opti: __pythran__/bench_more_opti.py
 	time python bench_more_opti.py ../data/input1k
 
+bench1k_omp: __pythran__/bench_omp.py
+	time python bench_omp.py ../data/input1k
+
 bench2k: __pythran__/bench.py
 	time python bench.py ../data/input2k
 
@@ -42,6 +45,9 @@ __pythran__/bench.py: bench.py
 
 __pythran__/bench_more_opti.py: bench_more_opti.py
 	transonic bench_more_opti.py -af "-march=native -Ofast"
+
+__pythran__/bench_omp.py: bench_omp.py
+	transonic bench_omp.py -af "-march=native -Ofast -fopenmp"
 
 clean:
 	rm -rf __pythran__
