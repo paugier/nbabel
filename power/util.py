@@ -18,8 +18,11 @@ def load_data(path_h5):
         t_end = file.attrs["t_end"]
         node = file.attrs["node"]
         nb_particles_short = file.attrs["nb_particles_short"]
-        time_julia_bench = file.attrs["time_julia_bench"]
         t_sleep_before = file.attrs["t_sleep_before"]
+        try:
+            time_julia_bench = file.attrs["time_julia_bench"]
+        except KeyError:
+            time_julia_bench = 0
 
         nb_cpus = file.attrs["nb_cpus"]
 

@@ -12,8 +12,10 @@ dir_saved = here / "saved"
 
 nb_particles_short = "16k"
 
+language = "julia"
+
 paths_h5 = sorted(
-    dir_saved.glob(f"parallel_julia_{nb_particles_short}_*.h5"),
+    dir_saved.glob(f"parallel_{language}_{nb_particles_short}_*.h5"),
     key=lambda p: p.name.split("grid5000")[-1],
 )
 pprint(paths_h5)
@@ -85,10 +87,13 @@ for ax in (ax0, ax1):
     ax.set_ylim(ymin=0)
     ax.set_xlim(xmax=16)
 
+ax0.set_ylim(ymax=0.33)
+ax1.set_ylim(ymax=3.8)
+
 ax1.set_xlabel("number of threads")
 ax1.set_ylabel("Production CO$_2$ (kg)")
 ax1.legend()
-ax0.set_title(f"{info['nb_particles_short']} particles, 10 N-Body time units")
+ax0.set_title(f"{info['nb_particles_short']} particles, 10 N-Body time units ({language.capitalize()})")
 fig.tight_layout()
 
 plt.show()
