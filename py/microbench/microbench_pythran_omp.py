@@ -11,15 +11,15 @@ dim = 3
 
 @boost
 def compute(
-    accelerations: "float[:, :,:]", masses: "float[:]", positions: "float[:,:]"
+    accelerations: "float[:,:,:]", masses: "float[:]", positions: "float[:,:]"
 ):
     nb_particules = masses.size
-    vector = np.empty(dim)
 
     nthreads = accelerations.shape[0]
 
     # omp parallel for schedule(static,8)
     for index_p0 in range(nb_particules - 1):
+        vector = np.empty(dim)
         rank = omp.get_thread_num()
         position0 = positions[index_p0]
         mass0 = masses[index_p0]
@@ -33,11 +33,11 @@ def compute(
                 accelerations[rank, index_p0, i] -= coef * mass1 * vector[i]
                 accelerations[rank, index_p1, i] += coef * mass0 * vector[i]
 
-    # omp parallel for schedule(static,8)
-    for index_p0 in range(nb_particules - 1):
+    # omp parallel for
+    for i_part in range(nb_particules):
         for i_thread in range(1, nthreads):
             for i in range(dim):
-                accelerations[0, index_p0, i] += accelerations[i_thread, index_p0, i]
+                accelerations[0, i_part, i] += accelerations[i_thread, i_part, i]
 
 
 @boost

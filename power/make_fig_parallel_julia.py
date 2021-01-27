@@ -12,19 +12,21 @@ dir_saved = here / "saved"
 
 nb_particles_short = "16k"
 
-paths_h5 = sorted(dir_saved.glob(f"parallel_julia_{nb_particles_short}_*.h5"))
+paths_h5 = sorted(
+    dir_saved.glob(f"parallel_julia_{nb_particles_short}_*.h5"),
+    key=lambda p: p.name.split("grid5000")[-1],
+)
 pprint(paths_h5)
 
-path_h5 = paths_h5[1]
+path_h5 = paths_h5[-1]
 
 info, df = load_data(path_h5)
+pprint(info)
 # print(df)
 
 t_end = info["t_end"]
 
 df = df[df.implementation != "sleep(t_sleep_before)"]
-
-print(df.columns)
 
 columns = [
     "implementation",
@@ -40,6 +42,7 @@ complete_df_out(df_out, info)
 
 print(df_out)
 
+
 def set_ylim_twin(ax):
     y0, y1 = ax.get_ylim()
     ax_twin = ax.ax_twin
@@ -48,11 +51,15 @@ def set_ylim_twin(ax):
     ax_twin.figure.canvas.draw()
     ax_twin.yaxis.set_major_formatter(mtick.PercentFormatter())
 
+
 fig, (ax0, ax1) = plt.subplots(2, 1, sharex=True)
 
 nb_threads_list = df_out.index
 
 ax0.plot(nb_threads_list, df_out.elapsed_time, marker=".")
+
+ax0.plot(nb_threads_list, df_out.elapsed_time.max() / nb_threads_list, "k:")
+
 
 ax0.ax_twin = ax0.twinx()
 ax0.ax_twin_norm = df_out.elapsed_time.max()
@@ -66,6 +73,7 @@ ax1.plot(
     marker=".",
     label="CO$_2$ during time longer run",
 )
+ax1.plot(nb_threads_list, df_out.CO2.max() / nb_threads_list, "k:")
 
 ax1.ax_twin = ax1.twinx()
 ax1.ax_twin_norm = df_out.CO2.max()

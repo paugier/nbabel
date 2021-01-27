@@ -48,12 +48,13 @@ def load_data(path_h5):
         times_run = times[cond]
         watts_run = watts[cond]
 
+        consommations[index] = trapz(watts_run, times_run)  # in J
+
         # fig, ax1 = plt.subplots()
         # ax1.plot(times_run, watts_run)
         # nb_threads = row.nb_threads
         # ax1.set_title(f"{row.implementation} nb_threads={nb_threads}")
 
-        consommations[index] = trapz(watts_run, times_run)  # in J
 
     df["consommation"] = consommations
     df["power"] = df["consommation"] / df["elapsed_time"]
