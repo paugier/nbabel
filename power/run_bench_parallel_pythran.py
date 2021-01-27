@@ -82,10 +82,11 @@ def run_benchmarks(nb_particles_short, time_sequential_bench):
     lines = []
     index_run = 0
 
-    nb_loops = 1
+    nb_loops = 2
     for i_loop in range(nb_loops):
         print(f"--- Running all benchmarks ({i_loop+1}/{nb_loops}) ---")
         for nb_threads in nb_threads_list:
+            print(f"setting OMP_NUM_THREADS={nb_threads}")
             os.environ["OMP_NUM_THREADS"] = f"{nb_threads}"
 
             # warmup
