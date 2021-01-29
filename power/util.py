@@ -1,9 +1,14 @@
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import h5py
 from scipy.integrate import trapz
 
-import matplotlib.pyplot as plt
+here = Path(__file__).absolute().parent
+
+dir_saved = here / "saved"
+
 
 def load_data(path_h5):
 
@@ -30,7 +35,8 @@ def load_data(path_h5):
         watts = file["watts"][:]
 
     power_sleep = np.percentile(watts, 5)
-    nb_cores = nb_cpus
+
+    nb_cores = nb_cpus // 2
     power_sleep_1core = power_sleep / nb_cores
 
     # fig, ax0 = plt.subplots()
@@ -58,7 +64,6 @@ def load_data(path_h5):
         # nb_threads = row.nb_threads
         # ax1.set_title(f"{row.implementation} nb_threads={nb_threads}")
 
-
     df["consommation"] = consommations
     df["power"] = df["consommation"] / df["elapsed_time"]
 
@@ -84,10 +89,13 @@ def load_data(path_h5):
 def compute_CO2_mass(consommation):
     """
     kWh = 3.6e6 J
-    0.283 kWh -> 1 kg
+
+    283 g CO2 / kWh
+
+    warning: "0.283 kWh/kg" typo in Zwart (2020) (personal communication)
     """
 
-    return consommation / 3.6e6 / 0.283
+    return consommation / 3.6e6 * 0.283
 
 
 def complete_df_out(df_out, info):
@@ -100,9 +108,14 @@ def complete_df_out(df_out, info):
     else:
         nb_threads = 1
 
+    if info["node"].startswith("taurus"):
+        nb_cores = 12
+    else:
+        nb_cores = info["nb_cores"]
+
     df_out["consommation_core"] = df_out["consommation"] - df_out[
         "elapsed_time"
-    ] * info["power_sleep_1core"] * (info["nb_cores"] - nb_threads)
+    ] * info["power_sleep_1core"] * (nb_cores - nb_threads)
 
     df_out["consommation_alt"] = (
         df_out["consommation"]

@@ -4,11 +4,9 @@ from pprint import pprint
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 
-from util import load_data, complete_df_out
+from util import load_data, complete_df_out, dir_saved
 
-here = Path(__file__).absolute().parent
 
-dir_saved = here / "saved"
 
 nb_particles_short = "16k"
 
