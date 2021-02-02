@@ -5,9 +5,7 @@ from datetime import timedelta
 import numpy as np
 import pandas as pd
 
-from numba import njit
-
-jit = njit(cache=True, fastmath=True)
+from transonic import jit
 
 
 def load_input_data(path):
@@ -23,29 +21,24 @@ def load_input_data(path):
     return masses, positions, velocities
 
 
-@jit
 def advance_positions(positions, velocities, accelerations, time_step):
     positions += time_step * velocities + 0.5 * time_step ** 2 * accelerations
 
 
-@jit
 def advance_velocities(velocities, accelerations, accelerations1, time_step):
     velocities += 0.5 * time_step * (accelerations + accelerations1)
 
 
-@jit
 def compute_distance(vec):
     d2 = vec[0] ** 2 + vec[1] ** 2 + vec[2] ** 2
     return sqrt(d2)
 
 
-@jit
 def compute_distance_cube(vec):
     d2 = vec[0] ** 2 + vec[1] ** 2 + vec[2] ** 2
     return d2 * sqrt(d2)
 
 
-@jit
 def compute_accelerations(accelerations, masses, positions):
     nb_particules = masses.size
     vector = np.empty(3)
@@ -72,7 +65,7 @@ def compute_accelerations(accelerations, masses, positions):
                 acceleration1[i] += coef_m0 * vector[i]
 
 
-@jit
+@jit(backend="numba")
 def loop(
     time_step: float,
     nb_steps: int,
@@ -114,12 +107,10 @@ def loop(
     return energy, energy0
 
 
-@jit
 def compute_kinetic_energy(masses, velocities):
     return 0.5 * np.sum(masses * np.sum(velocities ** 2, 1))
 
 
-@jit
 def compute_potential_energy(masses, positions):
     nb_particules = masses.size
     pe = 0.0
@@ -133,7 +124,6 @@ def compute_potential_energy(masses, positions):
     return pe
 
 
-@jit
 def compute_energies(masses, positions, velocities):
     energy_kin = compute_kinetic_energy(masses, velocities)
     energy_pot = compute_potential_energy(masses, positions)
