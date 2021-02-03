@@ -25,7 +25,13 @@ mkdir $HOME/opt
 wget http://buildbot.pypy.org/nightly/map-improvements-3.7/pypy-c-jit-latest-linux64.tar.bz2
 
 tar -xvjf pypy-c-jit-latest-linux64.tar.bz2
+rm -f pypy-c-jit-latest-linux64.tar.bz2
 mv pypy-c-jit*-linux64 opt/pypy-map-improvements
 mkdir -p $HOME/.local/bin
 ln -s $HOME/opt/pypy-map-improvements/bin/pypy $HOME/.local/bin/pypy-map-improvements
 export PATH=$PATH:$HOME/.local/bin
+
+wget https://buildbot.pypy.org/nightly/py3.7/pypy-c-jit-latest-linux64.tar.bz2
+tar -xvjf pypy-c-jit-latest-linux64.tar.bz2
+mv pypy-c-jit*-linux64 opt/pypy3.7
+ln -s $HOME/opt/pypy3.7/bin/pypy $HOME/.local/bin/pypy-map-improvements

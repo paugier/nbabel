@@ -33,9 +33,11 @@ respectively. This is approximately 20% faster than the C++ implementation.
 **Note 3:** With PyPy, a pure Python implementation (bench_pypy_Point.py) runs
 for 1024 particles in 133 s, i.e. only 2.4 times slower than the C++
 implementation (compared to ~50 times slower as shown in the figure taken from
-Zwart, 2020). Moreover, with a new version of PyPy (branch map-improvements),
-another implementation (bench_purepy_Particle.py) runs in 55 s, i.e. same speed
-than the C++ implementation!
+Zwart, 2020). Moreover, with a new version of PyPy (branch map-improvements,
+merged in default on Feb 02 2021, so one can use a [nightly
+build](https://buildbot.pypy.org/nightly/py3.7/)), another implementation
+(bench_purepy_Particle.py) runs in 55 s, i.e. same speed than the C++
+implementation!
 
 **Note 4:** The directory "julia" contains some more advanced and faster
 implementations. The sequential optimized Julia implementation runs on my PC in
