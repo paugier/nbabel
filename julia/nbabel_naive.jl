@@ -28,8 +28,9 @@ function compute_accelerations(accelerations, masses, positions)
     vector = [0.0, 0.0, 0.0]
     @inbounds for index_p0=1:nb_particules - 1
         @fastmath @inbounds @simd for index_p1= index_p0 + 1:nb_particules
+            # we need to be a bit more low level otherwise it is very slow
             for i in 1:3
-                vector[i] = positions[i, index_p0] .- positions[i, index_p1]
+                vector[i] = positions[i, index_p0] - positions[i, index_p1]
             end
             distance = sqrt(sum(vector .^ 2))
             coef = 1.0 / distance ^ 3
