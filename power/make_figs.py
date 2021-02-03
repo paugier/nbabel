@@ -66,7 +66,7 @@ def make_figs(
     paths_h5 = sorted(dir_saved.glob(f"{nb_particles_short}_*.h5"))
     pprint(paths_h5)
 
-    path_h5 = paths_h5[0]
+    path_h5 = paths_h5[1]
 
     info, df = load_data(path_h5)
     # print(df)
@@ -76,7 +76,7 @@ def make_figs(
         "language",
         "elapsed_time",
         "consommation",
-        "power",
+        "power_mean",
     ]
 
     df_out = df.loc[:, columns].groupby(["implementation", "language"]).mean()
@@ -164,6 +164,7 @@ def make_figs(
                 row.elapsed_time * (1 + factor_time * x_ratios[iax]),
                 row[quantity] * (1 + factor_cons * y_ratios[iax]),
                 name,
+                linespacing=1.2,
             )
 
     axes[0].set_ylabel("CO$_2$ production full node (kg)")
@@ -241,11 +242,11 @@ def make_figs(
 
         ax.figure.legend(
             handles=handles_legend_languages,
-            loc=(0.18, 0.757),
+            loc=(0.15, 0.757),
         )
         ax.figure.legend(
             handles=handles_legend_compilation_types,
-            loc=(0.18, 0.64),
+            loc=(0.15, 0.64),
         )
 
     return axes

@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
     conso = getwatt()
 
-    df = pd.DataFrame(conso, columns=["timestamp", "power"])
+    df = pd.DataFrame(conso, columns=["timestamp", "power_mean"])
     df['date'] = pd.to_datetime(df['timestamp'])
     print(df.head())
 

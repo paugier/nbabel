@@ -34,7 +34,7 @@ columns = [
     "nb_threads",
     "elapsed_time",
     "consommation",
-    "power",
+    "power_mean",
 ]
 
 df_out = df.loc[:, columns].groupby(["nb_threads"]).mean()

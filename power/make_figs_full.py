@@ -1,3 +1,4 @@
+import numpy as np
 import matplotlib.pyplot as plt
 
 
@@ -17,7 +18,7 @@ def get_result_parallel(filename):
         "nb_threads",
         "elapsed_time",
         "consommation",
-        "power",
+        "power_mean",
     ]
 
     df_out = df.loc[:, columns].groupby(["nb_threads"]).mean()
@@ -55,7 +56,7 @@ def add_points(axes):
 
 def get_shift_labels(nb_particles_short, path_name, name, iax):
     factor_time = -0.003
-    factor_cons = 0.005
+    factor_cons = 0.004
 
     if nb_particles_short == "16k":
         if "2021-01-25_14-08-35" in path_name:
@@ -76,17 +77,28 @@ def get_shift_labels(nb_particles_short, path_name, name, iax):
                 factor_cons = -0.005
 
             elif name == "PyPy":
-
                 factor_time = 0.001
                 factor_cons = -0.005
-
-
-            #     factor_time = -0.0035
-            #     factor_cons = 0.0045
 
             elif name.startswith("C++"):
                 factor_time = -0.0042
                 factor_cons = 0.005
+
+        elif "2021-02-03_10-20-15" in path_name:
+            if name == "Pythran\n naive":
+                factor_time = -0.006
+                factor_cons = -0.01
+
+            elif name.startswith("C++"):
+                factor_time = -0.0048
+                factor_cons = 0.005
+
+            elif name == "PyPy":
+                factor_time = -0.002
+
+            elif name.startswith("Fortran"):
+                factor_time = 0.001
+                factor_cons = -0.005
 
     return factor_time, factor_cons
 
@@ -99,11 +111,15 @@ if __name__ == "__main__":
 
     mass = row_julia6.CO2_core
 
-    ax1.text(3.5e-2, mass * 1.27, "Pythran & Julia")
-    ax1.text(3.9e-2, mass * 1.15, "parallel")
+    ax1.text(3.7e-2, mass * 1.19, "Pythran & Julia\n  parallel", linespacing=1.2)
 
-    ax1.text(7e-2, mass * 1, "6 cores", fontsize=8)
-    ax1.text(3.2e-2, mass * 1, "12 cores", fontsize=8)
+    ax1.text(7e-2, mass * 0.97, "  6\ncores", fontsize=8, linespacing=1.05)
+    ax1.text(3.3e-2, mass * 1.02, "  12\ncores", fontsize=8, linespacing=1.05)
+
+    x = np.array([0.25, 1.55])
+    kg_per_day = 0.28
+    ax1.plot(x, kg_per_day * x, "-", color="silver", zorder=0)
+    ax1.text(0.61, 0.19, f"{kg_per_day} kg/day", color="silver", rotation=51)
 
     plt.close(ax0.figure)
     # plt.close(ax1.figure)

@@ -34,15 +34,12 @@ def load_data(path_h5):
         times = file["times"][:]
         watts = file["watts"][:]
 
-    power_sleep = np.percentile(watts, 5)
-
-    nb_cores = nb_cpus // 2
-    power_sleep_1core = power_sleep / nb_cores
-
     # fig, ax0 = plt.subplots()
     # ax0.plot(times, watts)
 
     consommations = np.empty(df.shape[0])
+
+    power_sleeps = []
 
     deltat = 0.2
     for index, row in df.iterrows():
@@ -59,13 +56,21 @@ def load_data(path_h5):
 
         consommations[index] = trapz(watts_run, times_run)  # in J
 
+        if row.implementation.startswith("sleep"):
+            power_sleeps.append(np.percentile(watts_run, 20))
+
         # fig, ax1 = plt.subplots()
         # ax1.plot(times_run, watts_run)
         # nb_threads = row.nb_threads
         # ax1.set_title(f"{row.implementation} nb_threads={nb_threads}")
 
+    power_sleep = np.array(power_sleeps).mean()
+
+    nb_cores = nb_cpus // 2
+    power_sleep_1core = power_sleep / nb_cores
+
     df["consommation"] = consommations
-    df["power"] = df["consommation"] / df["elapsed_time"]
+    df["power_mean"] = df["consommation"] / df["elapsed_time"]
 
     loc = locals()
 
