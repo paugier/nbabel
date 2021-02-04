@@ -114,10 +114,10 @@ def run_benchmarks(nb_particles_short, time_julia_bench):
             nb_particles=nb_particles,
         )
 
-    print("First run to evaluate t_end for time_julia_bench")
-    t_end = 0.1
+    print(f"First run to evaluate t_end from time_julia_bench={time_julia_bench}")
+    t_end = 0.05
     if nb_particles_short == "16k":
-        t_end = 0.05
+        t_end = 0.02
 
     name_dir, command_template = implementations["julia naive"]
     working_dir = path_base_repo / name_dir
