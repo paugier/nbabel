@@ -72,10 +72,10 @@ implementations = {
         "py",
         "python bench_numba.py ../data/input{nb_particles_short} {t_end}",
     ),
-    "julia nbabel.org": (
+    "julia low-level": (
         "julia",
         "julia -O3 --check-bounds=no -- run.jl "
-        "nbabel.jl ../data/input{nb_particles_short} true {t_end}",
+        "naive_lowlevel.jl ../data/input{nb_particles_short} true {t_end}",
     ),
     "fortran nbabel.org": (
         "fortran",
@@ -89,10 +89,15 @@ implementations = {
         "py",
         "python bench_numpy_highlevel_jit.py ../data/input{nb_particles_short} {t_end}",
     ),
-    "pypy": (
-        "py",
-        "pypy bench_purepy_Point.py ../data/input{nb_particles_short} {t_end}",
+    "julia naive": (
+        "julia",
+        "julia -O3 --check-bounds=no -- run.jl "
+        "naive_better.jl ../data/input{nb_particles_short} true {t_end}",
     ),
+    # "pypy": (
+    #     "py",
+    #     "pypy bench_purepy_Point.py ../data/input{nb_particles_short} {t_end}",
+    # ),
 }
 
 nb_particles_dict = {"1k": 1024, "2k": 2048, "16k": 16384}
@@ -114,7 +119,7 @@ def run_benchmarks(nb_particles_short, time_julia_bench):
     if nb_particles_short == "16k":
         t_end = 0.05
 
-    name_dir, command_template = implementations["julia optimized"]
+    name_dir, command_template = implementations["julia naive"]
     working_dir = path_base_repo / name_dir
     command = create_command(command_template, nb_particles_short, t_end)
 
@@ -276,6 +281,6 @@ if __name__ == "__main__":
     if len(sys.argv) > 2:
         time_julia_bench = float(sys.argv[2])
     else:
-        time_julia_bench = 20.0  # (s)
+        time_julia_bench = 200.0  # (s)
 
     run_benchmarks(nb_particles_short, time_julia_bench)
