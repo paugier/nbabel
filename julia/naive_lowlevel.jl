@@ -29,11 +29,15 @@ function compute_accelerations(accelerations, masses, positions)
     @inbounds for index_p0=1:nb_particules - 1
         @fastmath @inbounds @simd for index_p1= index_p0 + 1:nb_particules
             # we need to be a bit more low level otherwise it is very slow
+            # vector[:] = positions[:, index_p0] - positions[:, index_p1]
             for i in 1:3
                 vector[i] = positions[i, index_p0] - positions[i, index_p1]
             end
-            distance = sqrt(sum(vector .^ 2))
+            # distance = sqrt(sum(vector .^ 2))
+            distance = sqrt(vector[1] ^ 2 + vector[2] ^ 2 + vector[3] ^ 2)
             coef = 1.0 / distance ^ 3
+            # accelerations[:, index_p0] -= coef * masses[index_p1] * vector
+            # accelerations[:, index_p1] += coef * masses[index_p0] * vector
             for i in 1:3
                 accelerations[i, index_p0] -= coef * masses[index_p1] * vector[i]
                 accelerations[i, index_p1] += coef * masses[index_p0] * vector[i]
@@ -56,7 +60,7 @@ function loop(time_step, nb_steps, masses, positions, velocities)
     energy0, _, _ = compute_energies(masses, positions, velocities)
     energy_previous = energy0
     energy = energy0
-    for step= 1:nb_steps
+    for step= 0:nb_steps-1
         advance_positions(positions, velocities, accelerations, time_step)
         # swap acceleration arrays
         accelerations, accelerations1 = accelerations1, accelerations
@@ -66,7 +70,7 @@ function loop(time_step, nb_steps, masses, positions, velocities)
         advance_velocities(velocities, accelerations, accelerations1, time_step)
         time += time_step
 
-        if step % 100 == 1
+        if step % 100 == 0
             energy, _, _ = compute_energies(masses, positions, velocities)
             dE = (energy - energy_previous) / energy_previous
             @printf "t = %g, Etot=%g, dE/E=%g \n" time_step * step energy dE
