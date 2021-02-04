@@ -89,11 +89,11 @@ implementations = {
         "py",
         "python bench_numpy_highlevel_jit.py ../data/input{nb_particles_short} {t_end}",
     ),
-    "julia naive": (
-        "julia",
-        "julia -O3 --check-bounds=no -- run.jl "
-        "naive_better.jl ../data/input{nb_particles_short} true {t_end}",
-    ),
+    # "julia naive": (
+    #     "julia",
+    #     "julia -O3 --check-bounds=no -- run.jl "
+    #     "naive_better.jl ../data/input{nb_particles_short} true {t_end}",
+    # ),
     # "pypy": (
     #     "py",
     #     "pypy bench_purepy_Point.py ../data/input{nb_particles_short} {t_end}",
@@ -115,11 +115,11 @@ def run_benchmarks(nb_particles_short, time_julia_bench):
         )
 
     print(f"First run to evaluate t_end from time_julia_bench={time_julia_bench}")
-    t_end = 0.05
+    t_end = 0.08
     if nb_particles_short == "16k":
-        t_end = 0.02
+        t_end = 0.04
 
-    name_dir, command_template = implementations["julia naive"]
+    name_dir, command_template = implementations["pythran high-level jit"]
     working_dir = path_base_repo / name_dir
     command = create_command(command_template, nb_particles_short, t_end)
 

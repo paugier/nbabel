@@ -29,10 +29,10 @@ function compute_accelerations(accelerations, masses, positions)
     @inbounds for index_p0 = 1:nb_particules - 1
         @fastmath @inbounds @simd for index_p1 = index_p0 + 1:nb_particules
             # we need to be a bit more low level otherwise it is very slow
-            vector[:] = positions[:, index_p0] - positions[:, index_p1]
-            # for i in 1:3
-            #     vector[i] = positions[i, index_p0] - positions[i, index_p1]
-            # end
+            # vector[:] = positions[:, index_p0] - positions[:, index_p1]
+            for i in 1:3
+                vector[i] = positions[i, index_p0] - positions[i, index_p1]
+            end
             distance = sqrt(sum(vector.^2))
             # distance = sqrt(vector[1] ^ 2 + vector[2] ^ 2 + vector[3] ^ 2)
             coef = 1.0 / distance^3
@@ -54,12 +54,14 @@ function loop(time_step, nb_steps, masses, positions, velocities)
     fill!(accelerations, 0.)
     fill!(accelerations1, 0.)
 
-    compute_accelerations(accelerations, masses, positions)
+    print("compute_accelerations\n")
+    @time compute_accelerations(accelerations, masses, positions)
 
     time_start = time_ns()
 
     time = 0.0
-    energy0, _, _ = compute_energies(masses, positions, velocities)
+    print("compute_energies\n")
+    energy0, _, _ = @time compute_energies(masses, positions, velocities)
     energy_previous = energy0
     energy = energy0
     step = 0
