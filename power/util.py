@@ -3,15 +3,20 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import h5py
+from matplotlib import cm
 from scipy.integrate import trapz
 
 here = Path(__file__).absolute().parent
 
 dir_saved = here / "saved"
 
-color_Python = "r"
-color_static = "springgreen"
-color_Julia = "mediumblue"
+# See https://matplotlib.org/tutorials/colors/colormaps.html
+cmap = cm.get_cmap("tab20c")
+colors = cmap(range(20))
+
+color_Python = colors[4 + 0]  # red: level 0
+color_static = colors[8 + 2]  # green: level 2
+color_Julia = colors[0 + 1]  # blue: level 1
 
 nb_particles_dict = {"1k": 1024, "2k": 2048, "16k": 16384}
 
