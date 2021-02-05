@@ -4,7 +4,14 @@ from pprint import pprint
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
-from util import load_data, complete_df_out
+from util import (
+    load_data,
+    complete_df_out,
+    color_Python,
+    color_static,
+    color_Julia,
+    nb_particles_dict,
+)
 
 here = Path(__file__).absolute().parent
 
@@ -61,12 +68,16 @@ def make_figs(
     nb_particles_short="16k",
     add_points=None,
     get_shift_labels=get_shift_labels,
+    filter_path_str=None,
 ):
 
     paths_h5 = sorted(dir_saved.glob(f"{nb_particles_short}_*.h5"))
     pprint(paths_h5)
 
-    path_h5 = paths_h5[1]
+    if filter_path_str is not None:
+        paths_h5 = [p for p in paths_h5 if filter_path_str in p.name]
+
+    path_h5 = paths_h5[0]
 
     info, df = load_data(path_h5)
     # print(df)
@@ -101,11 +112,11 @@ def make_figs(
             continue
 
         if language == "py":
-            color = "r"
+            color = color_Python
         elif language in ("cpp", "fortran"):
-            color = "g"
+            color = color_static
         elif language == "julia":
-            color = "b"
+            color = color_Julia
         else:
             color = "y"
 
@@ -131,6 +142,7 @@ def make_figs(
                 color=color,
                 markersize=markersize,
                 zorder=zorder,
+                markeredgecolor="k",
             )
 
     if add_points is not None:
@@ -155,6 +167,11 @@ def make_figs(
         elif name.startswith("Pypy"):
             name = name.replace("Pypy", "PyPy")
             name = "PyPy"
+        elif name == "Julia low-level":
+            name = "Julia"
+
+        if "2021-02-04_22-04-51" in path_h5.name and name == "C++ nbabel.org":
+            name = "   C++\nnbabel.org"
 
         for iax, (ax, quantity) in enumerate(zip(axes, quantities)):
             factor_time, factor_cons = get_shift_labels(
@@ -164,7 +181,7 @@ def make_figs(
                 row.elapsed_time * (1 + factor_time * x_ratios[iax]),
                 row[quantity] * (1 + factor_cons * y_ratios[iax]),
                 name,
-                linespacing=1.2,
+                linespacing=1.1,
             )
 
     axes[0].set_ylabel("CO$_2$ production full node (kg)")
@@ -176,7 +193,7 @@ def make_figs(
             [0],
             [0],
             color="w",
-            markerfacecolor="r",
+            markerfacecolor=color_Python,
             marker="s",
             markersize=8,
             label="Python",
@@ -186,7 +203,7 @@ def make_figs(
             [0],
             color="w",
             marker="s",
-            markerfacecolor="b",
+            markerfacecolor=color_Julia,
             markersize=8,
             label="Julia",
         ),
@@ -195,7 +212,7 @@ def make_figs(
             [0],
             color="w",
             marker="s",
-            markerfacecolor="g",
+            markerfacecolor=color_static,
             markersize=8,
             label="Static languages",
         ),
@@ -226,7 +243,10 @@ def make_figs(
 
     for ax in axes:
         ax.set_xlabel("Time to solution (day)")
-        ax.set_title(f"{nb_particles_short} particles, 10 N-Body time units")
+        ax.set_title(
+            f"{nb_particles_dict[nb_particles_short]}"
+            " particles, 10 N-Body time units"
+        )
         ax.figure.tight_layout()
 
         # xmin, xmax = ax.get_xlim()
@@ -247,7 +267,7 @@ def make_figs(
             loc=(0.15, 0.64),
         )
 
-    return axes
+    return path_h5, axes
 
 
 if __name__ == "__main__":

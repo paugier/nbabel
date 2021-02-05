@@ -2,7 +2,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-from util import load_data, complete_df_out, dir_saved
+from util import (
+    load_data,
+    complete_df_out,
+    dir_saved,
+    color_Python,
+    color_static,
+    color_Julia,
+)
 from make_figs import make_figs
 
 
@@ -37,26 +44,40 @@ row_julia6, row_julia12 = get_result_parallel(
 
 def add_points(axes):
     ax0, ax1, ax2 = axes
-    row = row_pythran6
-    ax1.plot(row.elapsed_time, row.CO2_core, "r", marker="*", markersize="10")
-    print(row)
 
-    row = row_julia6
-    ax1.plot(row.elapsed_time, row.CO2_core, "ob", markersize="8")
-    print(row)
+    def plot(row, color, marker, markersize):
+        ax1.plot(
+            row.elapsed_time,
+            row.CO2_core,
+            color=color,
+            marker=marker,
+            markersize=markersize,
+            markeredgecolor="k",
+        )
+        print(row)
 
-    row = row_pythran12
-    ax1.plot(row.elapsed_time, row.CO2_core, "r", marker="*", markersize="10")
-    print(row)
+    plot(row_pythran6, color=color_Python, marker="*", markersize="10")
+    plot(row_julia6, color=color_Julia, marker="o", markersize="8")
 
-    row = row_julia12
-    ax1.plot(row.elapsed_time, row.CO2_core, "ob", markersize="8")
-    print(row)
+    plot(row_pythran12, color=color_Python, marker="*", markersize="10")
+    plot(row_julia12, color=color_Julia, marker="o", markersize="8")
 
 
 def get_shift_labels(nb_particles_short, path_name, name, iax):
     factor_time = -0.003
     factor_cons = 0.004
+
+    if "2021-02-04_22-04-51" in path_name:
+        factor_time = 0.001
+        factor_cons = -0.003
+
+        if name == "Pythran\n naive":
+            factor_time = -0.0055
+            factor_cons = -0.008
+
+        elif name.strip().startswith("C++"):
+            factor_time = -0.0003
+            factor_cons = -0.01
 
     if nb_particles_short == "16k":
         if "2021-01-25_14-08-35" in path_name:
@@ -105,8 +126,16 @@ def get_shift_labels(nb_particles_short, path_name, name, iax):
 
 if __name__ == "__main__":
 
-    ax0, ax1, ax2 = make_figs(
-        add_points=add_points, get_shift_labels=get_shift_labels
+    # with Julia lowlevel
+    filter_path_str = "2021-02-04_22-04-51"
+
+    # with Julia NBabel
+    # filter_path_str = "2021-02-03_10-20-15"
+
+    path, (ax0, ax1, ax2) = make_figs(
+        add_points=add_points,
+        get_shift_labels=get_shift_labels,
+        filter_path_str=filter_path_str,
     )
 
     mass = row_julia6.CO2_core
@@ -116,10 +145,21 @@ if __name__ == "__main__":
     ax1.text(7e-2, mass * 0.97, "  6\ncores", fontsize=8, linespacing=1.05)
     ax1.text(3.3e-2, mass * 1.02, "  12\ncores", fontsize=8, linespacing=1.05)
 
-    x = np.array([0.25, 1.55])
+    xlim_line = [0.25, 1.55]
     kg_per_day = 0.28
-    ax1.plot(x, kg_per_day * x, "-", color="silver", zorder=0)
-    ax1.text(0.61, 0.19, f"{kg_per_day} kg/day", color="silver", rotation=51)
+    x_text = 0.61
+    y_text = 0.19
+
+    if filter_path_str == "2021-02-04_22-04-51":
+        xlim_line = [0.28, 1.77]
+        kg_per_day = 0.265
+        x_text = 0.60
+        y_text = 0.18
+
+    x = np.array(xlim_line)
+
+    ax1.plot(x, kg_per_day * x, "-", color="grey", zorder=0)
+    ax1.text(x_text, y_text, f"{kg_per_day} kg/day", color="grey", rotation=51)
 
     plt.close(ax0.figure)
     # plt.close(ax1.figure)

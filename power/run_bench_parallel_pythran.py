@@ -39,8 +39,6 @@ command_template = (
     "python bench{omp}.py ../data/input{nb_particles_short} {t_end}"
 )
 
-nb_particles_dict = {"1k": 1024, "2k": 2048, "16k": 16384}
-
 
 def run_benchmarks(nb_particles_short, time_sequential_bench):
     def create_command(command_template, nb_particles_short, t_end, nb_threads=1):

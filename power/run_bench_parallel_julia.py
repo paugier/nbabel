@@ -20,6 +20,7 @@ import pandas as pd
 import h5py
 
 from run_benchmarks import get_time_as_str, run
+from util import nb_particles_dict
 
 t_sleep_before = 4  # (s)
 
@@ -40,8 +41,6 @@ command_template = (
     "julia -t{nb_threads} -O3 --check-bounds=no -- run.jl "
     "nbabel5_{threads}.jl ../data/input{nb_particles_short} true {t_end}"
 )
-
-nb_particles_dict = {"1k": 1024, "2k": 2048, "16k": 16384}
 
 
 def run_benchmarks(nb_particles_short, time_julia_bench):
