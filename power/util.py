@@ -10,8 +10,8 @@ here = Path(__file__).absolute().parent
 dir_saved = here / "saved"
 
 color_Python = "r"
-color_static = "lime"
-color_Julia = "darkblue"
+color_static = "springgreen"
+color_Julia = "mediumblue"
 
 nb_particles_dict = {"1k": 1024, "2k": 2048, "16k": 16384}
 
