@@ -28,7 +28,7 @@ working_dir = path_base_repo / "py"
 nb_cpus = os.cpu_count()
 
 if nb_cpus == 24:
-    nb_threads_list = [1, 2, 4, 6, 8, 12, 16, 24]
+    nb_threads_list = [1, 2, 4, 6, 8, 12]
 elif nb_cpus == 6:
     nb_threads_list = [1, 2, 4, 6]
 else:
