@@ -41,6 +41,7 @@ command_template = (
 
 
 def run_benchmarks(nb_particles_short, time_sequential_bench):
+
     def create_command(command_template, nb_particles_short, t_end, nb_threads=1):
 
         if nb_threads == 1:
@@ -56,16 +57,19 @@ def run_benchmarks(nb_particles_short, time_sequential_bench):
 
     print("First run to evaluate t_end for time_sequential_bench")
 
+    command = create_command(command_template, nb_particles_short, 0.002)
+    run(command, working_dir)
+
     if nb_particles_short == "1k":
         t_end = 2
     elif nb_particles_short == "2k":
         t_end = 0.5
     elif nb_particles_short == "16k":
         t_end = 0.05
+    else:
+        raise ValueError
 
     command = create_command(command_template, nb_particles_short, t_end)
-
-    run(command, working_dir)
     t_perf_start = perf_counter()
     run(command, working_dir)
     elapsed_time = perf_counter() - t_perf_start

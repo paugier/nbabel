@@ -3,7 +3,8 @@
 ```bash
 ssh g5k
 ssh lyon
-oarsub -p "cluster='taurus'" -I
+oarsub -p "cluster='taurus'" -l nodes=1,walltime=4:00 -I
+oarsub -p "host='taurus-12.lyon.grid5000.fr'" -l nodes=1,walltime=4:00 -I
 ```
 
 Benchmarks run in Taurus node at Grid 5000:

@@ -13,14 +13,12 @@ from pathlib import Path
 from time import time, perf_counter, sleep
 import platform
 import os
-import gzip
 
 import numpy as np
 import pandas as pd
 import h5py
 
 from run_benchmarks import get_time_as_str, run
-from util import nb_particles_dict
 
 t_sleep_before = 4  # (s)
 
@@ -43,9 +41,7 @@ command_template = (
 )
 
 
-def run_benchmarks(nb_particles_short, time_julia_bench):
-
-    nb_particles = nb_particles_dict[nb_particles_short]
+def run_benchmarks(nb_particles_short, time_sequential_bench):
 
     def create_command(command_template, nb_particles_short, t_end, nb_threads=1):
 
@@ -57,12 +53,14 @@ def run_benchmarks(nb_particles_short, time_julia_bench):
         return command_template.format(
             nb_particles_short=nb_particles_short,
             t_end=t_end,
-            nb_particles=nb_particles,
             nb_threads=nb_threads,
             threads=threads,
         )
 
-    print("First run to evaluate t_end for time_julia_bench")
+    print("First run to evaluate t_end for time_sequential_bench")
+
+    command = create_command(command_template, nb_particles_short, 0.002)
+    run(command, working_dir)
 
     if nb_particles_short == "1k":
         t_end = 2
@@ -70,16 +68,16 @@ def run_benchmarks(nb_particles_short, time_julia_bench):
         t_end = 0.5
     elif nb_particles_short == "16k":
         t_end = 0.05
+    else:
+        raise ValueError
 
     command = create_command(command_template, nb_particles_short, t_end)
-
-    run(command, working_dir)
     t_perf_start = perf_counter()
     run(command, working_dir)
     elapsed_time = perf_counter() - t_perf_start
     print(f"elapsed time: {elapsed_time:.3f} s")
 
-    t_end = t_end * time_julia_bench / elapsed_time
+    t_end = t_end * time_sequential_bench / elapsed_time
     print(f"We'll run the benchmarks with t_end = {t_end}")
 
     timestamp_before = time()
@@ -179,36 +177,22 @@ def run_benchmarks(nb_particles_short, time_julia_bench):
 
     from getwatt import getwatt
 
+    path_result = path_result.with_suffix(".h5")
+
     timestamp_end = time()
     node_shortname = node.split(".")[0]
-    try:
-        conso = np.array(getwatt(node_shortname, timestamp_before, timestamp_end))
-    except gzip.BadGzipFile:
-        print(
-            "Error gzip.BadGzipFile. " "Power data will need to be upload later."
-        )
-        error_BadGzipFile = True
-        path_result = path_result.with_name(
-            path_result.stem + "_incomplete" + ".h5"
-        )
-    else:
-        error_BadGzipFile = False
-        path_result = path_result.with_suffix(".h5")
-
     with h5py.File(str(path_result), "w") as file:
         file.attrs["t_end"] = t_end
         file.attrs["node"] = node
         file.attrs["node_shortname"] = node_shortname
         file.attrs["nb_particles_short"] = nb_particles_short
-        file.attrs["time_julia_bench"] = time_julia_bench
+        file.attrs["time_sequential_bench"] = time_sequential_bench
         file.attrs["t_sleep_before"] = t_sleep_before
         file.attrs["nb_cpus"] = nb_cpus
         file.attrs["timestamp_before"] = timestamp_before
         file.attrs["timestamp_end"] = timestamp_end
 
-    if error_BadGzipFile:
-        return
-
+    conso = np.array(getwatt(node_shortname, timestamp_before, timestamp_end))
     times = conso[:, 0]
     watts = conso[:, 1]
     with h5py.File(str(path_result), "a") as file:
@@ -233,8 +217,8 @@ if __name__ == "__main__":
         nb_particles_short = "1k"
 
     if len(sys.argv) > 2:
-        time_julia_bench = float(sys.argv[2])
+        time_sequential_bench = float(sys.argv[2])
     else:
-        time_julia_bench = 20.0  # (s)
+        time_sequential_bench = 20.0  # (s)
 
-    run_benchmarks(nb_particles_short, time_julia_bench)
+    run_benchmarks(nb_particles_short, time_sequential_bench)

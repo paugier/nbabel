@@ -161,7 +161,7 @@ if __name__ == "__main__":
     ax1.plot(x, kg_per_day * x, "-", color="grey", zorder=0)
     ax1.text(x_text, y_text, f"{kg_per_day} kg/day", color="grey", rotation=51)
 
-    ax1.text(0.25, 0.11, "single-threaded", rotation=51, fontsize=11)
+    ax1.text(0.25, 0.11, "single-threaded (1 core)", rotation=51, fontsize=11)
 
     plt.close(ax0.figure)
     # plt.close(ax1.figure)
