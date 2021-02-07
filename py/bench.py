@@ -98,8 +98,8 @@ def compute_potential_energy(masses, positions):
     nb_particules = masses.size
     pe = 0.0
     for index_p0 in range(nb_particules - 1):
+        mass0 = masses[index_p0]
         for index_p1 in range(index_p0 + 1, nb_particules):
-            mass0 = masses[index_p0]
             mass1 = masses[index_p1]
             vector = positions[index_p0] - positions[index_p1]
             distance = compute_distance(vector)

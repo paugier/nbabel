@@ -76,7 +76,7 @@ def load_data(path_h5):
         # ax1.set_title(f"{row.implementation} nb_threads={nb_threads}")
 
     power_sleep = np.array(power_sleeps).mean()
-
+    print("power_sleep", power_sleep, power_sleeps)
     nb_cores = nb_cpus // 2
     power_sleep_1core = power_sleep / nb_cores
 
@@ -129,9 +129,15 @@ def complete_df_out(df_out, info):
     else:
         nb_cores = info["nb_cores"]
 
+    print("power_sleep_1core", info["power_sleep_1core"])
+
     df_out["consommation_core"] = df_out["consommation"] - df_out[
         "elapsed_time"
     ] * info["power_sleep_1core"] * (nb_cores - nb_threads)
+
+    df_out["power_mean_core"] = (
+        df_out["consommation_core"] / df_out["elapsed_time"]
+    )
 
     df_out["consommation_alt"] = (
         df_out["consommation"]

@@ -4,13 +4,11 @@ from pprint import pprint
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 
-from util import load_data, complete_df_out, dir_saved
-
-
+from util import load_data, complete_df_out, dir_saved, nb_particles_dict
 
 nb_particles_short = "16k"
 
-language = "julia"
+language = "pythran"
 
 paths_h5 = sorted(
     dir_saved.glob(f"parallel_{language}_{nb_particles_short}_*.h5"),
@@ -66,32 +64,35 @@ ax0.ax_twin_norm = df_out.elapsed_time.max()
 ax0.callbacks.connect("ylim_changed", set_ylim_twin)
 
 
-ax1.plot(nb_threads_list, df_out.CO2, marker=".", label="CO$_2$ during run")
-ax1.plot(
-    nb_threads_list,
-    df_out.CO2_alt,
-    marker=".",
-    label="CO$_2$ during time longer run",
-)
-ax1.plot(nb_threads_list, df_out.CO2.max() / nb_threads_list, "k:")
+ax1.plot(nb_threads_list, df_out.CO2_core, marker=".", label="CO$_2$ during run")
+# ax1.plot(
+#     nb_threads_list,
+#     df_out.CO2_alt,
+#     marker=".",
+#     label="CO$_2$ during time longer run",
+# )
+ax1.plot(nb_threads_list, df_out.CO2_core.max() / nb_threads_list, "k:")
 
 ax1.ax_twin = ax1.twinx()
-ax1.ax_twin_norm = df_out.CO2.max()
+ax1.ax_twin_norm = df_out.CO2_core.max()
 ax1.callbacks.connect("ylim_changed", set_ylim_twin)
 
 ax0.set_ylabel("Elapsed time (day)")
 
 for ax in (ax0, ax1):
     ax.set_ylim(ymin=0)
-    ax.set_xlim(xmax=16)
+    ax.set_xlim(xmax=12)
 
 ax0.set_ylim(ymax=0.33)
-ax1.set_ylim(ymax=3.8)
+# ax1.set_ylim(ymax=3.8)
 
 ax1.set_xlabel("number of threads")
 ax1.set_ylabel("Production CO$_2$ (kg)")
 ax1.legend()
-ax0.set_title(f"{info['nb_particles_short']} particles, 10 N-Body time units ({language.capitalize()})")
+ax0.set_title(
+    f"{nb_particles_dict[info['nb_particles_short']]} particles, "
+    f"10 N-Body time units ({language.capitalize()})"
+)
 fig.tight_layout()
 
 plt.show()

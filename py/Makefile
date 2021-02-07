@@ -1,7 +1,4 @@
 
-CC=gcc
-CXX=g++
-
 build: __pythran__/bench.py
 	# launching to "warm the jit"
 	python bench_numpy_highlevel_jit.py ../data/input16 0.1
@@ -40,14 +37,20 @@ bench64: __pythran__/bench.py
 	python bench.py ../data/input64
 
 __pythran__/bench.py: bench.py
-	transonic bench.py -af "-march=native -Ofast"
-	# transonic bench.py -af "-march=native -DUSE_XSIMD -Ofast"
+	export CC=clang
+	export CXX=clang++
+	# transonic bench.py -af "-march=native -Ofast"
+	transonic bench.py -af "-march=native -DUSE_XSIMD -Ofast"
 
 __pythran__/bench_more_opti.py: bench_more_opti.py
-	transonic bench_more_opti.py -af "-march=native -Ofast"
+	export CC=clang
+	export CXX=clang++
+	transonic bench_more_opti.py -af "-march=native -DUSE_XSIMD -Ofast"
 
 __pythran__/bench_omp.py: bench_omp.py
-	transonic bench_omp.py -af "-march=native -Ofast -fopenmp"
+	export CC=clang
+	export CXX=clang++
+	transonic bench_omp.py -af "-march=native -DUSE_XSIMD -Ofast -fopenmp"
 
 clean:
 	rm -rf __pythran__
