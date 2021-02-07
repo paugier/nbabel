@@ -37,19 +37,13 @@ bench64: __pythran__/bench.py
 	python bench.py ../data/input64
 
 __pythran__/bench.py: bench.py
-	export CC=clang
-	export CXX=clang++
 	# transonic bench.py -af "-march=native -Ofast"
 	transonic bench.py -af "-march=native -DUSE_XSIMD -Ofast"
 
 __pythran__/bench_more_opti.py: bench_more_opti.py
-	export CC=clang
-	export CXX=clang++
 	transonic bench_more_opti.py -af "-march=native -DUSE_XSIMD -Ofast"
 
 __pythran__/bench_omp.py: bench_omp.py
-	export CC=clang
-	export CXX=clang++
 	transonic bench_omp.py -af "-march=native -DUSE_XSIMD -Ofast -fopenmp"
 
 clean:
