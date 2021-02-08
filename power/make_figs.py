@@ -170,8 +170,12 @@ def make_figs(
         elif name == "Julia low-level":
             name = "Julia"
 
-        if "2021-02-04_22-04-51" in path_h5.name and name == "C++ nbabel.org":
-            name = "   C++\nnbabel.org"
+        if name == "C++ nbabel.org":
+            if "2021-02-04_22-04-51" in path_h5.name:
+                name = "   C++\nnbabel.org"
+            elif "2021-02-07_09-42-05" in path_h5.name:
+                name = "    C++\nnbabel.org"
+
 
         for iax, (ax, quantity) in enumerate(zip(axes, quantities)):
             factor_time, factor_cons = get_shift_labels(

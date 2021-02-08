@@ -76,7 +76,7 @@ def load_data(path_h5):
         # ax1.set_title(f"{row.implementation} nb_threads={nb_threads}")
 
     power_sleep = np.array(power_sleeps).mean()
-    print("power_sleep", power_sleep, power_sleeps)
+    # print("power_sleep", power_sleep, power_sleeps)
     nb_cores = nb_cpus // 2
     power_sleep_1core = power_sleep / nb_cores
 
@@ -98,6 +98,8 @@ def load_data(path_h5):
             "nb_cores",
         ]
     }
+
+    print(df[df.implementation != "sleep(t_sleep_before)"])
 
     return info, df
 

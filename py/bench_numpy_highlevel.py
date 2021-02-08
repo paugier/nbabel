@@ -5,8 +5,6 @@ from datetime import timedelta
 import numpy as np
 import pandas as pd
 
-from transonic import jit
-
 
 def load_input_data(path):
     df = pd.read_csv(
@@ -41,7 +39,6 @@ def compute_accelerations(accelerations, masses, positions):
             accelerations[index_p1] += coef * mass0 * vector
 
 
-# @jit
 def loop(time_step, nb_steps, masses, positions, velocities):
     accelerations = np.zeros_like(positions)
     accelerations1 = np.zeros_like(positions)
@@ -100,7 +97,12 @@ if __name__ == "__main__":
     import sys
 
     t_start = perf_counter()
-    time_end, time_step = 10.0, 0.001
+    try:
+        time_end = float(sys.argv[2])
+    except IndexError:
+        time_end = 10.
+
+    time_step = 0.001
     nb_steps = int(time_end / time_step) + 1
 
     path_input = sys.argv[1]

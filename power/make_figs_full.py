@@ -47,6 +47,10 @@ def add_points(axes):
     ax0, ax1, ax2 = axes
 
     def plot(row, color, marker, markersize):
+        zorder = None
+        if marker == "*":
+            zorder = 10
+
         ax1.plot(
             row.elapsed_time,
             row.CO2_core,
@@ -54,6 +58,7 @@ def add_points(axes):
             marker=marker,
             markersize=markersize,
             markeredgecolor="k",
+            zorder=zorder,
         )
         print(row)
 
@@ -85,12 +90,16 @@ def get_shift_labels(nb_particles_short, path_name, name, iax):
         factor_cons = -0.003
 
         if name == "Pythran\n naive":
-            factor_time = -0.0055
+            factor_time = -0.005
             factor_cons = -0.008
 
         elif name.strip().startswith("C++"):
-            factor_time = -0.0003
+            factor_time = -0.0008
             factor_cons = -0.01
+
+        elif name == "PyPy":
+            factor_time = 0.001
+            factor_cons = -0.005
 
     if nb_particles_short == "16k":
         if "2021-01-25_14-08-35" in path_name:
@@ -144,6 +153,7 @@ if __name__ == "__main__":
 
     # with Julia lowlevel
     filter_path_str = "2021-02-04_22-04-51"
+    # filter_path_str = "2021-02-08_09-39-55"
     filter_path_str = "2021-02-07_09-42-05"
 
     path, (ax0, ax1, ax2) = make_figs(
@@ -154,10 +164,26 @@ if __name__ == "__main__":
 
     mass = row_julia6.CO2_core
 
-    ax1.text(3.7e-2, mass * 1.19, "Pythran & Julia\n  parallel", linespacing=1.2)
+    x_PJ = 3.7e-2
+    x6 = 7e-2
+    x12 = 3.3e-2
 
-    ax1.text(7e-2, mass * 0.97, "  6\ncores", fontsize=8, linespacing=1.05)
-    ax1.text(3.3e-2, mass * 1.02, "  12\ncores", fontsize=8, linespacing=1.05)
+    y_PJ = mass * 1.19
+    y6 = mass * 0.97
+    y12 = mass * 1.02
+
+    if filter_path_str == "2021-02-07_09-42-05":
+        x_PJ = row_julia12.elapsed_time * 1.1
+        x6 = row_julia6.elapsed_time * 1.1
+        x12 = row_julia12.elapsed_time * 1.07
+
+        y_PJ = mass * 1.20
+        y6 = mass * 0.97
+        y12 = row_julia12.CO2_core * 0.95
+
+    ax1.text(x_PJ, y_PJ, "Pythran & Julia\n  parallel", linespacing=1.2)
+    ax1.text(x6, y6, "  6\ncores", fontsize=8, linespacing=1.05)
+    ax1.text(x12, y12, "  12\ncores", fontsize=8, linespacing=1.05)
 
     xlim_line = [0.25, 1.55]
     kg_per_day = 0.28
@@ -169,6 +195,11 @@ if __name__ == "__main__":
         kg_per_day = 0.265
         x_text = 0.60
         y_text = 0.18
+    elif filter_path_str == "2021-02-07_09-42-05":
+        xlim_line = [0.26, 1.55]
+        kg_per_day = 0.28
+        x_text = 0.57
+        y_text = 0.18
 
     x = np.array(xlim_line)
 
@@ -176,6 +207,10 @@ if __name__ == "__main__":
     ax1.text(x_text, y_text, f"{kg_per_day} kg/day", color="grey", rotation=51)
 
     ax1.text(0.25, 0.11, "single-threaded (1 core)", rotation=51, fontsize=11)
+
+    xmin, xmax = ax1.get_xlim()
+    ax1.text(0.61 * xmin, 0.96 * 0.4, r"$4\times 10^{-1}$", fontsize=9)
+    ax1.text(0.61 * xmin, 0.96 * 0.04, r"$4\times 10^{-2}$", fontsize=9)
 
     plt.close(ax0.figure)
     # plt.close(ax1.figure)
