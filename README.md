@@ -48,3 +48,31 @@ simple Python implementation).
 (bench_numpy_highlevel.py), if one (i) adds an import `from transonic import
 jit` and (ii) decorates the function `loop` with `@jit`, the case for 1024
 particles runs in 136 s (2.5 times slower than the C++ implementation).
+
+## Table of codes
+
+See [run_benchmarks.py](https://github.com/paugier/nbabel/blob/reply-zwart2020/power/run_benchmarks.py).
+
+|   Legend figure    |        Source code                            |
+|:------------------:|:---------------------------------------------:|
+|   C++ nbabel.org   | [main.cpp][main.cpp]                          |
+| Fortran nbabel.org | [nbabel.f03][nbabel.f03]                      |
+|   Pythran naive    | [bench_numpy_highlevel_jit.py][pythran-naive] |
+|        PyPy        | [bench_purepy_Particle.py][purepy_Particle]   |
+|        Numba       | [bench_numba.py][bench_numba.py]              |
+|       Pythran      | [bench.py][bench.py]                          |
+|        Julia       | [naive_lowlevel.jl][naive_lowlevel.jl]        |
+|   Julia optimized  | [nbabel5_serial.jl][nbabel5_serial.jl]        |
+|  Pythran paralllel | [bench_omp.py][bench_omp.py]                  |
+|   Julia parallel   | [nbabel5_threads.jl][nbabel5_threads.jl]      |
+
+[main.cpp]:   https://github.com/paugier/nbabel/blob/reply-zwart2020/cpp/main.cpp
+[nbabel.f03]: https://github.com/paugier/nbabel/blob/reply-zwart2020/fortran/nbabel.f03
+[pythran-naive]: https://github.com/paugier/nbabel/blob/reply-zwart2020/py/bench_numpy_highlevel_jit.py
+[purepy_Particle]: https://github.com/paugier/nbabel/blob/reply-zwart2020/py/bench_purepy_Particle.py
+[bench_numba.py]: https://github.com/paugier/nbabel/blob/reply-zwart2020/py/bench_numba.py
+[bench.py]: https://github.com/paugier/nbabel/blob/reply-zwart2020/py/bench.py
+[naive_lowlevel.jl]: https://github.com/paugier/nbabel/blob/reply-zwart2020/julia/naive_lowlevel.jl
+[nbabel5_serial.jl]: https://github.com/paugier/nbabel/blob/reply-zwart2020/julia/nbabel5_serial.jl
+[bench_omp.py]: https://github.com/paugier/nbabel/blob/reply-zwart2020/py/bench_omp.py
+[nbabel5_threads.jl]: https://github.com/paugier/nbabel/blob/reply-zwart2020/julia/nbabel5_threads.jl
