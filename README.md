@@ -11,9 +11,12 @@ in some languages).
 |    16384    | 7220 | 14640 |  10914  | 11100 |    ? |
 
 The implementations in C++, Fortran and Julia come from https://www.nbabel.org/
-and have recently been used in an article published in Nature Astronomy
-([Zwart, 2020](https://arxiv.org/pdf/2009.11295.pdf)). The implementation in
-Python-Numpy is very simple, but uses
+and have been used in an article published in Nature Astronomy
+([Zwart, 2020](https://arxiv.org/pdf/2009.11295.pdf)). The results of this
+updated benchmark was summarized in [Augier et al., 2021](https://rdcu.be/ciO0J)
+(see how to [cite the article](#Citation)).
+
+The implementation in Python-Numpy is very simple, but uses
 [Transonic](https://transonic.readthedocs.io) and
 [Pythran](https://pythran.readthedocs.io) (>=0.9.8).
 
@@ -76,3 +79,22 @@ See [run_benchmarks.py](https://github.com/paugier/nbabel/blob/reply-zwart2020/p
 [nbabel5_serial.jl]: https://github.com/paugier/nbabel/blob/reply-zwart2020/julia/nbabel5_serial.jl
 [bench_omp.py]: https://github.com/paugier/nbabel/blob/reply-zwart2020/py/bench_omp.py
 [nbabel5_threads.jl]: https://github.com/paugier/nbabel/blob/reply-zwart2020/julia/nbabel5_threads.jl
+
+## Citation
+
+```bib
+@article{nbabel2021,
+  title = {Reducing the Ecological Impact of Computing through Education and {{Python}} Compilers},
+  author = {Augier, Pierre and {Bolz-Tereick}, Carl Friedrich and Guelton, Serge and Mohanan, Ashwin Vishnu},
+  year = {2021},
+  month = apr,
+  volume = {5},
+  pages = {334--335},
+  publisher = {{Nature Publishing Group}},
+  issn = {2397-3366},
+  doi = {10.1038/s41550-021-01342-y},
+  journal = {Nature Astronomy},
+  language = {en},
+  number = {4}
+}
+```
