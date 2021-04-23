@@ -57,24 +57,23 @@ public:
     for (vector<Star>::iterator si = s.begin(); si != s.end(); ++si)
       si->a.assign(3, 0);
     // For each star
+    vector<real> rij(3);
     for (vector<Star>::iterator si = s.begin(); si != s.end(); ++si) {
-      vector<real> rij(3);
       real init = 0.0;
       // For each remaining star
-      for (vector<Star>::iterator sj = s.begin(); sj != s.end(); ++sj) {
-        if (si != sj) {
+      for (vector<Star>::iterator sj = si + 1; sj != s.end(); ++sj) {
           // Distance difference between the two stars
           for (int i = 0; i != 3; ++i)
             rij[i] = si->r[i] - sj->r[i];
           // Sum of the dot product
           real RdotR = inner_product(rij.begin(), rij.end(), rij.begin(), init);
-          real apre = 1. / sqrt(RdotR * RdotR * RdotR);
+          real apre = 1 / (sqrt(RdotR) * RdotR);
           // Update accelerations
           for (int i = 0; i != 3; ++i) {
             si->a[i] -= sj->m * apre * rij[i];
+            sj->a[i] += si->m * apre * rij[i];
           }
-        } // end for
-      }   // si != sj
+      }   // end for
     }     // end for
   }       // end acceleration
 
@@ -109,8 +108,9 @@ public:
 
     // Kinetic energy
     for (vector<Star>::iterator si = s.begin(); si != s.end(); ++si)
-      E[1] += 0.5 * si->m *
+      E[1] += si->m *
               inner_product(si->v.begin(), si->v.end(), si->v.begin(), init);
+    E[1] *= 0.5;
 
     // Potential energy
     for (vector<Star>::iterator si = s.begin(); si != s.end(); ++si) {
