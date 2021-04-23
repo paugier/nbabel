@@ -9,69 +9,42 @@ more input128 | ./main
 #include <math.h>
 #include <numeric>
 #include <vector>
+#include <array>
 typedef double real;
 using namespace std;
-// Class Star, contains the properties:
-// mass (m)
-// position (r)
-// velocity (v)
-// accelerations (a and a0)
-//
-class Star {
-public:
-  real m;
-  vector<real> r;
-  vector<real> v;
-  vector<real> a, a0;
-  // Default constructor
-  Star() {
-    r.assign(3, 0);
-    v.assign(3, 0);
-    a.assign(3, 0);
-    a0.assign(3, 0);
-  }
-  // Detailed constructor
-  Star(real mass, vector<real> pos, vector<real> vel) {
-    m = mass;
-    r = pos;
-    v = vel;
-  }
-  // Print function (overloaded << operator)
-  friend ostream &operator<<(ostream &so, const Star &si) {
-    so << si.m << " " << si.r[0] << " " << si.r[1] << " " << si.r[2] << " "
-       << si.v[0] << " " << si.v[1] << " " << si.v[2] << endl;
-    return so;
-  }
-};
 // Star cluster based on the Star class
 // A star cluster contains a number of stars
 // stored in the vector S
 //
-class Cluster : public Star {
+class Cluster {
 protected:
 public:
-  vector<Star> s;
-  Cluster() : Star() {}
+  vector<real> m;
+  vector<array<real, 3>> r;
+  vector<array<real, 3>> v;
+  vector<array<real, 3>> a, a0;
   // Computes the acceleration of each star in the cluster
   void acceleration() {
-    for (vector<Star>::iterator si = s.begin(); si != s.end(); ++si)
-      si->a.assign(3, 0);
+    size_t N = m.size();
+    a.reserve(N);
+    for (size_t si = 0; si < N; si++)
+      std::fill(a[si].begin(), a[si].end(), 0);
     // For each star
-    vector<real> rij(3);
-    for (vector<Star>::iterator si = s.begin(); si != s.end(); ++si) {
-      real init = 0.0;
+    for (size_t si = 0; si < N; si++) {
       // For each remaining star
-      for (vector<Star>::iterator sj = si + 1; sj != s.end(); ++sj) {
+      for (size_t sj = si+1; sj < N; sj++) {
+          array<real, 3> rij;
           // Distance difference between the two stars
-          for (int i = 0; i != 3; ++i)
-            rij[i] = si->r[i] - sj->r[i];
+          for (int i = 0; i < 3; ++i)
+            rij[i] = r[sj][i] - r[si][i];
           // Sum of the dot product
+          real init = 0.0;
           real RdotR = inner_product(rij.begin(), rij.end(), rij.begin(), init);
           real apre = 1 / (sqrt(RdotR) * RdotR);
           // Update accelerations
-          for (int i = 0; i != 3; ++i) {
-            si->a[i] -= sj->m * apre * rij[i];
-            sj->a[i] += si->m * apre * rij[i];
+          for (int i = 0; i < 3; ++i) {
+            a[si][i] -= m[sj] * apre * rij[i];
+            a[sj][i] += m[si] * apre * rij[i];
           }
       }   // end for
     }     // end for
@@ -79,45 +52,49 @@ public:
 
   // Update positions
   void updatePositions(real dt) {
-    for (vector<Star>::iterator si = s.begin(); si != s.end(); ++si) {
+    size_t N = m.size();
+    a0.reserve(N);
+    for (size_t si = 0; si < N; si++) {
       // Update the positions, based on the calculated accelerations and
       // velocities
-      si->a0 = si->a;
+      a0[si] = a[si];
       for (int i = 0; i != 3; ++i) // for each axis (x/y/z)
-        si->r[i] += dt * si->v[i] + 0.5 * dt * dt * si->a0[i];
+        r[si][i] += dt * v[si][i] + 0.5 * dt * dt * a0[si][i];
     }
   }
 
   // Update velocities based on previous and new accelerations
   void updateVelocities(real dt) {
     // Update the velocities based on the previous and old accelerations
-    for (vector<Star>::iterator si = s.begin(); si != s.end(); ++si) {
+    size_t N = m.size();
+    for (size_t si = 0; si < N; si++) {
       for (int i = 0; i != 3; ++i)
-        si->v[i] += 0.5 * dt * (si->a0[i] + si->a[i]);
-      si->a0 = si->a;
+        v[si][i] += 0.5 * dt * (a0[si][i] + a[si][i]);
+      a0 = a;
     }
   }
 
   // Compute the energy of the system,
   // contains an expensive O(N^2) part which can be moved to the acceleration
   // part where this is already calculated
-  vector<real> energies() {
+  array<real, 3> energies() {
     real init = 0;
-    vector<real> E(3), rij(3);
-    E.assign(3, 0);
+    array<real, 3> E, rij;
+    std::fill(E.begin(), E.end(), 0);
 
+    size_t N = m.size();
     // Kinetic energy
-    for (vector<Star>::iterator si = s.begin(); si != s.end(); ++si)
-      E[1] += si->m *
-              inner_product(si->v.begin(), si->v.end(), si->v.begin(), init);
+    for (size_t si = 0; si < N; si++)
+      E[1] += m[si] *
+              inner_product(v[si].begin(), v[si].end(), v[si].begin(), init);
     E[1] *= 0.5;
 
     // Potential energy
-    for (vector<Star>::iterator si = s.begin(); si != s.end(); ++si) {
-      for (vector<Star>::iterator sj = si + 1; sj != s.end(); ++sj) {
+    for (size_t si = 0; si < N; si++) {
+      for (size_t sj = si + 1; sj < N; sj++) {
         for (int i = 0; i != 3; ++i)
-          rij[i] = si->r[i] - sj->r[i];
-        E[2] -= si->m * sj->m /
+          rij[i] = r[si][i] - r[sj][i];
+        E[2] -= m[si] * m[sj] /
                 sqrt(inner_product(rij.begin(), rij.end(), rij.begin(), init));
       }
     }
@@ -125,12 +102,6 @@ public:
     return E;
   }
 
-  // Print function
-  friend ostream &operator<<(ostream &so, Cluster &cl) {
-    for (vector<Star>::iterator si = cl.s.begin(); si != cl.s.end(); ++si)
-      so << *si;
-    return so;
-  }
 };
 
 int main(int argc, char* argv[]) {
@@ -138,7 +109,7 @@ int main(int argc, char* argv[]) {
   Cluster cl;
   real m;
   int dummy;
-  vector<real> r(3), v(3);
+  array<real, 3> r, v;
 
   // Read input data from the command line (makeplummer | dumbp)
   do {
@@ -148,14 +119,18 @@ int main(int argc, char* argv[]) {
       cin >> r[i];
     for (int i = 0; i != 3; ++i)
       cin >> v[i];
-    cl.s.push_back(Star(m, r, v));
+    cl.m.push_back(m);
+    cl.r.push_back(r);
+    cl.v.push_back(v);
   } while (!cin.eof());
 
   // Remove the last one
-  cl.s.pop_back();
+  cl.m.pop_back();
+  cl.r.pop_back();
+  cl.v.pop_back();
 
   // Compute initial energu of the system
-  vector<real> E(3), E0(3);
+  array<real, 3> E, E0;
   E0 = cl.energies();
   cerr << "Energies: " << E0[0] << " " << E0[1] << " " << E0[2] << endl;
 
