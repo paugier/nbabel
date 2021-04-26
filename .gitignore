@@ -5,6 +5,7 @@
 **/__pythran__/
 **/__numba__
 cpp/main
+cpp/main_opt
 fortran/nbabel
 fortran/output*
 
