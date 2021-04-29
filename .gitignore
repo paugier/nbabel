@@ -6,6 +6,7 @@
 **/__numba__
 cpp/main
 cpp/main_opt
+cpp/main_arrays
 fortran/nbabel
 fortran/output*
 

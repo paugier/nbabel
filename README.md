@@ -52,9 +52,13 @@ simple Python implementation).
 jit` and (ii) decorates the function `loop` with `@jit`, the case for 1024
 particles runs in 136 s (2.5 times slower than the C++ implementation).
 
-**Note 6:** The directory "cpp" contains a faster C++ implementation (proposed
-by [@bolverk](https://github.com/paugier/nbabel/pull/16)) which runs on my PC
-in 25 s, 104 s and 7100 s, respectively.
+**Note 6:** The directory "cpp" also contains 2 faster C++ implementations
+(proposed by [@bolverk](https://github.com/paugier/nbabel/pull/16) and
+[@isuruf](https://github.com/paugier/nbabel/pull/17)) which run on my PC in 25
+s, 104 s and 7080 s for the [AoS](https://en.wikipedia.org/wiki/AoS_and_SoA)
+implementation by @bolverk and 26s, 104 s and 7330 s for the
+[SoA](https://en.wikipedia.org/wiki/AoS_and_SoA) implementation by @isuruf.
+Note that there is a problem with the conservation of energy.
 
 ## Table of codes
 
