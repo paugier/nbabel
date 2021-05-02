@@ -2,7 +2,7 @@
 use std::path::Path;
 use std::{fs, mem};
 
-use packed_simd::*;
+use wide::f64x4;
 
 #[derive(Clone)]
 pub struct Particle {
@@ -33,7 +33,7 @@ impl Bodies {
         let res: f64 = self
             .particles
             .iter()
-            .map(|p| 0.5 * p.mass * (p.velocity * p.velocity).sum())
+            .map(|p| 0.5 * p.mass * (p.velocity * p.velocity).reduce_add())
             .sum();
         pe + res
     }
@@ -64,7 +64,7 @@ impl Bodies {
 
             for p2 in particles.iter_mut() {
                 let vector = p1.position - p2.position;
-                let norm2 = (vector * vector).sum();
+                let norm2 = (vector * vector).reduce_add();
                 let distance = norm2.sqrt();
                 let distance_cube = norm2 * distance;
 
@@ -87,8 +87,8 @@ fn parse_row(line: &str) -> Particle {
         .collect();
 
     Particle {
-        position: f64x4::new(row_vec[1], row_vec[2], row_vec[3], 0.),
-        velocity: f64x4::new(row_vec[4], row_vec[5], row_vec[6], 0.),
+        position: f64x4::from([row_vec[1], row_vec[2], row_vec[3], 0.]),
+        velocity: f64x4::from([row_vec[4], row_vec[5], row_vec[6], 0.]),
         acceleration: [f64x4::splat(0.0); 2],
         mass: row_vec[0],
     }

@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
-packed_simd = { version = "0.3.4", package = "packed_simd_2" }
+wide = { version = "0.6.4"}
 
 [[bin]]
 name = "nbabel"
@@ -15,6 +15,4 @@ name = "nbabel_lib"
 path = "src/lib.rs"
 
 [features]
-default = [ ]
-sleef-sys = [ "packed_simd/sleef-sys" ]
-core_arch = [ "packed_simd/core_arch" ]
+std = []
