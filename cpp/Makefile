@@ -12,6 +12,12 @@ bench128: main
 bench1k: main
 	cat ../data/input1k | time ./main
 
+bench1k_opt_all: main_opt_all
+	cat ../data/input1k | time ./main_opt_all
+
+bench1k_opt_algo: main_opt_algo
+	cat ../data/input1k | time ./main_opt_algo
+
 bench2k: main
 	cat ../data/input2k | time ./main
 
