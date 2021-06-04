@@ -12,6 +12,12 @@ bench128: main
 bench1k: main
 	cat ../data/input1k | time ./main
 
+bench1k_opt_all: main_opt_all
+	cat ../data/input1k | time ./main_opt_all
+
+bench1k_opt_algo: main_opt_algo
+	cat ../data/input1k | time ./main_opt_algo
+
 bench2k: main
 	cat ../data/input2k | time ./main
 
@@ -27,11 +33,17 @@ bench2k_opt: main_opt
 bench16k_opt: main_opt
 	cat ../data/input16k | time ./main_opt 0.5
 
-main: main.cpp
-	g++ -march=native -Ofast main.cpp -o main
+bench1k_arrays: main_arrays
+	cat ../data/input1k | time ./main_arrays
 
-main_opt: main_opt.cpp
-	g++ -march=native -Ofast main_opt.cpp -o main_opt
+bench2k_arrays: main_arrays
+	cat ../data/input2k | time ./main_arrays
+
+bench16k_arrays: main_arrays
+	cat ../data/input16k | time ./main_arrays 0.5
+
+%: %.cpp
+	g++ -march=native -Ofast $< -o $@
 
 clean:
 	rm -f main
