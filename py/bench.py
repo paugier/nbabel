@@ -13,10 +13,10 @@ def load_input_data(path):
         path, names=["mass", "x", "y", "z", "vx", "vy", "vz"], delimiter=r"\s+"
     )
 
-    # no need for .copy() with numpy 1.20.3 and pandas 1.2.4
-    masses = df["mass"].values
-    positions = df.loc[:, ["x", "y", "z"]].values
-    velocities = df.loc[:, ["vx", "vy", "vz"]].values
+    # with numpy 1.20.3 and pandas 1.2.4
+    masses = np.ascontiguousarray(df["mass"].values)
+    positions = np.ascontiguousarray(df.loc[:, ["x", "y", "z"]].values)
+    velocities = np.ascontiguousarray(df.loc[:, ["vx", "vy", "vz"]].values)
 
     return masses, positions, velocities
 
