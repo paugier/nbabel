@@ -13,10 +13,10 @@ def load_input_data(path):
         path, names=["mass", "x", "y", "z", "vx", "vy", "vz"], delimiter=r"\s+"
     )
 
-    # warning: copy() is for Pythran...
-    masses = df["mass"].values.copy()
-    positions = df.loc[:, ["x", "y", "z"]].values.copy()
-    velocities = df.loc[:, ["vx", "vy", "vz"]].values.copy()
+    # no need for .copy() with numpy 1.20.3 and pandas 1.2.4
+    masses = df["mass"].values
+    positions = df.loc[:, ["x", "y", "z"]].values
+    velocities = df.loc[:, ["vx", "vy", "vz"]].values
 
     return masses, positions, velocities
 
