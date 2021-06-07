@@ -7,6 +7,8 @@
 cpp/main
 cpp/main_opt
 cpp/main_arrays
+cpp/main_opt_algo
+cpp/main_opt_all
 fortran/nbabel
 fortran/output*
 
