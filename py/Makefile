@@ -6,6 +6,9 @@ build: __pythran__/bench.py
 bench0:
 	python bench0.py ../data/input16
 
+bench_compyler:
+	python bench_compyler.py ../data/input16
+
 bench_pypy_purepy:
 	pypy bench_purepy.py ../data/input16
 
