@@ -27,3 +27,5 @@ py/**/*.c
 py/**/*.html
 
 power/tmp
+
+py/.venv

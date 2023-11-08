@@ -1,10 +1,9 @@
-from math import sqrt
-from time import now as perf_counter
 import sys
 
-# from file import open
+from math import sqrt
 from python import Python
 from utils.vector import InlinedFixedVector
+from time import now
 
 # from datetime import timedelta
 
@@ -169,8 +168,6 @@ fn loop(
 
 
 def main():
-    t_start = perf_counter()
-
     args = sys.argv()
 
     let time_end: Float64
@@ -230,9 +227,12 @@ def main():
     let energy: Float64
     let energy0: Float64
 
+    let t_start = now()
     energy, energy0 = loop(time_step, nb_steps, particles)
-
     print("Final dE/E = " + String((energy - energy0) / energy0))
-    # print(
-    #     f"{nb_steps} time steps run in {timedelta(seconds=perf_counter()-t_start)}"
-    # )
+    print(
+        String(nb_steps)
+        + " time steps run in "
+        + String(Float64(now() - t_start) * 1e-9)
+        + " s"
+    )
