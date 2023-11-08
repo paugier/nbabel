@@ -1,5 +1,5 @@
 """
-Taken from https://raw.githubusercontent.com/gabrieldemarmiesse/mojo-stdlib-extensions
+Taken from https://github.com/gabrieldemarmiesse/mojo-stdlib-extensions
 
 """
 
