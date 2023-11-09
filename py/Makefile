@@ -1,3 +1,4 @@
+SHELL = bash
 
 build: __pythran__/bench.py
 	# launching to "warm the jit"

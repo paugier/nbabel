@@ -1,4 +1,4 @@
-
+SHELL=bash
 
 all : bench1k bench2k benchparallel bench1k-nobounds bench2k-nobounds benchparallel-nobounds
 

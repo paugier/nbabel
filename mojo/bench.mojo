@@ -7,8 +7,7 @@ from time import now
 
 # from datetime import timedelta
 
-from util import split, list
-from helpers import string_to_float
+from helpers import string_to_float, split, list, read_file
 
 # def load_input_data(path: String):
 #     pd = Python.import_module("pandas")
@@ -23,12 +22,6 @@ from helpers import string_to_float
 
 # return masses, positions, velocities
 
-
-def read_file(path: String) -> String:
-    let text: String
-    with open(path, "r") as file:
-        text = file.read()
-    return text
 
 
 alias Vec4floats = SIMD[DType.float64, 4]
