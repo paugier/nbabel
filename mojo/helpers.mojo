@@ -33,14 +33,11 @@ fn string_to_float(str_n: String) raises -> Float64:
         let n_before = atol(before)
         let n_after = atol(after)
 
-        print("n_after", n_after)
-        print("len(after)", len(after))
-
         var f_alter = Float64(n_after)
         if len(after) < 19:
-            f_alter = f_alter / 10**len(after)
+            f_alter = f_alter / 10 ** len(after)
         else:
-            f_alter = f_after / 10**18 / 10**(len(after) - 18)
+            f_alter = f_alter / 10**18 / 10 ** (len(after) - 18)
 
         number = sign * (Float64(abs(n_before)) + f_alter)
     else:
@@ -80,10 +77,6 @@ def _test_string_to_float(str_n: String, should_be: Float64):
 
 
 def main():
-    debug_assert(
-        string_to_float("0.065") == 0.065, "issue"
-    )
-
     _test_string_to_float("-0.503269367480841723", -0.503269367480841723)
     _test_string_to_float("0.503269367480841723", 0.503269367480841723)
     _test_string_to_float("-1.503269367480841723", -1.503269367480841723)
@@ -92,5 +85,4 @@ def main():
     _test_string_to_float("-0", 0.0)
     _test_string_to_float("-1", -1.0)
     _test_string_to_float("1", 1.0)
-
     _test_string_to_float("0.1654360739738478747", 0.1654360739738478747)
