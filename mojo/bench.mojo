@@ -7,7 +7,7 @@ from time import now
 
 # from datetime import timedelta
 
-from helpers import string_to_float, split, list, read_file
+from helpers import string_to_float, read_data
 
 # def load_input_data(path: String):
 #     pd = Python.import_module("pandas")
@@ -21,7 +21,6 @@ from helpers import string_to_float, split, list, read_file
 # velocities = df.loc[:, ["vx", "vy", "vz"]].values
 
 # return masses, positions, velocities
-
 
 
 alias Vec4floats = SIMD[DType.float64, 4]
@@ -58,6 +57,8 @@ struct Particle:
             + String(self.mass)
             + ", position="
             + String(self.position)
+            + ", velocity="
+            + String(self.velocity)
             + ", ...)"
         )
 
@@ -175,40 +176,20 @@ def main():
     path_input = args[1]
     print(path_input)
 
-    lines = split(read_file(path_input), "\n")
+    data = read_data(path_input)
 
-    nb_particles = 0
-    for index in range(lines.__len__()):
-        line = lines[index]
-        if not len(line):
-            continue
-        nb_particles += 1
+    nb_particles = data.n0
 
     particles = InlinedFixedVector[Particle, 4](nb_particles)
 
-    index_part = -1
-
-    for index in range(lines.__len__()):
-        line = lines[index]
-        if not len(line):
-            continue
-
-        index_part += 1
-
-        words = split(line)
-        words1 = list[String]()
-        for idx in range(1, words.__len__()):
-            word = words[idx]
-            if len(word):
-                words1.append(word)
-
-        m = string_to_float(words1[0])
-        x = string_to_float(words1[1])
-        y = string_to_float(words1[2])
-        z = string_to_float(words1[3])
-        vx = string_to_float(words1[4])
-        vy = string_to_float(words1[5])
-        vz = string_to_float(words1[6])
+    for idx_part in range(nb_particles):
+        m = data[idx_part, 0]
+        x = data[idx_part, 1]
+        y = data[idx_part, 2]
+        z = data[idx_part, 3]
+        vx = data[idx_part, 4]
+        vy = data[idx_part, 5]
+        vz = data[idx_part, 6]
 
         particles.append(Particle(Vec4floats(x, y, z, 0), Vec4floats(vx, vy, vz, 0), m))
 
