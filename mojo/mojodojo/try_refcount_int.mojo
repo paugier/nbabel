@@ -3,7 +3,7 @@ from memory.unsafe import Pointer, DTypePointer
 from memory.memory import memcpy
 
 
-@register_passable("trivial")
+@register_passable  # ("trivial")
 struct InternalContainer:
     var data: Int
     var ref_count: Int
@@ -32,13 +32,19 @@ struct InternalContainer:
     fn free_memory(inout self):
         print("Freeing memory")
 
+    fn __del__(owned self):
+        print("__del__ Container")
+
 
 struct MyPyIntRef:
     var ptr_container: Pointer[InternalContainer]
 
-    fn __init__(inout self, size: Int):
+    fn __init__(inout self, value: Int):
         self.ptr_container = Pointer[InternalContainer].alloc(1)
-        self.ptr_container.store(0, InternalContainer(4))
+        var container = self.ptr_container[0]
+        container.data = value
+        container.ref_count = 1
+        self.ptr_container.store(0, container)
         print("end init Array")
 
     fn __copyinit__(inout self, borrowed existing: Self):
@@ -46,6 +52,7 @@ struct MyPyIntRef:
         var container = existing.ptr_container.load(0)
         container.incref()
         existing.ptr_container.store(0, container)
+
         self.ptr_container = existing.ptr_container
 
     fn __moveinit__(inout self, owned existing: Self):
@@ -54,7 +61,7 @@ struct MyPyIntRef:
 
     fn __del__(owned self):
         var container = self.ptr_container.load(0)
-        print("del", self.__str__(), "refcount", container.ref_count)
+        # print("del", self.__str__(), "refcount", container.ref_count)
         container.ref_count -= 1
         if container.ref_count == 0:
             self.ptr_container.free()
@@ -69,6 +76,14 @@ struct MyPyIntRef:
 
 
 def main():
+    ptr_container = Pointer[InternalContainer].alloc(1)
+    container = ptr_container[0]
+    container.data = 4
+    container.ref_count = 1
+    ptr_container.store(0, container)
+
+    print(ptr_container[0].data)
+
     a = MyPyIntRef(4)
 
     print("in main, a:", a.__str__())
@@ -81,5 +96,3 @@ def main():
     c = b
 
     print("in main, c:", c.__str__())
-
-
