@@ -10,9 +10,10 @@ fn my_fn(borrowed a: object) raises:
 
 def main():
     a = object([0])
-
     print(a)
+    b = a  # <- the reference is copied but not the pointed list
     my_def(a)
     print(a)
+    print(b)
     my_fn(a)
     print(a)
