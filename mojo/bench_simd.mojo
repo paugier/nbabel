@@ -192,13 +192,15 @@ fn compute_energy(inout particles: Particles) -> Float64:
             let vel = velocity[axis].load(idx)
             kinetic += 0.5 * m * vel**2
 
-    # for i0 in range(nb_particules - 1):
-    #     let p0 = particles[i0]
-    #     for i1 in range(i0 + 1, nb_particules):
-    #         let p1 = particles[i1]
-    #         let vector = p0.position - p1.position
-    #         let distance = sqrt(norm2(vector))
-    #         potential -= (p0.mass * p1.mass) / distance
+    for i0 in range(nb_particules - 1):
+        let mass0 = mass.load(i0)
+        for i1 in range(i0 + 1, nb_particules):
+            let delta_x = position[0].load(i0) - position[0].load(i1)
+            let delta_y = position[1].load(i0) - position[1].load(i1)
+            let delta_z = position[2].load(i0) - position[2].load(i1)
+            let distance = sqrt(delta_x**2 + delta_y**2 + delta_z**2)
+            let mass1 = mass.load(i1)
+            potential -= (mass0 * mass1) / distance
     return kinetic + potential
 
 

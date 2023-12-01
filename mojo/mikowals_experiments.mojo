@@ -68,7 +68,7 @@ fn accelerate(inout particles: VecParticles) -> NoneType:
         particles[idx] = particle
 
     let nb_particules = len(particles)
-    for i0 in range(nb_particules - 1):
+    for i0 in range(nb_particules):
         var p0 = particles[i0]
         for i1 in range(i0 + 1, nb_particules):
             var p1 = particles[i1]
@@ -147,7 +147,7 @@ fn accelerate_vectorize[n: Int](inout particles: Particles[n]):
         )
         memset_zero(acceleration[axis], n)
 
-    for i0 in range(n - 1):
+    for i0 in range(n):
 
         @parameter
         fn other_particles[_nelts: Int](i_tail: Int):
@@ -195,7 +195,7 @@ fn accelerate_tile[n: Int](inout particles: Particles[n]):
         )
         memset_zero(acceleration[axis], n)
 
-    for i0 in range(n - 1):
+    for i0 in range(n):
 
         @parameter
         fn other_particles[_nelts: Int](i1: Int):

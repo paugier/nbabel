@@ -87,7 +87,7 @@ fn accelerate(inout particles: VecParticles) -> NoneType:
         particles[idx] = particle
 
     let nb_particules = len(particles)
-    for i0 in range(nb_particules - 1):
+    for i0 in range(nb_particules):
         var p0 = particles[i0]
         for i1 in range(i0 + 1, nb_particules):
             var p1 = particles[i1]
@@ -122,7 +122,7 @@ fn compute_energy(inout particles: VecParticles) -> Float64:
     var potential = Float64(0.0)
     let nb_particules = len(particles)
 
-    for i0 in range(nb_particules - 1):
+    for i0 in range(nb_particules):
         let p0 = particles[i0]
         for i1 in range(i0 + 1, nb_particules):
             let p1 = particles[i1]
