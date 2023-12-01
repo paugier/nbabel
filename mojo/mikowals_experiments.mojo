@@ -81,7 +81,7 @@ fn accelerate(inout particles: VecParticles) -> NoneType:
             particles[i1] = p1
 
 
-fn fill_3D_tuple[n: Int]() -> StaticTuple[3, DTypePointer[DType.float64]]:
+fn fill_3D_tuple(n: Int) -> StaticTuple[3, DTypePointer[DType.float64]]:
     var result = StaticTuple[3, DTypePointer[DType.float64]]()
 
     @unroll
@@ -92,20 +92,22 @@ fn fill_3D_tuple[n: Int]() -> StaticTuple[3, DTypePointer[DType.float64]]:
     return result
 
 
-struct Particles[n: Int]:
+struct Particles:
+    var size: Int
     var position: StaticTuple[3, DTypePointer[DType.float64]]
     var velocity: StaticTuple[3, DTypePointer[DType.float64]]
     var acceleration: StaticTuple[3, DTypePointer[DType.float64]]
     var acceleration1: StaticTuple[3, DTypePointer[DType.float64]]
     var mass: DTypePointer[DType.float64]
 
-    fn __init__(inout self):
-        self.position = fill_3D_tuple[n]()
-        self.velocity = fill_3D_tuple[n]()
-        self.acceleration = fill_3D_tuple[n]()
-        self.acceleration1 = fill_3D_tuple[n]()
-        self.mass = DTypePointer[DType.float64].alloc(n)
-        rand(self.mass, n)
+    fn __init__(inout self, size: Int):
+        self.size = size
+        self.position = fill_3D_tuple(size)
+        self.velocity = fill_3D_tuple(size)
+        self.acceleration = fill_3D_tuple(size)
+        self.acceleration1 = fill_3D_tuple(size)
+        self.mass = DTypePointer[DType.float64].alloc(size)
+        rand(self.mass, size)
 
 
 @always_inline
@@ -131,7 +133,8 @@ fn norm2[
     return x**2 + y**2 + z**2
 
 
-fn accelerate_vectorize[n: Int](inout particles: Particles[n]):
+fn accelerate_vectorize(inout particles: Particles):
+    let size = particles.size
     let position = particles.position
     let acceleration = particles.acceleration
     let acceleration1 = particles.acceleration1
@@ -143,11 +146,11 @@ fn accelerate_vectorize[n: Int](inout particles: Particles[n]):
         memcpy(
             acceleration1[axis],
             acceleration[axis],
-            n,
+            size,
         )
-        memset_zero(acceleration[axis], n)
+        memset_zero(acceleration[axis], size)
 
-    for i0 in range(n):
+    for i0 in range(size):
 
         @parameter
         fn other_particles[_nelts: Int](i_tail: Int):
@@ -176,10 +179,11 @@ fn accelerate_vectorize[n: Int](inout particles: Particles[n]):
                     acc_ptr.simd_load[_nelts](i1) + mass.load(i0) * delta[axis],
                 )
 
-        vectorize[nelts, other_particles](n - i0 - 1)
+        vectorize[nelts, other_particles](size - i0 - 1)
 
 
-fn accelerate_tile[n: Int](inout particles: Particles[n]):
+fn accelerate_tile(inout particles: Particles):
+    let size = particles.size
     let position = particles.position
     let acceleration = particles.acceleration
     let acceleration1 = particles.acceleration1
@@ -191,11 +195,11 @@ fn accelerate_tile[n: Int](inout particles: Particles[n]):
         memcpy(
             acceleration1[axis],
             acceleration[axis],
-            n,
+            size,
         )
-        memset_zero(acceleration[axis], n)
+        memset_zero(acceleration[axis], size)
 
-    for i0 in range(n):
+    for i0 in range(size):
 
         @parameter
         fn other_particles[_nelts: Int](i1: Int):
@@ -225,8 +229,8 @@ fn accelerate_tile[n: Int](inout particles: Particles[n]):
 
         tile[
             other_particles,
-            VariadicList(nelts, nelts // 2, nelts // 4, 1),
-        ](i0 + 1, n)
+            VariadicList(nelts, 1),
+        ](i0 + 1, size)
 
 
 fn bench[func: fn (inout VecParticles) -> None]() -> Float64:
@@ -246,7 +250,7 @@ fn bench[func: fn (inout VecParticles) -> None]() -> Float64:
 
 
 fn bench2[func: fn (inout Particles) -> None]() -> Float64:
-    var particles = Particles[nb_particles]()
+    var particles = Particles(nb_particles)
 
     @parameter
     fn wrapper():
@@ -264,7 +268,7 @@ fn correctness_check[func: fn (inout Particles) -> None]():
     for _ in range(nb_particles):
         p.append(Particle())
 
-    var p_ = Particles[nb_particles]()
+    var p_ = Particles(nb_particles)
     for ii in range(nb_particles):
         let i = ii
         p_.mass.store(i, p[i].mass)

@@ -2,7 +2,7 @@ import sys
 
 from math import sqrt
 from random import rand, random_float64
-from algorithm import tile
+from algorithm import tile, vectorize
 from memory import memcpy, memset_zero
 
 from python import Python
@@ -12,7 +12,7 @@ from time import now
 
 from helpers import string_to_float, read_data
 
-alias nelts = 32
+alias nelts = 4
 
 # def load_input_data(path: String):
 #     pd = Python.import_module("pandas")
@@ -40,30 +40,30 @@ fn fill_3D_tuple(n: Int) -> StaticTuple[3, DTypePointer[DType.float64]]:
 
 
 struct Particles:
-    var nparts: Int
+    var size: Int
     var position: StaticTuple[3, DTypePointer[DType.float64]]
     var velocity: StaticTuple[3, DTypePointer[DType.float64]]
     var acceleration: StaticTuple[3, DTypePointer[DType.float64]]
     var acceleration1: StaticTuple[3, DTypePointer[DType.float64]]
     var mass: DTypePointer[DType.float64]
 
-    fn __init__(inout self, nparts: Int):
-        self.nparts = nparts
+    fn __init__(inout self, size: Int):
+        self.size = size
         print("creating the particles data")
-        self.position = fill_3D_tuple(nparts)
-        self.velocity = fill_3D_tuple(nparts)
-        self.acceleration = fill_3D_tuple(nparts)
-        self.acceleration1 = fill_3D_tuple(nparts)
-        self.mass = DTypePointer[DType.float64].alloc(nparts)
-        rand(self.mass, nparts)
+        self.position = fill_3D_tuple(size)
+        self.velocity = fill_3D_tuple(size)
+        self.acceleration = fill_3D_tuple(size)
+        self.acceleration1 = fill_3D_tuple(size)
+        self.mass = DTypePointer[DType.float64].alloc(size)
+        rand(self.mass, size)
 
     fn __del__(owned self):
-        #     @unroll
-        #     for axis in range(3):
-        #         self.position[axis].free()
-        #         self.velocity[axis].free()
-        #         self.acceleration[axis].free()
-        #         self.acceleration1[axis].free()
+        @unroll
+        for axis in range(3):
+            self.position[axis].free()
+            self.velocity[axis].free()
+            self.acceleration[axis].free()
+            self.acceleration1[axis].free()
 
         self.mass.free()
 
@@ -92,7 +92,7 @@ fn norm2[
 
 
 fn accelerate(inout particles: Particles):
-    let nparts = particles.nparts
+    let size = particles.size
 
     let position = particles.position
     let acceleration = particles.acceleration
@@ -105,14 +105,19 @@ fn accelerate(inout particles: Particles):
         memcpy(
             acceleration1[axis],
             acceleration[axis],
-            nparts,
+            size,
         )
-        memset_zero(acceleration[axis], nparts)
+        memset_zero(acceleration[axis], size)
 
-    for i0 in range(nparts - 1):
+    for i0 in range(size):
 
         @parameter
         fn other_particles[_nelts: Int](i1: Int):
+
+        # for vectorize
+        # fn other_particles[_nelts: Int](i_tail: Int):
+        #     let i1 = i0 + i_tail + 1
+
             let delta_x = position[0].load(i0) - position[0].simd_load[_nelts](i1)
             let delta_y = position[1].load(i0) - position[1].simd_load[_nelts](i1)
             let delta_z = position[2].load(i0) - position[2].simd_load[_nelts](i1)
@@ -139,8 +144,10 @@ fn accelerate(inout particles: Particles):
 
         tile[
             other_particles,
-            VariadicList(nelts, nelts // 2, nelts // 4, 1),
-        ](i0 + 1, nparts)
+            VariadicList(nelts, nelts // 2, 1),
+        ](i0 + 1, size)
+
+        # vectorize[nelts, other_particles](size - i0 - 1)
 
 
 fn advance_positions(inout particles: Particles, time_step: Float64) -> NoneType:
@@ -148,7 +155,7 @@ fn advance_positions(inout particles: Particles, time_step: Float64) -> NoneType
     let velocity = particles.velocity
     let acceleration = particles.acceleration
 
-    for idx in range(particles.nparts):
+    for idx in range(particles.size):
 
         @unroll
         for axis in range(3):
@@ -165,7 +172,7 @@ fn advance_velocities(inout particles: Particles, time_step: Float64) -> NoneTyp
     let acceleration = particles.acceleration
     let acceleration1 = particles.acceleration1
 
-    for idx in range(particles.nparts):
+    for idx in range(particles.size):
 
         @unroll
         for axis in range(3):
@@ -176,7 +183,7 @@ fn advance_velocities(inout particles: Particles, time_step: Float64) -> NoneTyp
 
 
 fn compute_energy(inout particles: Particles) -> Float64:
-    let nb_particules = particles.nparts
+    let nb_particules = particles.size
     let position = particles.position
     let velocity = particles.velocity
     let mass = particles.mass
@@ -184,7 +191,7 @@ fn compute_energy(inout particles: Particles) -> Float64:
     var kinetic = Float64(0.0)
     var potential = Float64(0.0)
 
-    for idx in range(particles.nparts):
+    for idx in range(particles.size):
         let m = mass.load(idx)
 
         @unroll
