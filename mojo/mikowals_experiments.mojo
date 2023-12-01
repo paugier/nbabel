@@ -1,6 +1,6 @@
 from math import sqrt
 from random import rand, random_float64
-from algorithm import vectorize
+from algorithm import vectorize, tile
 from memory import memcpy, memset_zero
 from testing import assert_equal, assert_almost_equal
 
@@ -11,7 +11,8 @@ alias vec4zeros = Vec4floats(0)
 alias VecParticles = InlinedFixedVector[Particle, 4]
 
 alias nb_particles = 1024
-alias benchmark_iterations = 1_000
+alias benchmark_iterations = 500
+alias nelts = 16
 
 
 fn rand_fill_3_values() -> Vec4floats:
@@ -130,9 +131,7 @@ fn norm2[
     return x**2 + y**2 + z**2
 
 
-alias nelts = 16
-
-fn accelerate[n: Int](inout particles: Particles[n]):
+fn accelerate_vectorize[n: Int](inout particles: Particles[n]):
     let position = particles.position
     let acceleration = particles.acceleration
     let acceleration1 = particles.acceleration1
@@ -158,21 +157,76 @@ fn accelerate[n: Int](inout particles: Particles[n]):
             let delta_z = position[2].load(i0) - position[2].simd_load[_nelts](i1)
             let distance_cube = norm_cube(delta_x, delta_y, delta_z)
             let delta = StaticTuple[3, SIMD[DType.float64, _nelts]](
-                delta_x, delta_y, delta_z
+                delta_x / distance_cube,
+                delta_y / distance_cube,
+                delta_z / distance_cube,
             )
 
             @unroll
             for axis in range(3):
-                let new_acc_p0 = acceleration[axis].load(i0) - (
-                    mass.simd_load[_nelts](i1) / distance_cube * delta[axis]
-                ).reduce_add()
-                acceleration[axis].store(i0, new_acc_p0)
-                let new_acc_p1 = acceleration[axis].simd_load[_nelts](i1) + mass.load(
-                    i0
-                ) / distance_cube * delta[axis]
-                acceleration[axis].simd_store[_nelts](i1, new_acc_p1)
+                let acc_ptr = acceleration[axis]
+                acc_ptr.store(
+                    i0,
+                    acc_ptr.load(i0)
+                    - (mass.simd_load[_nelts](i1) * delta[axis]).reduce_add(),
+                )
+
+                acc_ptr.simd_store[_nelts](
+                    i1,
+                    acc_ptr.simd_load[_nelts](i1) + mass.load(i0) * delta[axis],
+                )
 
         vectorize[nelts, other_particles](n - i0 - 1)
+
+
+fn accelerate_tile[n: Int](inout particles: Particles[n]):
+    let position = particles.position
+    let acceleration = particles.acceleration
+    let acceleration1 = particles.acceleration1
+    let mass = particles.mass
+
+    # store current acceleration as acceleration1
+    @unroll
+    for axis in range(3):
+        memcpy(
+            acceleration1[axis],
+            acceleration[axis],
+            n,
+        )
+        memset_zero(acceleration[axis], n)
+
+    for i0 in range(n - 1):
+
+        @parameter
+        fn other_particles[_nelts: Int](i1: Int):
+            let delta_x = position[0].load(i0) - position[0].simd_load[_nelts](i1)
+            let delta_y = position[1].load(i0) - position[1].simd_load[_nelts](i1)
+            let delta_z = position[2].load(i0) - position[2].simd_load[_nelts](i1)
+            let distance_cube = norm_cube(delta_x, delta_y, delta_z)
+            let delta = StaticTuple[3, SIMD[DType.float64, _nelts]](
+                delta_x / distance_cube,
+                delta_y / distance_cube,
+                delta_z / distance_cube,
+            )
+
+            @unroll
+            for axis in range(3):
+                let acc_ptr = acceleration[axis]
+                acc_ptr.store(
+                    i0,
+                    acc_ptr.load(i0)
+                    - (mass.simd_load[_nelts](i1) * delta[axis]).reduce_add(),
+                )
+
+                acc_ptr.simd_store[_nelts](
+                    i1,
+                    acc_ptr.simd_load[_nelts](i1) + mass.load(i0) * delta[axis],
+                )
+
+        tile[
+            other_particles,
+            VariadicList(nelts, nelts // 2, nelts // 4, 1),
+        ](i0 + 1, n)
 
 
 fn bench[func: fn (inout VecParticles) -> None]() -> Float64:
@@ -191,13 +245,13 @@ fn bench[func: fn (inout VecParticles) -> None]() -> Float64:
     return rep.mean()
 
 
-fn bench2() -> Float64:
+fn bench2[func: fn (inout Particles) -> None]() -> Float64:
     var particles = Particles[nb_particles]()
 
     @parameter
     fn wrapper():
         for i in range(benchmark_iterations):
-            accelerate(particles)
+            func(particles)
 
     let rep = benchmark.run[wrapper]()
     print("Time: ", rep.mean(), "seconds")
@@ -205,7 +259,7 @@ fn bench2() -> Float64:
     return rep.mean()
 
 
-fn correctness_check():
+fn correctness_check[func: fn (inout Particles) -> None]():
     var p = VecParticles(nb_particles)
     for _ in range(nb_particles):
         p.append(Particle())
@@ -249,14 +303,19 @@ fn correctness_check():
     if not check_equal():
         print("correctness check failed before accelarate")
     accelerate(p)
-    accelerate(p_)
+    func(p_)
     if not check_equal():
         print("correctness check failed after accelarate")
 
 
 fn main():
     print("nelts:", nelts)
-    correctness_check()
+    correctness_check[accelerate_vectorize]()
+    correctness_check[accelerate_tile]()
+
     let original_time = bench[accelerate]()
-    let new_time = bench2()
-    print("Speedup: ", original_time / new_time, " times")
+    var new_time = bench2[accelerate_vectorize]()
+    print("Speedup: ", original_time / new_time, " (vectorize)")
+
+    new_time = bench2[accelerate_tile]()
+    print("Speedup: ", original_time / new_time, " (tile)")
