@@ -13,8 +13,6 @@ from time import now
 from helpers import string_to_float, read_data
 from particles import Particles, accelerate_tile, accelerate_vectorize
 
-alias nelts = 4
-
 
 fn accelerate[nelts: Int](inout particles: Particles):
     # return accelerate_tile[nelts](particles)
@@ -98,9 +96,9 @@ fn compute_energy(inout particles: Particles) -> Float64:
     return kinetic + potential
 
 
-fn loop(
-    time_step: Float64, nb_steps: Int, inout particles: Particles
-) -> (Float64, Float64):
+fn loop[
+    nelts: Int
+](time_step: Float64, nb_steps: Int, inout particles: Particles) -> (Float64, Float64):
     var energy = compute_energy(particles)
     var old_energy = energy
     let energy0 = energy
@@ -128,6 +126,8 @@ fn loop(
 
 
 def main():
+    alias nelts = 4
+
     print("nelts:", nelts)
     args = sys.argv()
 
@@ -185,7 +185,7 @@ def main():
     let energy0: Float64
 
     let t_start = now()
-    energy, energy0 = loop(time_step, nb_steps, particles)
+    energy, energy0 = loop[nelts](time_step, nb_steps, particles)
     print("Final dE/E = " + String((energy - energy0) / energy0))
     print(
         String(nb_steps)

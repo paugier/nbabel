@@ -3,6 +3,7 @@ from random import rand, random_float64
 from algorithm import vectorize, tile
 from memory import memcpy, memset_zero
 from testing import assert_equal, assert_almost_equal
+from sys.info import simdwidthof
 
 import benchmark
 
@@ -14,7 +15,6 @@ alias VecParticles = InlinedFixedVector[Particle, 4]
 
 alias nb_particles = 1024
 alias benchmark_iterations = 500
-alias nelts = 16
 
 
 fn rand_fill_3_values() -> Vec4floats:
@@ -165,14 +165,25 @@ fn correctness_check[func: fn (inout Particles) -> None]():
     # using p_ to delay its destruction
 
 
-fn main():
+fn check_bench_1_nelts[nelts: Int](original_time: Float64):
     print("nelts:", nelts)
     correctness_check[accelerate_vectorize[nelts]]()
     correctness_check[accelerate_tile[nelts]]()
 
-    let original_time = bench[accelerate]()
     var new_time = bench2[accelerate_vectorize[nelts]]()
     print("Speedup: ", original_time / new_time, " (vectorize)")
 
     new_time = bench2[accelerate_tile[nelts]]()
     print("Speedup: ", original_time / new_time, " (tile)")
+
+
+fn main():
+    let original_time = bench[accelerate]()
+
+    alias simd_width = simdwidthof[DType.float64]()
+    print("simd_width:", simd_width)
+
+    check_bench_1_nelts[4](original_time)
+    check_bench_1_nelts[8](original_time)
+    check_bench_1_nelts[16](original_time)
+    check_bench_1_nelts[32](original_time)
