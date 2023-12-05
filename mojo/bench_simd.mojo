@@ -15,8 +15,8 @@ from particles import Particles, accelerate_tile, accelerate_vectorize
 
 
 fn accelerate[nelts: Int](inout particles: Particles):
-    # return accelerate_tile[nelts](particles)
-    return accelerate_vectorize[nelts](particles)
+    return accelerate_tile[nelts](particles)
+    # return accelerate_vectorize[nelts](particles)
 
 
 # def load_input_data(path: String):

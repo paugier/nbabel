@@ -10,12 +10,7 @@ from time import now
 from helpers import string_to_float, read_data
 
 alias Vec4floats = SIMD[DType.float64, 4]
-alias vec4zeros = Vec4floats(0)
-alias VecVec4floats = InlinedFixedVector[Vec4floats, 4]
-
-
-fn kinetic_energy_part(mass: Float64, velocity: Vec4floats) -> Float64:
-    return 0.5 * mass * norm2(velocity)
+alias VecVec4floats = InlinedFixedVector[Vec4floats]
 
 
 fn norm(vec: Vec4floats) -> Float64:
@@ -32,7 +27,7 @@ fn norm2(vec: Vec4floats) -> Float64:
 
 
 fn accelerate(
-    masses: InlinedFixedVector[Float64, 4],
+    masses: InlinedFixedVector[Float64],
     inout accelerations: VecVec4floats,
     inout accelerations1: VecVec4floats,
     positions: VecVec4floats,
@@ -41,9 +36,9 @@ fn accelerate(
 
     accelerations1 = accelerations
     for idx_part in range(nb_particules):
-        accelerations[idx_part] = vec4zeros
+        accelerations[idx_part] = Vec4floats(0)
 
-    for i0 in range(nb_particules - 1):
+    for i0 in range(nb_particules):
         let m0 = masses[0]
         for i1 in range(i0 + 1, nb_particules):
             let delta = positions[i0] - positions[i1]
@@ -58,7 +53,7 @@ fn advance_positions(
     velocities: VecVec4floats,
     accelerations: VecVec4floats,
     time_step: Float64,
-) -> NoneType:
+):
     let nb_particules = len(positions)
     for idx in range(nb_particules):
         positions[idx] += (
@@ -71,14 +66,18 @@ fn advance_velocities(
     accelerations: VecVec4floats,
     accelerations1: VecVec4floats,
     time_step: Float64,
-) -> NoneType:
+):
     let nb_particules = len(velocities)
     for idx in range(nb_particules):
         velocities[idx] += 0.5 * time_step * (accelerations[idx] + accelerations1[idx])
 
 
+fn kinetic_energy_part(mass: Float64, velocity: Vec4floats) -> Float64:
+    return 0.5 * mass * norm2(velocity)
+
+
 fn compute_energy(
-    masses: InlinedFixedVector[Float64, 4],
+    masses: InlinedFixedVector[Float64],
     positions: VecVec4floats,
     velocities: VecVec4floats,
 ) -> Float64:
@@ -89,8 +88,7 @@ fn compute_energy(
         kinetic += kinetic_energy_part(masses[idx], velocities[idx])
 
     var potential = Float64(0.0)
-
-    for i0 in range(nb_particules - 1):
+    for i0 in range(nb_particules):
         for i1 in range(i0 + 1, nb_particules):
             let vector = positions[i0] - positions[i1]
             let distance = sqrt(norm2(vector))
@@ -101,7 +99,7 @@ fn compute_energy(
 fn loop(
     time_step: Float64,
     nb_steps: Int,
-    masses: InlinedFixedVector[Float64, 4],
+    masses: InlinedFixedVector[Float64],
     inout positions: VecVec4floats,
     inout velocities: VecVec4floats,
 ) -> (Float64, Float64):
@@ -113,6 +111,9 @@ fn loop(
 
     var accelerations = VecVec4floats(len(masses))
     var accelerations1 = accelerations
+    for idx_part in range(len(masses)):
+        accelerations[idx_part] = Vec4floats(0)
+        accelerations1[idx_part] = Vec4floats(0)
 
     accelerate(masses, accelerations, accelerations1, positions)
     for step in range(1, nb_steps + 1):
@@ -153,7 +154,7 @@ def main():
 
     nb_particles = data.n0
 
-    masses = InlinedFixedVector[Float64, 4](nb_particles)
+    masses = InlinedFixedVector[Float64](nb_particles)
     positions = VecVec4floats(nb_particles)
     velocities = VecVec4floats(nb_particles)
 
