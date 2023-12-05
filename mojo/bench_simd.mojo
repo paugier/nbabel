@@ -45,11 +45,10 @@ fn advance_positions(inout particles: Particles, time_step: Float64) -> NoneType
 
         @unroll
         for axis in range(3):
-            let pos = position[axis][idx]
             let vel = velocity[axis][idx]
             let acc = acceleration[axis][idx]
-            position[axis].store(
-                idx, pos + time_step * vel + 0.5 * time_step**2 * acc
+            position[axis][idx] = (
+                position[axis][idx] + time_step * vel + 0.5 * time_step**2 * acc
             )
 
 
@@ -62,10 +61,9 @@ fn advance_velocities(inout particles: Particles, time_step: Float64) -> NoneTyp
 
         @unroll
         for axis in range(3):
-            let vel = velocity[axis][idx]
             let acc = acceleration[axis][idx]
             let acc1 = acceleration1[axis][idx]
-            velocity[axis].store(idx, vel + 0.5 * time_step * (acc + acc1))
+            velocity[axis][idx] = velocity[axis][idx] + 0.5 * time_step * (acc + acc1)
 
 
 fn compute_energy(inout particles: Particles) -> Float64:
@@ -186,7 +184,9 @@ def main():
 
     let t_start = now()
     energy, energy0 = loop[nelts](time_step, nb_steps, particles)
-    print("(E - E_init) / E_init = " + String(100 * (energy - energy0) / energy0) + " %")
+    print(
+        "(E - E_init) / E_init = " + String(100 * (energy - energy0) / energy0) + " %"
+    )
     print(
         String(nb_steps)
         + " time steps run in "
