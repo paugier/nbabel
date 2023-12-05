@@ -4,9 +4,10 @@ from math import sqrt
 from random import rand, random_float64
 from algorithm import tile, vectorize
 from memory import memcpy, memset_zero
-
-from python import Python
+from sys.param_env import env_get_int
 from time import now
+
+# from python import Python
 
 # from datetime import timedelta
 
@@ -44,9 +45,9 @@ fn advance_positions(inout particles: Particles, time_step: Float64) -> NoneType
 
         @unroll
         for axis in range(3):
-            let pos = position[axis].load(idx)
-            let vel = velocity[axis].load(idx)
-            let acc = acceleration[axis].load(idx)
+            let pos = position[axis][idx]
+            let vel = velocity[axis][idx]
+            let acc = acceleration[axis][idx]
             position[axis].store(
                 idx, pos + time_step * vel + 0.5 * time_step**2 * acc
             )
@@ -61,9 +62,9 @@ fn advance_velocities(inout particles: Particles, time_step: Float64) -> NoneTyp
 
         @unroll
         for axis in range(3):
-            let vel = velocity[axis].load(idx)
-            let acc = acceleration[axis].load(idx)
-            let acc1 = acceleration1[axis].load(idx)
+            let vel = velocity[axis][idx]
+            let acc = acceleration[axis][idx]
+            let acc1 = acceleration1[axis][idx]
             velocity[axis].store(idx, vel + 0.5 * time_step * (acc + acc1))
 
 
@@ -77,22 +78,21 @@ fn compute_energy(inout particles: Particles) -> Float64:
     var potential = Float64(0.0)
 
     for idx in range(particles.size):
-        let m = mass.load(idx)
+        let m = mass[idx]
 
         @unroll
         for axis in range(3):
-            let vel = velocity[axis].load(idx)
+            let vel = velocity[axis][idx]
             kinetic += 0.5 * m * vel**2
 
     for i0 in range(nb_particules - 1):
-        let mass0 = mass.load(i0)
+        let mass0 = mass[i0]
         for i1 in range(i0 + 1, nb_particules):
-            let delta_x = position[0].load(i0) - position[0].load(i1)
-            let delta_y = position[1].load(i0) - position[1].load(i1)
-            let delta_z = position[2].load(i0) - position[2].load(i1)
+            let delta_x = position[0][i0] - position[0][i1]
+            let delta_y = position[1][i0] - position[1][i1]
+            let delta_z = position[2][i0] - position[2][i1]
             let distance = sqrt(delta_x**2 + delta_y**2 + delta_z**2)
-            let mass1 = mass.load(i1)
-            potential -= (mass0 * mass1) / distance
+            potential -= (mass0 * mass[i1]) / distance
     return kinetic + potential
 
 
@@ -126,7 +126,7 @@ fn loop[
 
 
 def main():
-    alias nelts = 4
+    alias nelts = env_get_int["nelts", 4]()
 
     print("nelts:", nelts)
     args = sys.argv()
@@ -147,7 +147,7 @@ def main():
 
     nb_particles = data.n0
 
-    particles = Particles(nb_particles)
+    var particles = Particles(nb_particles)
 
     let position = particles.position
     let velocity = particles.velocity
@@ -186,7 +186,7 @@ def main():
 
     let t_start = now()
     energy, energy0 = loop[nelts](time_step, nb_steps, particles)
-    print("Final dE/E = " + String((energy - energy0) / energy0))
+    print("(E - E_init) / E_init = " + String(100 * (energy - energy0) / energy0) + " %")
     print(
         String(nb_steps)
         + " time steps run in "

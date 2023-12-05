@@ -19,7 +19,21 @@ from datetime import timedelta
 
 
 class Particle:
-    __slots__ = ('mass', 'px', 'py', 'pz', 'vx', 'vy', 'vz', 'ax', 'ay', 'az', 'oax', 'oay', 'oaz')
+    __slots__ = (
+        "mass",
+        "px",
+        "py",
+        "pz",
+        "vx",
+        "vy",
+        "vz",
+        "ax",
+        "ay",
+        "az",
+        "oax",
+        "oay",
+        "oaz",
+    )
 
     def __init__(self, mass, x, y, z, vx, vy, vz):
         self.mass = mass
@@ -62,8 +76,8 @@ class Cluster(list):
 
         nb_particules = len(self)
         for i, p1 in enumerate(self):
-            for i in range(i + 1, nb_particules):
-                p2 = self[i]
+            for j in range(i + 1, nb_particules):
+                p2 = self[j]
                 dx = p1.px - p2.px
                 dy = p1.py - p2.py
                 dz = p1.pz - p2.pz
@@ -80,13 +94,12 @@ class Cluster(list):
 
 
 if __name__ == "__main__":
-
     t_start = perf_counter()
 
     try:
         time_end = float(sys.argv[2])
     except IndexError:
-        time_end = 10.
+        time_end = 10.0
 
     time_step = 0.001
     cluster = Cluster()
@@ -97,17 +110,18 @@ if __name__ == "__main__":
             except TypeError:
                 pass
 
-    old_energy = energy0 = energy = -0.25
+    old_energy = energy0 = energy = cluster.get_energy()
+    print(f"{energy0 = }")
     cluster.accelerate()
     for step in range(1, int(time_end / time_step + 1)):
         cluster.step(time_step)
         if not step % 100:
             energy = cluster.get_energy()
             print(
-                f"t = {time_step * step:.2f}, E = {energy:.10f}, "
-                f"dE/E = {(energy - old_energy) / old_energy:.10f}"
+                f"t = {time_step * step:.3f}, E = {energy:.10f}, "
+                f"dE/E = {(energy - old_energy) / old_energy:.10e}"
             )
             old_energy = energy
-    print(f"Final dE/E = {(energy - energy0) / energy0:.6e}")
+    print(f"(E - E_init) / E_init = {100 * (energy - energy0) / energy0:.6f} %")
 
     print(f"run in {timedelta(seconds=perf_counter()-t_start)}")

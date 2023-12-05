@@ -88,9 +88,9 @@ fn accelerate_vectorize[nelts: Int](inout particles: Particles):
         @parameter
         fn other_particles[_nelts: Int](i_tail: Int):
             let i1 = i0 + i_tail + 1
-            let delta_x = position[0].load(i0) - position[0].simd_load[_nelts](i1)
-            let delta_y = position[1].load(i0) - position[1].simd_load[_nelts](i1)
-            let delta_z = position[2].load(i0) - position[2].simd_load[_nelts](i1)
+            let delta_x = position[0][i0] - position[0].simd_load[_nelts](i1)
+            let delta_y = position[1][i0] - position[1].simd_load[_nelts](i1)
+            let delta_z = position[2][i0] - position[2].simd_load[_nelts](i1)
             let distance_cube = norm_cube(delta_x, delta_y, delta_z)
             let delta = StaticTuple[3, SIMD[DType.float64, _nelts]](
                 delta_x / distance_cube,
@@ -103,13 +103,13 @@ fn accelerate_vectorize[nelts: Int](inout particles: Particles):
                 let acc_ptr = acceleration[axis]
                 acc_ptr.store(
                     i0,
-                    acc_ptr.load(i0)
+                    acc_ptr[i0]
                     - (mass.simd_load[_nelts](i1) * delta[axis]).reduce_add(),
                 )
 
                 acc_ptr.simd_store[_nelts](
                     i1,
-                    acc_ptr.simd_load[_nelts](i1) + mass.load(i0) * delta[axis],
+                    acc_ptr.simd_load[_nelts](i1) + mass[i0] * delta[axis],
                 )
 
         vectorize[nelts, other_particles](size - i0 - 1)
@@ -136,9 +136,9 @@ fn accelerate_tile[nelts: Int](inout particles: Particles):
 
         @parameter
         fn other_particles[_nelts: Int](i1: Int):
-            let delta_x = position[0].load(i0) - position[0].simd_load[_nelts](i1)
-            let delta_y = position[1].load(i0) - position[1].simd_load[_nelts](i1)
-            let delta_z = position[2].load(i0) - position[2].simd_load[_nelts](i1)
+            let delta_x = position[0][i0] - position[0].simd_load[_nelts](i1)
+            let delta_y = position[1][i0] - position[1].simd_load[_nelts](i1)
+            let delta_z = position[2][i0] - position[2].simd_load[_nelts](i1)
             let distance_cube = norm_cube(delta_x, delta_y, delta_z)
             let delta = StaticTuple[3, SIMD[DType.float64, _nelts]](
                 delta_x / distance_cube,
@@ -151,13 +151,13 @@ fn accelerate_tile[nelts: Int](inout particles: Particles):
                 let acc_ptr = acceleration[axis]
                 acc_ptr.store(
                     i0,
-                    acc_ptr.load(i0)
+                    acc_ptr[i0]
                     - (mass.simd_load[_nelts](i1) * delta[axis]).reduce_add(),
                 )
 
                 acc_ptr.simd_store[_nelts](
                     i1,
-                    acc_ptr.simd_load[_nelts](i1) + mass.load(i0) * delta[axis],
+                    acc_ptr.simd_load[_nelts](i1) + mass[i0] * delta[axis],
                 )
 
         tile[

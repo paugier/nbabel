@@ -4,6 +4,7 @@ from algorithm import vectorize, tile
 from memory import memcpy, memset_zero
 from testing import assert_equal, assert_almost_equal
 from sys.info import simdwidthof
+from utils.vector import InlinedFixedVector
 
 import benchmark
 
@@ -11,7 +12,7 @@ from particles import Particles, accelerate_tile, accelerate_vectorize
 
 alias Vec4floats = SIMD[DType.float64, 4]
 alias vec4zeros = Vec4floats(0)
-alias VecParticles = InlinedFixedVector[Particle, 4]
+alias VecParticles = InlinedFixedVector[Particle]
 
 alias nb_particles = 1024
 alias benchmark_iterations = 500
@@ -133,24 +134,34 @@ fn correctness_check[func: fn (inout Particles) -> None]():
     fn check_equal() -> Bool:
         var is_correct = True
         for i in range(nb_particles):
-            if not assert_almost_equal(p[i].mass, p_.mass.load(i)):
+            try:
+                assert_almost_equal(p[i].mass, p_.mass.load(i))
+            except Error:
                 print("mass mismatch", i)
                 is_correct = False
             for j in range(3):
-                if not assert_almost_equal(p[i].position[j], p_.position[j].load(i)):
+                try:
+                    assert_almost_equal(p[i].position[j], p_.position[j].load(i))
+                except Error:
                     print("position mismatch", i, j)
                     is_correct = False
-                if not assert_almost_equal(p[i].velocity[j], p_.velocity[j].load(i)):
+                try:
+                    assert_almost_equal(p[i].velocity[j], p_.velocity[j].load(i))
+                except:
                     print("velocity mismatch", i, j)
                     is_correct = False
-                if not assert_almost_equal(
-                    p[i].acceleration[j], p_.acceleration[j].load(i)
-                ):
+                try:
+                    assert_almost_equal(
+                        p[i].acceleration[j], p_.acceleration[j].load(i)
+                    )
+                except Error:
                     print("acceleration mismatch", i, j)
                     is_correct = False
-                if not assert_almost_equal(
-                    p[i].acceleration1[j], p_.acceleration1[j].load(i)
-                ):
+                try:
+                    assert_almost_equal(
+                        p[i].acceleration1[j], p_.acceleration1[j].load(i)
+                    )
+                except Error:
                     print("acceleration1 mismatch", i, j)
                     is_correct = False
         return is_correct
@@ -183,6 +194,7 @@ fn main():
     alias simd_width = simdwidthof[DType.float64]()
     print("simd_width:", simd_width)
 
+    check_bench_1_nelts[2](original_time)
     check_bench_1_nelts[4](original_time)
     check_bench_1_nelts[8](original_time)
     check_bench_1_nelts[16](original_time)

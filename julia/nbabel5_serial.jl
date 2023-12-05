@@ -37,6 +37,7 @@ function NBabelCalcs(ID, mass, pos, vel, tend = 10.0, dt = 0.001, show=false)
 
     Ekin, Epot = compute_energy(pos, vel, mass)
     Etot_ICs = Ekin + Epot
+    Etot_previous = Etot_ICs
 
     t = 0.0
     nstep = 0
@@ -50,22 +51,23 @@ function NBabelCalcs(ID, mass, pos, vel, tend = 10.0, dt = 0.001, show=false)
         acc = compute_acceleration(pos, mass, acc)
 
         vel = update_velocities(vel, acc, last_acc, dt)
-        
+
         t += dt
         nstep += 1
 
         if show && nstep%100 == 0
-
             Ekin, Epot = compute_energy(pos, vel, mass)
             Etot = Ekin + Epot
-            dE = (Etot - Etot_ICs)/Etot_ICs
-
-            @printf "t = %g, Etot=%g, Ekin=%g, Epot=%g, dE=%g \n" t Etot Ekin Epot dE
+            dE = (Etot - Etot_previous)/Etot_previous
+            @printf "t = %g, Etot=%.7g, Ekin=%g, Epot=%g, dE/E=%e \n" t Etot Ekin Epot dE
+            Etot_previous = Etot
         end
     end
 
     Ekin, Epot = compute_energy(pos, vel, mass)
     Etot = Ekin + Epot
+    @printf "(E - E_init)/E_init = %g %%\n" 100 * (Etot - Etot_ICs) / Etot_ICs
+
     return (; Ekin, Epot, Etot)
     # return size(pos,1)
 end

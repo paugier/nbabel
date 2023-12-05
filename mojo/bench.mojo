@@ -25,7 +25,7 @@ from helpers import string_to_float, read_data
 
 alias Vec4floats = SIMD[DType.float64, 4]
 alias vec4zeros = Vec4floats(0)
-alias VecParticles = InlinedFixedVector[Particle, 4]
+alias VecParticles = InlinedFixedVector[Particle]
 
 
 @register_passable("trivial")
@@ -180,7 +180,7 @@ def main():
 
     nb_particles = data.n0
 
-    particles = InlinedFixedVector[Particle, 4](nb_particles)
+    particles = InlinedFixedVector[Particle](nb_particles)
 
     for idx_part in range(nb_particles):
         m = data[idx_part, 0]
@@ -203,7 +203,7 @@ def main():
 
     let t_start = now()
     energy, energy0 = loop(time_step, nb_steps, particles)
-    print("Final dE/E = " + String((energy - energy0) / energy0))
+    print("(E - E_init) / E_init = " + String(100 * (energy - energy0) / energy0) + " %")
     print(
         String(nb_steps)
         + " time steps run in "

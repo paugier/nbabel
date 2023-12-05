@@ -107,13 +107,12 @@ fn loop(
     var old_energy = energy
     let energy0 = energy
 
-    print("energy0", energy0)
+    print("energy0 =", energy0)
 
     var accelerations = VecVec4floats(len(masses))
-    var accelerations1 = accelerations
     for idx_part in range(len(masses)):
         accelerations[idx_part] = Vec4floats(0)
-        accelerations1[idx_part] = Vec4floats(0)
+    var accelerations1 = accelerations
 
     accelerate(masses, accelerations, accelerations1, positions)
     for step in range(1, nb_steps + 1):
@@ -178,7 +177,7 @@ def main():
 
     let t_start = now()
     energy, energy0 = loop(time_step, nb_steps, masses, positions, velocities)
-    print("Final dE/E = " + String((energy - energy0) / energy0))
+    print("(E - E_init) / E_init = " + String(100 * (energy - energy0) / energy0) + " %")
     print(
         String(nb_steps)
         + " time steps run in "
