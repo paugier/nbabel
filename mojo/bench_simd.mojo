@@ -138,7 +138,12 @@ def main():
     time_step = 0.001
     nb_steps = (time_end / time_step).to_int() + 1
 
-    path_input = args[1]
+    let path_input: String
+
+    if len(args) > 1:
+        path_input = args[1]
+    else:
+        path_input = "../data/input1k"
     print(path_input)
 
     data = read_data(path_input)
@@ -191,5 +196,7 @@ def main():
         String(nb_steps)
         + " time steps run in "
         + String(Float64(now() - t_start) * 1e-9)
-        + " s"
+        + " s (nelts="
+        + String(nelts)
+        + ")"
     )

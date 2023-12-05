@@ -189,10 +189,10 @@ fn check_bench_1_nelts[nelts: Int](original_time: Float64):
 
 
 fn main():
-    let original_time = bench[accelerate]()
-
     alias simd_width = simdwidthof[DType.float64]()
     print("simd_width:", simd_width)
+
+    let original_time = bench[accelerate]()
 
     check_bench_1_nelts[2](original_time)
     check_bench_1_nelts[4](original_time)
