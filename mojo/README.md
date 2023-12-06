@@ -30,8 +30,8 @@ speedup with Julia and Mojo.
 | mojo -D nelts=4 bench_simd.mojo  | 9.2      |
 | mojo -D nelts=16 bench_simd.mojo | 7.3      |
 
-On a computer for which `simdwidthof[DType.float64]()` gives 4 (i5-8400 CPU @
-2.80GHz), I get:
+- On a computer for which `simdwidthof[DType.float64]()` gives 4 (i5-8400 CPU @
+  2.80GHz), I get:
 
 |                                  | time (s) |
 | -------------------------------- | -------- |
