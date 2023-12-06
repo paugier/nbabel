@@ -12,3 +12,6 @@ bench_simd:
 	mojo -D nelts=4 bench_simd.mojo  ../data/input1k 1
 	mojo -D nelts=8 bench_simd.mojo  ../data/input1k 1
 	mojo -D nelts=16 bench_simd.mojo  ../data/input1k 1
+
+format:
+	mdformat --wrap 82 README.md
