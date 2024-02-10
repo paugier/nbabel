@@ -1,7 +1,9 @@
 from math import sqrt
 from random import rand, random_float64
-from algorithm import vectorize, tile
+from algorithm import vectorize, tile, parallelize
 from memory import memcpy, memset_zero, stack_allocation
+
+from sys.info import num_performance_cores
 
 
 fn fill_3D_tuple(n: Int) -> StaticTuple[3, DTypePointer[DType.float64]]:
@@ -121,6 +123,61 @@ fn accelerate_vectorize[nelts: Int](inout particles: Particles):
         @unroll
         for axis in range(3):
             acceleration[axis][i0] += acc_0[axis].simd_load[nelts]().reduce_add()
+
+
+fn accelerate_parallelize_vectorize[nelts: Int](inout particles: Particles):
+    let size = particles.size
+    let position = particles.position
+    let acceleration = particles.acceleration
+    let acceleration1 = particles.acceleration1
+    let mass = particles.mass
+
+    @unroll
+    for axis in range(3):
+        memcpy(
+            acceleration1[axis],
+            acceleration[axis],
+            size,
+        )
+        memset_zero(acceleration[axis], size)
+
+    @parameter
+    fn outer_body(i0: Int):
+        var acc_0 = StaticTuple[3, DTypePointer[DType.float64]]()
+
+        @unroll
+        for axis in range(3):
+            acc_0[axis] = stack_allocation[nelts, DType.float64]()
+            memset_zero(acc_0[axis], nelts)
+
+        @parameter
+        fn inner_body[_nelts: Int](i1: Int):
+            var delta = StaticTuple[3, SIMD[DType.float64, _nelts]]()
+
+            @unroll
+            for axis in range(3):
+                delta[axis] = position[axis][i0] - position[axis].simd_load[_nelts](i1)
+
+            let distance_cube = norm_cube(delta[0], delta[1], delta[2])
+
+            @unroll
+            for axis in range(3):
+                delta[axis] /= distance_cube
+                # zero the multiplier where i0 and i1 are same body
+                var multiplier = mass.simd_load[_nelts](i1) * delta[axis]
+                if i1 <= i0 < i1 + _nelts:
+                    multiplier[i0 - i1] = 0
+                acc_0[axis].simd_store[_nelts](
+                    acc_0[axis].simd_load[_nelts]() - multiplier,
+                )
+
+        vectorize[nelts, inner_body](size)
+
+        @unroll
+        for axis in range(3):
+            acceleration[axis][i0] += acc_0[axis].simd_load[nelts]().reduce_add()
+
+    parallelize[outer_body](size, num_performance_cores())
 
 
 fn accelerate_tile[nelts: Int](inout particles: Particles):

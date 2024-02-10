@@ -8,7 +8,12 @@ from collections.vector import InlinedFixedVector
 
 import benchmark
 
-from particles import Particles, accelerate_tile, accelerate_vectorize
+from particles import (
+    Particles,
+    accelerate_tile,
+    accelerate_vectorize,
+    accelerate_parallelize_vectorize,
+)
 
 alias Vec4floats = SIMD[DType.float64, 4]
 alias vec4zeros = Vec4floats(0)
@@ -96,7 +101,7 @@ fn bench[func: fn (inout VecParticles) -> None]() -> Float64:
         for i in range(benchmark_iterations):
             func(particles)
 
-    let rep = benchmark.run[wrapper]()
+    let rep = benchmark.run[wrapper](max_runtime_secs=2.0)
     print("Time: ", rep.mean(), "seconds")
 
     return rep.mean()
@@ -110,7 +115,7 @@ fn bench2[func: fn (inout Particles) -> None]() -> Float64:
         for i in range(benchmark_iterations):
             func(particles)
 
-    let rep = benchmark.run[wrapper]()
+    let rep = benchmark.run[wrapper](max_runtime_secs=2.0)
     # using particles to delay its destruction
     let size = particles.size
     print("Time: ", rep.mean(), "seconds")
@@ -182,12 +187,16 @@ fn check_bench_1_nelts[nelts: Int](original_time: Float64):
     print("nelts:", nelts)
     correctness_check[accelerate_vectorize[nelts]]()
     correctness_check[accelerate_tile[nelts]]()
+    correctness_check[accelerate_parallelize_vectorize[nelts]]()
 
     var new_time = bench2[accelerate_vectorize[nelts]]()
     print("Speedup: ", original_time / new_time, " (vectorize)")
 
     new_time = bench2[accelerate_tile[nelts]]()
     print("Speedup: ", original_time / new_time, " (tile)")
+
+    new_time = bench2[accelerate_parallelize_vectorize[nelts]]()
+    print("Speedup: ", original_time / new_time, " (parallelize)")
 
 
 fn main():
