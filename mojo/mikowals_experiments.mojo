@@ -71,17 +71,19 @@ fn accelerate(inout particles: VecParticles) -> NoneType:
         particles[idx] = particle
 
     let nb_particules = len(particles)
+
     for i0 in range(nb_particules):
         var p0 = particles[i0]
+
         for i1 in range(i0 + 1, nb_particules):
             var p1 = particles[i1]
             let delta = p0.position - p1.position
             let distance_cube = norm_cube(delta)
             p0.acceleration -= p1.mass / distance_cube * delta
             p1.acceleration += p0.mass / distance_cube * delta
+            particles[i1].acceleration = p1.acceleration
 
-            particles[i0] = p0
-            particles[i1] = p1
+        particles[i0].acceleration = p0.acceleration
 
 
 fn bench[func: fn (inout VecParticles) -> None]() -> Float64:
