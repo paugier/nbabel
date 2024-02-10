@@ -4,7 +4,7 @@ from algorithm import vectorize, tile
 from memory import memcpy, memset_zero
 from testing import assert_equal, assert_almost_equal
 from sys.info import simdwidthof
-from utils.vector import InlinedFixedVector
+from collections.vector import InlinedFixedVector
 
 import benchmark
 
