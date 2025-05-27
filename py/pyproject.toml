@@ -1,0 +1,20 @@
+[project]
+name = "py-nbabel"
+version = "0.1.0"
+description = "n-babel Python implementations"
+authors = [
+    {name = "Pierre Augier", email = "pierre.augier@univ-grenoble-alpes.fr"},
+]
+dependencies = [
+    "numpy",
+    "pandas",
+    "transonic",
+    "pythran",
+]
+requires-python = ">=3.11"
+readme = "README.md"
+license = {text = "GPL"}
+
+
+[tool.pdm]
+distribution = false

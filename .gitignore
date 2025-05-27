@@ -29,3 +29,4 @@ py/**/*.html
 power/tmp
 
 py/.venv
+.pdm-python
