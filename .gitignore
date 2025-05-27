@@ -28,5 +28,5 @@ py/**/*.html
 
 power/tmp
 
-py/.venv
+py/.venv*
 .pdm-python

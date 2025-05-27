@@ -10,11 +10,14 @@ bench0:
 bench_compyler:
 	python bench_compyler.py ../data/input16
 
-bench_pypy_purepy:
-	pypy bench_purepy.py ../data/input16
+bench_pypy_Point:
+	pypy bench_purepy_Point.py ../data/input16
 
 bench_pypy:
-	pypy bench_pypy.py ../data/input16
+	pypy bench_purepy_Particle.py ../data/input16
+
+bench1k_pypy:
+	pypy bench_purepy_Particle.py ../data/input1k
 
 bench1k: __pythran__/bench.py
 	time python bench.py ../data/input1k
@@ -52,3 +55,7 @@ __pythran__/bench_omp.py: bench_omp.py
 
 clean:
 	rm -rf __pythran__
+
+create_venv_pypy:
+	uv python install pypy
+	$(shell uv python find pypy) -m venv .venv_pypy --upgrade-deps
